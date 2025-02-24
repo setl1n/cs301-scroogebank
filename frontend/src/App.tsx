@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import LoginPage from './pages/login/LoginPage'
-import AdminPage from './pages/admin/Admin'
+import AdminPage from './pages/admin/AdminPage'
 import AgentPage from './pages/agent/Agent'
 
 function App() {
