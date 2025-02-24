@@ -1,6 +1,5 @@
-import { FC } from 'react'
 
-const AgentPage: FC = () => {
+const AgentPage = () => {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold">Agent Dashboard</h1>
