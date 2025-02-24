@@ -28,31 +28,31 @@ const AdminDashboard = () => {
                 Admin Dashboard
             </h2>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-4 gap-3 mb-8">
                 <Button
                     onClick={handleCreateAccount}
-                    className="px-4 py-3 font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                    className="px-3 py-3 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors whitespace-nowrap"
                 >
-                    Create New Account
+                    Create Account
                 </Button>
 
                 <Button
                     onClick={() => setIsManageAccountsOpen(true)}
-                    className="px-4 py-3 font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                    className="px-3 py-3 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors whitespace-nowrap"
                 >
                     Manage Accounts
                 </Button>
 
                 <Button
                     onClick={handleViewTransactions}
-                    className="px-4 py-3 font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                    className="px-3 py-3 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors whitespace-nowrap"
                 >
                     View Transactions
                 </Button>
 
                 <Button
                     onClick={handleSettings}
-                    className="px-4 py-3 font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                    className="px-3 py-3 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors whitespace-nowrap"
                 >
                     Settings
                 </Button>
