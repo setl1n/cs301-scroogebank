@@ -27,7 +27,7 @@ const ManageAccountsDialog = ({ isOpen, onClose, onCreateAccount }: ManageAccoun
             
             <div className="fixed inset-0 flex items-center justify-center p-4">
                 <DialogPanel className="mx-auto max-w-2xl w-full rounded-lg bg-secondary-800 p-6">
-                    <DialogTitle className="text-2xl font-bold text-white mb-6">
+                    <DialogTitle className="text-2xl font-bold text-input-text mb-6">
                         Manage Accounts
                     </DialogTitle>
 
@@ -37,18 +37,18 @@ const ManageAccountsDialog = ({ isOpen, onClose, onCreateAccount }: ManageAccoun
                             <input
                                 type="text"
                                 placeholder="Search accounts..."
-                                className="w-full px-4 py-2 rounded-lg bg-secondary-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="w-full px-4 py-2 rounded-lg bg-input-bg border border-input-border text-input-text focus:outline-none focus:ring-2 focus:ring-input-focus"
                             />
                             <div className="flex gap-3">
                                 <Button
-                                    className="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+                                    className="px-4 py-2 rounded-lg bg-button-bg text-input-text hover:bg-button-hover focus:outline-none focus:ring-2 focus:ring-button-focus transition-colors"
                                 >
                                     Search
                                 </Button>
                                 {/* Currently using the same "Create Account" Function as Create New Account from Dashboard, actual implementation may need to be a diff function. */}
                                 <Button 
                                     onClick={onCreateAccount}
-                                    className="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+                                    className="px-4 py-2 rounded-lg bg-button-bg text-input-text hover:bg-button-hover focus:outline-none focus:ring-2 focus:ring-button-focus transition-colors"
                                 >
                                     Add New Account
                                 </Button>

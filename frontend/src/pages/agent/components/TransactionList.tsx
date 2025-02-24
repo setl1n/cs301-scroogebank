@@ -37,7 +37,7 @@ const TransactionList = ({ isOpen, onClose }: TransactionListProps) => {
             
             <div className="fixed inset-0 flex items-center justify-center p-4">
                 <DialogPanel className="mx-auto max-w-4xl w-full rounded-lg bg-secondary-800 p-6">
-                    <DialogTitle className="text-2xl font-bold text-white mb-6">
+                    <DialogTitle className="text-2xl font-bold text-input-text mb-6">
                         Transactions
                     </DialogTitle>
 
@@ -45,19 +45,19 @@ const TransactionList = ({ isOpen, onClose }: TransactionListProps) => {
                         <input
                             type="text"
                             placeholder="Search transactions..."
-                            className="flex-1 bg-secondary-700 text-white rounded-md focus:ring-2 focus:ring-primary-500 p-2.5 transition-colors"
+                            className="flex-1 bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus p-2.5 transition-colors"
                         />
                         <Button
                             type="submit"
-                            className="px-4 py-2 font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+                            className="px-4 py-2 font-medium rounded-lg bg-button-bg text-input-text hover:bg-button-hover focus:outline-none focus:ring-2 focus:ring-button-focus transition-colors"
                         >
                             Search
                         </Button>
                     </form>
 
                     <div className="overflow-x-auto">
-                        <h3 className="text-xl font-semibold text-white mb-4">Transaction List:</h3>
-                        <table className="w-full text-white">
+                        <h3 className="text-xl font-semibold text-input-text mb-4">Transaction List:</h3>
+                        <table className="w-full text-input-text">
                             <thead>
                                 <tr className="bg-secondary-700">
                                     <th className="px-4 py-2 text-left">Transaction ID</th>

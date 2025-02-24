@@ -100,14 +100,14 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
                 
                 <div className="fixed inset-0 flex items-center justify-center p-4">
                     <DialogPanel className="mx-auto max-w-2xl w-full rounded-lg bg-secondary-800 p-6">
-                        <DialogTitle className="text-2xl font-bold text-white mb-6">
+                        <DialogTitle className="text-2xl font-bold text-input-text mb-6">
                             Create Client Profile
                         </DialogTitle>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <Fieldset className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <Label className="block text-sm font-medium text-white mb-1">
+                                    <Label className="block text-sm font-medium text-input-text mb-1">
                                         First Name
                                     </Label>
                                     <input
@@ -115,13 +115,13 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
                                         name="firstName"
                                         value={formData.firstName}
                                         onChange={handleInputChange}
-                                        className="w-full bg-secondary-700 text-white rounded-md focus:ring-2 focus:ring-primary-500 block p-2.5 transition-colors"
+                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
                                         required
                                     />
                                 </div>
 
                                 <div>
-                                    <Label className="block text-sm font-medium text-white mb-1">
+                                    <Label className="block text-sm font-medium text-input-text mb-1">
                                         Last Name
                                     </Label>
                                     <input
@@ -129,13 +129,13 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
                                         name="lastName"
                                         value={formData.lastName}
                                         onChange={handleInputChange}
-                                        className="w-full bg-secondary-700 text-white rounded-md focus:ring-2 focus:ring-primary-500 block p-2.5 transition-colors"
+                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
                                         required
                                     />
                                 </div>
 
                                 <div>
-                                    <Label className="block text-sm font-medium text-white mb-1">
+                                    <Label className="block text-sm font-medium text-input-text mb-1">
                                         Date of Birth
                                     </Label>
                                     <input
@@ -143,20 +143,20 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
                                         name="dateOfBirth"
                                         value={formData.dateOfBirth}
                                         onChange={handleInputChange}
-                                        className="w-full bg-secondary-700 text-white rounded-md focus:ring-2 focus:ring-primary-500 block p-2.5 transition-colors"
+                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
                                         required
                                     />
                                 </div>
 
                                 <div>
-                                    <Label className="block text-sm font-medium text-white mb-1">
+                                    <Label className="block text-sm font-medium text-input-text mb-1">
                                         Gender
                                     </Label>
                                     <Select
                                         name="gender"
                                         value={formData.gender}
                                         onChange={handleInputChange}
-                                        className="w-full bg-secondary-700 text-white rounded-md focus:ring-2 focus:ring-primary-500 block p-2.5 transition-colors"
+                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
                                         required
                                     >
                                         <option value="">Select Gender</option>
@@ -169,7 +169,7 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
                                 </div>
 
                                 <div>
-                                    <Label className="block text-sm font-medium text-white mb-1">
+                                    <Label className="block text-sm font-medium text-input-text mb-1">
                                         Email
                                     </Label>
                                     <input
@@ -177,13 +177,13 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
                                         name="email"
                                         value={formData.email}
                                         onChange={handleInputChange}
-                                        className="w-full bg-secondary-700 text-white rounded-md focus:ring-2 focus:ring-primary-500 block p-2.5 transition-colors"
+                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
                                         required
                                     />
                                 </div>
 
                                 <div>
-                                    <Label className="block text-sm font-medium text-white mb-1">
+                                    <Label className="block text-sm font-medium text-input-text mb-1">
                                         Phone
                                     </Label>
                                     <input
@@ -191,13 +191,13 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleInputChange}
-                                        className="w-full bg-secondary-700 text-white rounded-md focus:ring-2 focus:ring-primary-500 block p-2.5 transition-colors"
+                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
                                         required
                                     />
                                 </div>
 
                                 <div className="col-span-2">
-                                    <Label className="block text-sm font-medium text-white mb-1">
+                                    <Label className="block text-sm font-medium text-input-text mb-1">
                                         Address
                                     </Label>
                                     <input
@@ -205,13 +205,13 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
                                         name="address"
                                         value={formData.address}
                                         onChange={handleInputChange}
-                                        className="w-full bg-secondary-700 text-white rounded-md focus:ring-2 focus:ring-primary-500 block p-2.5 transition-colors"
+                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
                                         required
                                     />
                                 </div>
 
                                 <div>
-                                    <Label className="block text-sm font-medium text-white mb-1">
+                                    <Label className="block text-sm font-medium text-input-text mb-1">
                                         City
                                     </Label>
                                     <input
@@ -219,13 +219,13 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
                                         name="city"
                                         value={formData.city}
                                         onChange={handleInputChange}
-                                        className="w-full bg-secondary-700 text-white rounded-md focus:ring-2 focus:ring-primary-500 block p-2.5 transition-colors"
+                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
                                         required
                                     />
                                 </div>
 
                                 <div>
-                                    <Label className="block text-sm font-medium text-white mb-1">
+                                    <Label className="block text-sm font-medium text-input-text mb-1">
                                         State
                                     </Label>
                                     <input
@@ -233,13 +233,13 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
                                         name="state"
                                         value={formData.state}
                                         onChange={handleInputChange}
-                                        className="w-full bg-secondary-700 text-white rounded-md focus:ring-2 focus:ring-primary-500 block p-2.5 transition-colors"
+                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
                                         required
                                     />
                                 </div>
 
                                 <div>
-                                    <Label className="block text-sm font-medium text-white mb-1">
+                                    <Label className="block text-sm font-medium text-input-text mb-1">
                                         Country
                                     </Label>
                                     <input
@@ -247,13 +247,13 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
                                         name="country"
                                         value={formData.country}
                                         onChange={handleInputChange}
-                                        className="w-full bg-secondary-700 text-white rounded-md focus:ring-2 focus:ring-primary-500 block p-2.5 transition-colors"
+                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
                                         required
                                     />
                                 </div>
 
                                 <div>
-                                    <Label className="block text-sm font-medium text-white mb-1">
+                                    <Label className="block text-sm font-medium text-input-text mb-1">
                                         Postal Code
                                     </Label>
                                     <input
@@ -261,7 +261,7 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
                                         name="postalCode"
                                         value={formData.postalCode}
                                         onChange={handleInputChange}
-                                        className="w-full bg-secondary-700 text-white rounded-md focus:ring-2 focus:ring-primary-500 block p-2.5 transition-colors"
+                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
                                         required
                                     />
                                 </div>
@@ -271,13 +271,13 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
                                 <Button
                                     type="button"
                                     onClick={handleClose}
-                                    className="px-4 py-2 font-medium rounded-lg bg-secondary-600 text-white hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-secondary-500 transition-colors"
+                                    className="px-4 py-2 font-medium rounded-lg bg-secondary-600 text-input-text hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-secondary-500 transition-colors"
                                 >
                                     Close
                                 </Button>
                                 <Button
                                     type="submit"
-                                    className="px-4 py-2 font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+                                    className="px-4 py-2 font-medium rounded-lg bg-button-bg text-input-text hover:bg-button-hover focus:outline-none focus:ring-2 focus:ring-button-focus transition-colors"
                                 >
                                     Save
                                 </Button>

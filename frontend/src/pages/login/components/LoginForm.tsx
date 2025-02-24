@@ -26,13 +26,13 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
 
     return (
         <div>
-            <h2 className="text-center text-3xl font-bold text-white">
+            <h2 className="text-center text-3xl font-bold text-input-text">
                 CRM Login
             </h2>
             <form className="mt-8 space-y-6" onSubmit={handleLogin}>
                 <Fieldset className="rounded-md shadow-sm space-y-4">
                     <div>
-                        <Label className="block text-sm font-medium text-white mb-1">
+                        <Label className="block text-sm font-medium text-input-text mb-1">
                             Username
                         </Label>
                         <input
@@ -40,12 +40,12 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             required
-                            className="w-full bg-input-bg border-input-border text-white rounded-md focus:ring-2 focus:ring-input-focus focus:border-input-focus block p-2.5 transition-colors"
+                            className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus focus:border-input-focus block p-2.5 transition-colors"
                             placeholder="Enter Username"
                         />
                     </div>
                     <div>
-                        <Label className="block text-sm font-medium text-white mb-1">
+                        <Label className="block text-sm font-medium text-input-text mb-1">
                             Password
                         </Label>
                         <div className="relative">
@@ -54,7 +54,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="w-full bg-input-bg border-input-border text-white rounded-md focus:ring-2 focus:ring-input-focus focus:border-input-focus block p-2.5 transition-colors"
+                                className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus focus:border-input-focus block p-2.5 transition-colors"
                                 placeholder="Enter Password"
                             />
                             <div
@@ -73,7 +73,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
 
                 <button
                     type="submit"
-                    className="w-full px-4 py-2 font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                    className="w-full px-4 py-2 font-medium rounded-lg bg-button-bg text-input-text hover:bg-button-hover focus:outline-none focus:ring-2 focus:ring-button-focus focus:ring-offset-2 transition-colors"
                 >
                     Log in
                 </button>
