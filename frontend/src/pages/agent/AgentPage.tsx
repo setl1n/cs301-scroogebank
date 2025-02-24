@@ -1,9 +1,11 @@
+import AgentDashboard from './components/AgentDashboard'
 
 const AgentPage = () => {
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold">Agent Dashboard</h1>
-      <p>This is a temporary agent page</p>
+    <div className="h-screen flex items-center justify-center bg-secondary-900 p-4">
+      <div className="max-w-3xl w-full h-full bg-secondary-800 p-8 rounded-lg">
+        <AgentDashboard />
+      </div>
     </div>
   )
 }
