@@ -1,12 +1,12 @@
 import { Button } from '@headlessui/react';
+import { useState } from 'react';
+import ManageAccountsDialog from './ManageAccountsDialog';
 
 const AdminDashboard = () => {
+    const [isManageAccountsOpen, setIsManageAccountsOpen] = useState(false);
+
     const handleCreateAccount = () => {
         console.log('Create account clicked');
-    };
-
-    const handleManageAccounts = () => {
-        console.log('Manage accounts clicked');
     };
 
     const handleViewTransactions = () => {
@@ -37,7 +37,7 @@ const AdminDashboard = () => {
                 </Button>
 
                 <Button
-                    onClick={handleManageAccounts}
+                    onClick={() => setIsManageAccountsOpen(true)}
                     className="px-4 py-3 font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
                 >
                     Manage Accounts
@@ -71,6 +71,12 @@ const AdminDashboard = () => {
                     ))}
                 </ul>
             </div>
+
+            <ManageAccountsDialog
+                isOpen={isManageAccountsOpen}
+                onClose={() => setIsManageAccountsOpen(false)}
+                onCreateAccount={handleCreateAccount}
+            />
         </div>
     );
 };
