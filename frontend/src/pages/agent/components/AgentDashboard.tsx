@@ -1,9 +1,9 @@
 import { Button } from '@headlessui/react';
+import { useState } from 'react';
+import CreateProfileDialog from './CreateProfileDialog';
 
 const AgentDashboard = () => {
-    const handleCreateProfile = () => {
-        console.log('Create profile clicked');
-    };
+    const [isCreateProfileOpen, setIsCreateProfileOpen] = useState(false);
 
     const handleManageProfiles = () => {
         console.log('Manage profiles clicked');
@@ -26,7 +26,7 @@ const AgentDashboard = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <Button
-                    onClick={handleCreateProfile}
+                    onClick={() => setIsCreateProfileOpen(true)}
                     className="px-4 py-3 font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
                 >
                     Create Client Profile
@@ -60,6 +60,11 @@ const AgentDashboard = () => {
                     ))}
                 </ul>
             </div>
+
+            <CreateProfileDialog
+                isOpen={isCreateProfileOpen}
+                onClose={() => setIsCreateProfileOpen(false)}
+            />
         </div>
     );
 };
