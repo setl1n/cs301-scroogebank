@@ -1,16 +1,18 @@
 import { Button } from '@headlessui/react';
 import { useState } from 'react';
 import CreateProfileDialog from './CreateProfileDialog';
+import TransactionList from './TransactionList';
 
 const AgentDashboard = () => {
     const [isCreateProfileOpen, setIsCreateProfileOpen] = useState(false);
+    const [isTransactionListOpen, setIsTransactionListOpen] = useState(false);
 
     const handleManageProfiles = () => {
         console.log('Manage profiles clicked');
     };
 
     const handleViewTransactions = () => {
-        console.log('View transactions clicked');
+        setIsTransactionListOpen(true);
     };
 
     const recentActivities = [
@@ -64,6 +66,11 @@ const AgentDashboard = () => {
             <CreateProfileDialog
                 isOpen={isCreateProfileOpen}
                 onClose={() => setIsCreateProfileOpen(false)}
+            />
+
+            <TransactionList
+                isOpen={isTransactionListOpen}
+                onClose={() => setIsTransactionListOpen(false)}
             />
         </div>
     );
