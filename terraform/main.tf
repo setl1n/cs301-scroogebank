@@ -2,29 +2,29 @@ module "network" {
   source = "./modules/network"
 }
 
-# module "rds" {
-#   source            = "./modules/rds"
-#   security_group_id = module.network.db_sg_id
-#   # For testing purposes, change back to module.network.db_subnet_group_name on prod
-#   db_subnet_group_name = module.network.db_public_subnet_group_name
+module "rds" {
+  source            = "./modules/rds"
+  security_group_id = module.network.db_sg_id
+  # For testing purposes, change back to module.network.db_subnet_group_name on prod
+  db_subnet_group_name = module.network.db_subnet_group_name
 
-#   # Database Connection Credentials
-#   database_name     = var.database_name
-#   database_username = var.DATABASE_USERNAME
-#   database_password = var.DATABASE_PASSWORD
+  # Database Connection Credentials
+  database_name     = var.DATABASE_NAME
+  database_username = var.DATABASE_USERNAME
+  database_password = var.DATABASE_PASSWORD
 
-#   applications = {
-#     users = {
-#       identifier = "users-db"
-#     },
-#     tournaments = {
-#       identifier = "tournaments-db"
-#     },
-#     clubs = {
-#       identifier = "clubs-db"
-#     },
-#   }
-# }
+  applications = {
+    client = {
+      identifier = "client-db"
+    },
+    account = {
+      identifier = "account-db"
+    },
+    transaction = {
+      identifier = "transaction-db"
+    },
+  }
+}
 
 # module "ecs" {
 #   source            = "./modules/ecs"
