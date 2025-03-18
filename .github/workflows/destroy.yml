@@ -1,0 +1,50 @@
+name: "Terraform Destroy"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write  # This is required for AWS OIDC connection
+  contents: read   # This is required for actions/checkout
+  pull-requests: write  # This is required for GH bot to comment PR
+
+env:
+  TF_LOG: INFO
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  undeploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./terraform
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        env:
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+          AWS_BUCKET_KEY_NAME: ${{ secrets.AWS_BUCKET_KEY_NAME }}
+          AWS_DYNAMODB_TABLE: ${{ secrets.AWS_DYNAMODB_TABLE }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${AWS_BUCKET_NAME}" \
+            -backend-config="key=${AWS_BUCKET_KEY_NAME}" \
+            -backend-config="region=${AWS_REGION}" \
+            -backend-config="dynamodb_table=${AWS_DYNAMODB_TABLE}"
+
+      - name: Terraform Destroy
+        run: |
+          TF_LOG=DEBUG terraform destroy \
+            -auto-approve
