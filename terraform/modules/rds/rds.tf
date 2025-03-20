@@ -3,7 +3,7 @@ resource "aws_rds_cluster" "aurora_cluster" {
   cluster_identifier     = "${each.value.identifier}-cluster"
   engine                 = "aurora-postgresql"
   engine_mode            = "provisioned"
-  engine_version         = "15.4" # PostgreSQL 15.4 compatible version
+  engine_version         = "17.4"
   db_subnet_group_name   = var.db_subnet_group_name
   database_name          = var.database_name
   master_username        = var.database_username
