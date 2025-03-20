@@ -24,7 +24,9 @@ variable "database_password" {
 }
 
 variable "applications" {
+  description = "Map of applications with their configurations"
   type = map(object({
     identifier = string
   }))
+  default = {}
 }

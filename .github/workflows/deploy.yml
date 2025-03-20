@@ -64,9 +64,16 @@ jobs:
 
       - name: Terraform Plan
         id: plan
+        env:
+          DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
         run: |
           terraform plan \
-            -no-color
+            -no-color \
+            -var "DATABASE_USERNAME=${DATABASE_USERNAME}" \
+            -var "DATABASE_PASSWORD=${DATABASE_PASSWORD}" \
+            -var "DATABASE_NAME=${DATABASE_NAME}"
         if: github.event_name == 'pull_request'
         continue-on-error: true
 
@@ -113,7 +120,14 @@ jobs:
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/master' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
         run: |
           terraform apply \
             -auto-approve \
-            -input=false
+            -var "DATABASE_USERNAME=${DATABASE_USERNAME}" \
+            -var "DATABASE_PASSWORD=${DATABASE_PASSWORD}" \
+            -var "DATABASE_NAME=${DATABASE_NAME}" \
+            -input=false 

@@ -1,5 +1,6 @@
 resource "aws_rds_cluster" "aurora_cluster" {
-  cluster_identifier     = "kickoff-cluster"
+  for_each               = var.applications
+  cluster_identifier     = "${each.value.identifier}-cluster"
   engine                 = "aurora-postgresql"
   engine_mode            = "provisioned"
   engine_version         = "15.4" # PostgreSQL 15.4 compatible version
@@ -15,25 +16,27 @@ resource "aws_rds_cluster" "aurora_cluster" {
 
 # Primary writer instance
 resource "aws_rds_cluster_instance" "aurora_writer" {
-  identifier          = "db-writer"
-  cluster_identifier  = aws_rds_cluster.aurora_cluster.id
+  for_each            = var.applications
+  identifier          = "${each.value.identifier}-writer"
+  cluster_identifier  = aws_rds_cluster.aurora_cluster[each.key].id
   instance_class      = "db.t3.medium"
-  engine              = aws_rds_cluster.aurora_cluster.engine
-  engine_version      = aws_rds_cluster.aurora_cluster.engine_version
+  engine              = aws_rds_cluster.aurora_cluster[each.key].engine
+  engine_version      = aws_rds_cluster.aurora_cluster[each.key].engine_version
   publicly_accessible = true
   availability_zone   = "ap-southeast-1a"
-  promotion_tier      = 0  # Primary instance with highest priority for promotion
+  promotion_tier      = 0 # Primary instance with highest priority for promotion
 }
 
 # Reader replicas in different AZs for high availability
 resource "aws_rds_cluster_instance" "aurora_readers" {
-  count               = 1  # Creating 2 reader replicas
-  identifier          = "db-reader-${count.index + 1}"
-  cluster_identifier  = aws_rds_cluster.aurora_cluster.id
+  for_each = var.applications
+
+  identifier          = "${each.value.identifier}-reader"
+  cluster_identifier  = aws_rds_cluster.aurora_cluster[each.key].id
   instance_class      = "db.t3.medium"
-  engine              = aws_rds_cluster.aurora_cluster.engine
-  engine_version      = aws_rds_cluster.aurora_cluster.engine_version
+  engine              = aws_rds_cluster.aurora_cluster[each.key].engine
+  engine_version      = aws_rds_cluster.aurora_cluster[each.key].engine_version
   publicly_accessible = true
-  availability_zone   = count.index == 0 ? "ap-southeast-1b" : "ap-southeast-1c"  # Distribute across different AZs
-  promotion_tier      = count.index + 1  # Sets promotion priority (lower number = higher priority)
+  availability_zone   = "ap-southeast-1b"
+  promotion_tier      = 1
 }
