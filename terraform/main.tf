@@ -40,14 +40,16 @@ module "elasticache" {
 #   services = {
 #     account = {
 #       cluster_name = "account-cluster"
-#       db_endpoint  = module.rds.users_db_endpoint
+#       db_endpoint  = module.rds.account_db_endpoint
+#       # change app image later
 #       app_image    = "vincetyy/kickoff-users:latest"
 #       app_port     = 8081
 #       path_pattern = ["/api/v1/users*", "/api/v1/playerProfiles*"]
 #     }
 #     client = {
 #       cluster_name = "client-cluster"
-#       db_endpoint  = module.rds.tournaments_db_endpoint
+#       db_endpoint  = module.rds.client_db_endpoint
+#       # change app image later
 #       app_image    = "vincetyy/kickoff-tournaments:latest"
 #       app_port     = 8080
 #       path_pattern = ["/api/v1/tournaments*", "/api/v1/locations*"]

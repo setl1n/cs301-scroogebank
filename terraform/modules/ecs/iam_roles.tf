@@ -33,26 +33,6 @@ resource "aws_iam_role" "ecs_tasks_role" {
   assume_role_policy = data.aws_iam_policy_document.assume_role_tasks.json
 }
 
-resource "aws_iam_role_policy" "service_discovery_policy" {
-  name = "service-discovery-policy"
-  role = aws_iam_role.ecs_tasks_role.name
-  policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Action" : [
-          "servicediscovery:RegisterInstance",
-          "servicediscovery:DeregisterInstance",
-          "servicediscovery:ListNamespaces",
-          "servicediscovery:GetService",
-          "servicediscovery:DiscoverInstances"
-        ],
-        "Resource" : "*"
-      }
-    ]
-  })
-}
 
 resource "aws_iam_role_policy_attachment" "task_execution_role_policy_attachment" {
   role       = aws_iam_role.ecs_tasks_role.name
