@@ -26,13 +26,6 @@ resource "aws_ecs_task_definition" "app" {
     DATABASE_NAME     = var.database_name
     DATABASE_USER     = var.database_username
     DATABASE_PASSWORD = var.database_password
-
-    CLUBS_SERVICE_BASE_URL = "http://clubs.${var.service_discovery_namespace_name}:${var.services["clubs"].app_port}/api/v1/clubs/"
-    OPENAI_API_KEY         = var.openai_api_key
-    JWT_SECRET_KEY         = var.jwt_secret_key
-    S3_AWS_ACCESS_KEY      = var.s3_access_key
-    S3_AWS_SECRET_KEY      = var.s3_secret_key
-    STRIPE_WEBHOOK_SECRET  = var.stripe_webhook_secret
   })
 }
 

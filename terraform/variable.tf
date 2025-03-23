@@ -15,3 +15,21 @@ variable "DATABASE_PASSWORD" {
   type        = string
   sensitive   = true
 }
+
+variable "applications" {
+  description = "Map of applications with their configurations"
+  type = map(object({
+    identifier = string
+  }))
+  default = {
+    client = {
+      identifier = "client-db"
+    },
+    account = {
+      identifier = "account-db"
+    },
+    transaction = {
+      identifier = "transaction-db"
+    },
+  }
+}

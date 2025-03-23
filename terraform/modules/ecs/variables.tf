@@ -21,7 +21,7 @@ variable "vpc_id" {
 variable "aws_region" {
   type        = string
   description = "The region to deploy your apps to"
-  default     = "ap-southeast-1" # Singapore
+  default     = "ap-southeast-1"
 }
 
 variable "app_count" {
@@ -48,11 +48,6 @@ variable "fargate_memory" {
   default     = "512"
 }
 
-variable "service_discovery_namespace_name" {
-  type        = string
-  description = "Namespace name for service discovery"
-  default     = "internal.local"
-}
 
 variable "database_name" {
   type        = string
@@ -70,41 +65,6 @@ variable "database_password" {
   description = "Password to connect to the database"
   sensitive   = true
 }
-variable "openai_api_key" {
-  type        = string
-  description = "OpenAI API Key"
-  sensitive   = true
-}
-variable "jwt_secret_key" {
-  type        = string
-  description = "JWT Secret Key"
-  sensitive   = true
-}
-
-variable "acm_certificate_arn" {
-  type        = string
-  description = "arn of the ACM certificate"
-  sensitive   = true
-}
-
-variable "s3_access_key" {
-  type        = string
-  description = "AWS Access Key for S3 access"
-  sensitive   = true
-}
-
-variable "s3_secret_key" {
-  type        = string
-  description = "AWS Secret Key for S3 access"
-  sensitive   = true
-}
-
-variable "stripe_webhook_secret" {
-  type        = string
-  description = "Stripe webhook secret"
-  sensitive   = true
-}
-
 
 variable "services" {
   type = map(object({

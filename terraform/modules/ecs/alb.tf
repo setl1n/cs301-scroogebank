@@ -16,7 +16,7 @@ resource "aws_alb_listener" "alb_http_listener" {
     redirect {
       port        = "443"
       protocol    = "HTTPS"
-      status_code = "HTTP_301" # Permanent redirect
+      status_code = "HTTP_301"
     }
   }
 }
@@ -26,8 +26,6 @@ resource "aws_alb_listener" "alb_https_listener" {
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
-
-  certificate_arn = var.acm_certificate_arn
 
   default_action {
     type = "fixed-response"

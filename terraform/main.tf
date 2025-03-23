@@ -2,29 +2,28 @@ module "network" {
   source = "./modules/network"
 }
 
-module "rds" {
-  source            = "./modules/rds"
-  security_group_id = module.network.db_sg_id
-  # For testing purposes, change back to module.network.db_subnet_group_name on prod
-  db_subnet_group_name = module.network.db_subnet_group_name
 
-  # Database Connection Credentials
-  database_name     = var.DATABASE_NAME
-  database_username = var.DATABASE_USERNAME
-  database_password = var.DATABASE_PASSWORD
+module "elasticache" {
+  source              = "./modules/elasticache"
+  security_group_id   = module.network.db_sg_id
+  db_subnet_group_ids = module.network.db_subnet_group_ids
 
-  applications = {
-    client = {
-      identifier = "client-db"
-    },
-    account = {
-      identifier = "account-db"
-    },
-    transaction = {
-      identifier = "transaction-db"
-    },
-  }
+  applications = var.applications
 }
+
+# module "rds" {
+#   source            = "./modules/rds"
+#   security_group_id = module.network.db_sg_id
+#   # For testing purposes, change back to module.network.db_subnet_group_name on prod
+#   db_subnet_group_name = module.network.db_subnet_group_name
+
+#   # Database Connection Credentials
+#   database_name     = var.DATABASE_NAME
+#   database_username = var.DATABASE_USERNAME
+#   database_password = var.DATABASE_PASSWORD
+
+#   applications = = var.applications
+# }
 
 # module "ecs" {
 #   source            = "./modules/ecs"
@@ -34,44 +33,24 @@ module "rds" {
 #   public_subnet_ids = module.network.public_subnet_ids
 
 #   # Database Connection Credentials
-#   database_name     = var.database_name
+#   database_name     = var.DATABASE_NAME
 #   database_username = var.DATABASE_USERNAME
 #   database_password = var.DATABASE_PASSWORD
 
-#   acm_certificate_arn   = var.ACM_CERTIFICATE_ARN
-#   openai_api_key        = var.OPENAI_API_KEY
-#   jwt_secret_key        = var.JWT_SECRET_KEY
-#   s3_access_key         = var.S3_AWS_ACCESS_KEY
-#   s3_secret_key         = var.S3_AWS_SECRET_KEY
-
 #   services = {
-#     users = {
-#       cluster_name = "users-cluster"
+#     account = {
+#       cluster_name = "account-cluster"
 #       db_endpoint  = module.rds.users_db_endpoint
 #       app_image    = "vincetyy/kickoff-users:latest"
 #       app_port     = 8081
 #       path_pattern = ["/api/v1/users*", "/api/v1/playerProfiles*"]
 #     }
-#     tournaments = {
-#       cluster_name = "tournaments-cluster"
+#     client = {
+#       cluster_name = "client-cluster"
 #       db_endpoint  = module.rds.tournaments_db_endpoint
 #       app_image    = "vincetyy/kickoff-tournaments:latest"
 #       app_port     = 8080
 #       path_pattern = ["/api/v1/tournaments*", "/api/v1/locations*"]
-#     }
-#     clubs = {
-#       cluster_name = "clubs-cluster"
-#       db_endpoint  = module.rds.clubs_db_endpoint
-#       app_image    = "vincetyy/kickoff-clubs:latest"
-#       app_port     = 8082
-#       path_pattern = ["/api/v1/clubs*"]
-#     }
-#     chatbot = {
-#       cluster_name = "chatbot-cluster"
-#       db_endpoint  = ""
-#       app_image    = "vincetyy/kickoff-chatbot:latest"
-#       app_port     = 8000
-#       path_pattern = ["/api/v1/chatbot*"]
 #     }
 #   }
 # }
