@@ -1,0 +1,173 @@
+name: Build and Deploy Static Website to S3
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+  pull_request:
+    paths:
+      - 'frontend/**'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read # This is required for actions/checkout
+  pull-requests: write # This is required for gh bot to comment PR
+
+jobs:
+  setup-and-build:
+    runs-on: ubuntu-latest   
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'  # Adjust as needed
+
+    - name: Install Dependencies
+      run: |
+        cd frontend
+        npm install
+    
+    # add env later on if required
+    - name: Build Project with Environment Variables
+      id: build
+      run: |
+        cd frontend
+        npm run build 2>&1 | tee build_output.txt
+        if [ ${PIPESTATUS[0]} -ne 0 ]; then
+          echo "build_failed=true" >> $GITHUB_OUTPUT
+          echo "build_logs<<EOF" >> $GITHUB_OUTPUT
+          cat build_output.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+
+      continue-on-error: true
+
+    - name: Comment on PR if Build Fails
+      if: steps.build.outcome == 'failure' && github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          // First, fetch all comments on the PR
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          
+          // Filter and delete comments made by the GitHub Actions bot
+          const botComments = comments.filter(comment => {
+            return comment.user.type === 'Bot' && 
+                   comment.body.includes('Frontend Build Status');
+          });
+          
+          // Delete each previous bot comment
+          for (const comment of botComments) {
+            await github.rest.issues.deleteComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: comment.id
+            });
+            console.log(`Deleted comment ${comment.id}`);
+          }
+          
+          // Get build logs
+          const buildLogs = `${{ steps.build.outputs.build_logs }}`;
+          const truncatedLogs = buildLogs.length > 10000 ? buildLogs.substring(0, 10000) + "\n... [logs truncated due to size]" : buildLogs;
+          
+          // Create the new comment
+          const output = `## Frontend Build Status ❌
+          ---
+          ### Build Failed
+          
+          The frontend build process failed. Please check the error logs below:
+          
+          <details><summary>Show Build Logs</summary>
+          
+          \`\`\`
+          ${truncatedLogs}
+          \`\`\`
+          
+          </details>
+          
+          *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+
+    - name: Comment on PR if Build Succeeds
+      if: steps.build.outcome == 'success' && github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          // First, fetch all comments on the PR
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          
+          // Filter and delete comments made by the GitHub Actions bot
+          const botComments = comments.filter(comment => {
+            return comment.user.type === 'Bot' && 
+                   comment.body.includes('Frontend Build Status');
+          });
+          
+          // Delete each previous bot comment
+          for (const comment of botComments) {
+            await github.rest.issues.deleteComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: comment.id
+            });
+            console.log(`Deleted comment ${comment.id}`);
+          }
+          
+          // Create the new comment
+          const output = `## Frontend Build Status ✅
+          ---
+          ### Build Successful
+          
+          The frontend build process completed successfully. The changes are ready for review.
+          
+          *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+            
+    - name: Check Build Status
+      if: steps.build.outcome == 'failure'
+      run: exit 1
+            
+    - name: Configure AWS Credentials
+      if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Sync Built Files to S3
+      if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      run: |
+        aws s3 sync frontend/dist s3://${{ secrets.FRONTEND_S3_BUCKET }} --delete --acl public-read
+
+    - name: Invalidate CloudFront Cache
+      if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      run: |
+        aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
