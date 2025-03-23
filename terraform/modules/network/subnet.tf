@@ -23,7 +23,7 @@ resource "aws_subnet" "public_subnet_b" {
 resource "aws_subnet" "private_app_subnet_a" {
   vpc_id                  = aws_vpc.vpc.id
   availability_zone       = "ap-southeast-1a"
-  cidr_block              = cidrsubnet(aws_vpc.vpc.cidr_block, 4, 4)
+  cidr_block              = cidrsubnet(aws_vpc.vpc.cidr_block, 4, 3)
   map_public_ip_on_launch = false
 
   tags = {
@@ -34,7 +34,7 @@ resource "aws_subnet" "private_app_subnet_a" {
 resource "aws_subnet" "private_app_subnet_b" {
   vpc_id                  = aws_vpc.vpc.id
   availability_zone       = "ap-southeast-1b"
-  cidr_block              = cidrsubnet(aws_vpc.vpc.cidr_block, 4, 4)
+  cidr_block              = cidrsubnet(aws_vpc.vpc.cidr_block, 4, 5)
   map_public_ip_on_launch = false
 
   tags = {
@@ -45,7 +45,7 @@ resource "aws_subnet" "private_app_subnet_b" {
 resource "aws_subnet" "private_database_subnet_a" {
   vpc_id                  = aws_vpc.vpc.id
   availability_zone       = "ap-southeast-1a"
-  cidr_block              = cidrsubnet(aws_vpc.vpc.cidr_block, 4, 4)
+  cidr_block              = cidrsubnet(aws_vpc.vpc.cidr_block, 4, 6)
   map_public_ip_on_launch = false
 
   tags = {
@@ -56,7 +56,7 @@ resource "aws_subnet" "private_database_subnet_a" {
 resource "aws_subnet" "private_database_subnet_b" {
   vpc_id                  = aws_vpc.vpc.id
   availability_zone       = "ap-southeast-1b"
-  cidr_block              = cidrsubnet(aws_vpc.vpc.cidr_block, 4, 4)
+  cidr_block              = cidrsubnet(aws_vpc.vpc.cidr_block, 4, 7)
   map_public_ip_on_launch = false
 
   tags = {
