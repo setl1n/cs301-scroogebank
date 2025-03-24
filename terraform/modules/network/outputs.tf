@@ -14,10 +14,14 @@ output "db_subnet_group_name" {
   value = aws_db_subnet_group.db_subnet_group.name
 }
 
+output "db_subnet_group_ids" {
+  value = aws_db_subnet_group.db_subnet_group.subnet_ids
+}
+
 output "vpc_id" {
   value = aws_vpc.vpc.id
 }
 
 output "public_subnet_ids" {
-  value = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
+  value = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id]
 }

@@ -64,9 +64,16 @@ jobs:
 
       - name: Terraform Plan
         id: plan
+        env:
+          DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
         run: |
           terraform plan \
-            -no-color
+            -no-color \
+            -var "DATABASE_USERNAME=${DATABASE_USERNAME}" \
+            -var "DATABASE_PASSWORD=${DATABASE_PASSWORD}" \
+            -var "DATABASE_NAME=${DATABASE_NAME}"
         if: github.event_name == 'pull_request'
         continue-on-error: true
 
@@ -77,7 +84,33 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            // First, fetch all comments on the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            // Filter and delete comments made by the GitHub Actions bot
+            const botComments = comments.filter(comment => {
+              return comment.user.type === 'Bot' && 
+                     comment.body.includes('Terraform Format and Style');
+            });
+            
+            // Delete each previous bot comment
+            for (const comment of botComments) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: comment.id
+              });
+              console.log(`Deleted comment ${comment.id}`);
+            }
+            
+            // Create the new comment
+            const output = `## Terraform Infrastructure Deployment 🚀
+            ---
+            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
             <details><summary>Validation Output</summary>
@@ -112,8 +145,15 @@ jobs:
         run: exit 1
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
         run: |
           terraform apply \
             -auto-approve \
+            -var "DATABASE_USERNAME=${DATABASE_USERNAME}" \
+            -var "DATABASE_PASSWORD=${DATABASE_PASSWORD}" \
+            -var "DATABASE_NAME=${DATABASE_NAME}" \
             -input=false

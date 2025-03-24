@@ -26,13 +26,6 @@ resource "aws_ecs_task_definition" "app" {
     DATABASE_NAME     = var.database_name
     DATABASE_USER     = var.database_username
     DATABASE_PASSWORD = var.database_password
-
-    CLUBS_SERVICE_BASE_URL = "http://clubs.${var.service_discovery_namespace_name}:${var.services["clubs"].app_port}/api/v1/clubs/"
-    OPENAI_API_KEY         = var.openai_api_key
-    JWT_SECRET_KEY         = var.jwt_secret_key
-    S3_AWS_ACCESS_KEY      = var.s3_access_key
-    S3_AWS_SECRET_KEY      = var.s3_secret_key
-    STRIPE_WEBHOOK_SECRET  = var.stripe_webhook_secret
   })
 }
 
@@ -55,10 +48,6 @@ resource "aws_ecs_service" "app" {
     target_group_arn = aws_alb_target_group.app[each.key].id
     container_name   = each.key
     container_port   = each.value.app_port
-  }
-
-  service_registries {
-    registry_arn = aws_service_discovery_service.service[each.key].arn
   }
 
   depends_on = [aws_alb_listener.alb_https_listener, aws_iam_role_policy_attachment.task_execution_role_policy_attachment]
