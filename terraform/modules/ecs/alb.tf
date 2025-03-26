@@ -1,3 +1,7 @@
+# Application Load Balancer configuration for ECS services
+# This file defines the ALB, listeners, target groups, and routing rules
+
+# Main application load balancer that will distribute traffic to our services
 resource "aws_alb" "main" {
   name                 = "lb"
   subnets              = var.public_subnet_ids
@@ -5,7 +9,7 @@ resource "aws_alb" "main" {
   preserve_host_header = true
 }
 
-# This tells the load balancer to listen on a specific port and forward traffic to a target group
+# HTTP listener that redirects all traffic to HTTPS for security
 resource "aws_alb_listener" "alb_http_listener" {
   load_balancer_arn = aws_alb.main.arn
   port              = 80
@@ -21,6 +25,8 @@ resource "aws_alb_listener" "alb_http_listener" {
   }
 }
 
+# HTTPS listener that handles encrypted traffic and forwards to appropriate target groups
+# Default action returns 404 if no matching rule is found
 resource "aws_alb_listener" "alb_https_listener" {
   load_balancer_arn = aws_alb.main.arn
   port              = 443
@@ -37,6 +43,8 @@ resource "aws_alb_listener" "alb_https_listener" {
   }
 }
 
+# Target groups for each service - these are the destinations for traffic from the load balancer
+# Each target group contains health check configuration to ensure traffic is only sent to healthy instances
 resource "aws_alb_target_group" "app" {
   for_each = var.services
 
@@ -57,6 +65,8 @@ resource "aws_alb_target_group" "app" {
   }
 }
 
+# Listener rules that determine which requests go to which target groups
+# Based on path patterns defined in the services variable
 resource "aws_lb_listener_rule" "app" {
   for_each     = var.services
   listener_arn = aws_alb_listener.alb_https_listener.arn

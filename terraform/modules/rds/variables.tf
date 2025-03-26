@@ -1,3 +1,6 @@
+#----------------------------------------
+# Network Configuration Variables
+#----------------------------------------
 variable "security_group_id" {
   type        = string
   description = "Security Group ID to be used by the DB"
@@ -8,6 +11,9 @@ variable "db_subnet_group_name" {
   description = "Subnet Group Name to be used by the DB"
 }
 
+#----------------------------------------
+# Database Connection Variables
+#----------------------------------------
 variable "database_name" {
   type        = string
   description = "The name of the database"
@@ -23,6 +29,11 @@ variable "database_password" {
   description = "value of the password for the database"
 }
 
+#----------------------------------------
+# Application Configuration
+# This allows for dynamic creation of multiple database clusters
+# based on the applications map provided
+#----------------------------------------
 variable "applications" {
   description = "Map of applications with their configurations"
   type = map(object({

@@ -1,4 +1,6 @@
 # AWS WAF Web ACL with AWS Managed Rules for CloudFront protection
+# Web Application Firewall (WAF) helps protect web applications from common web exploits
+# When attached to CloudFront, it filters malicious traffic before it reaches your origin
 resource "aws_wafv2_web_acl" "waf_acl" {
   provider    = aws.us-east-1
   name        = "cloudfront-waf"
@@ -10,6 +12,7 @@ resource "aws_wafv2_web_acl" "waf_acl" {
   }
 
   # Core rule set - Provides protection against common web exploits
+  # Includes rules for XSS, path traversal, remote code execution, and other OWASP Top 10 vulnerabilities
   rule {
     name     = "AWS-AWSManagedRulesCommonRuleSet"
     priority = 0
@@ -33,6 +36,7 @@ resource "aws_wafv2_web_acl" "waf_acl" {
   }
 
   # SQL Injection rule set - Provides protection against SQL injection attacks
+  # Analyzes web requests for malicious SQL code that could extract or modify database data
   rule {
     name     = "AWS-AWSManagedRulesSQLiRuleSet"
     priority = 1

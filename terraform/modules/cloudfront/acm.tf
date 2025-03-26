@@ -1,5 +1,6 @@
 # ACM Certificate for CloudFront distributions
-# Must be provisioned in us-east-1 region for use with CloudFront
+# AWS Certificate Manager (ACM) provides SSL/TLS certificates for use with AWS services
+# CloudFront requires certificates to be created in the us-east-1 region regardless of your application's region
 resource "aws_acm_certificate" "cert" {
   provider          = aws.us-east-1
   domain_name       = "*.${var.certificate_domain}"
@@ -15,6 +16,8 @@ resource "aws_acm_certificate" "cert" {
 }
 
 # Certificate validation to ensure ACM certificate is validated before use
+# DNS validation creates DNS records in Route53 to prove domain ownership
+# This validation must complete successfully before the certificate can be used with CloudFront
 resource "aws_acm_certificate_validation" "cert_validation" {
   provider                = aws.us-east-1
   certificate_arn         = aws_acm_certificate.cert.arn

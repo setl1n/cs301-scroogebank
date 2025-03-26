@@ -1,12 +1,14 @@
+# Primary S3 bucket resources
+# Creates a bucket for each entry in the var.buckets map
 resource "aws_s3_bucket" "bucket" {
   for_each = var.buckets
 
   bucket        = each.value.name
   force_destroy = true
-
 }
 
 # Website configuration for website buckets
+# Only applied to buckets where is_website = true
 resource "aws_s3_bucket_website_configuration" "website" {
   for_each = {
     for k, v in var.buckets : k => v if v.is_website
@@ -24,6 +26,7 @@ resource "aws_s3_bucket_website_configuration" "website" {
 }
 
 # Ownership controls for all buckets
+# Sets the object ownership to "BucketOwnerPreferred" to simplify permissions
 resource "aws_s3_bucket_ownership_controls" "bucket_ownership" {
   for_each = var.buckets
 
@@ -35,6 +38,7 @@ resource "aws_s3_bucket_ownership_controls" "bucket_ownership" {
 }
 
 # Public access policy for website buckets
+# Creates IAM policies that allow public read access for website content
 resource "aws_s3_bucket_policy" "website_policy" {
   for_each = {
     for k, v in var.buckets : k => v if v.is_website
@@ -63,6 +67,7 @@ resource "aws_s3_bucket_policy" "website_policy" {
 }
 
 # Allow public access settings for website buckets
+# Disables all public access blocks to allow website access
 resource "aws_s3_bucket_public_access_block" "website_buckets" {
   for_each = {
     for k, v in var.buckets : k => v if v.is_website
@@ -77,6 +82,7 @@ resource "aws_s3_bucket_public_access_block" "website_buckets" {
 }
 
 # Block public access for private buckets
+# Enables all public access blocks for non-website buckets for security
 resource "aws_s3_bucket_public_access_block" "private_buckets" {
   for_each = {
     for k, v in var.buckets : k => v if !v.is_website

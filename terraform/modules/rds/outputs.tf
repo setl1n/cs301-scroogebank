@@ -1,4 +1,6 @@
 # Dynamic outputs for all configured databases
+# These endpoints are used for connecting application services to their respective databases
+# Each application gets its own database endpoint based on the configuration
 output "db_endpoints" {
   value = {
     for app_key, app in var.applications :

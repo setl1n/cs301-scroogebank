@@ -1,10 +1,17 @@
+#--------------------------------------------------------------
 # VPC Resources
+# These outputs expose the VPC identifiers for use in other modules
+#--------------------------------------------------------------
 output "vpc_id" {
   value       = aws_vpc.vpc.id
   description = "The ID of the VPC"
 }
 
+#--------------------------------------------------------------
 # Subnet Resources
+# These outputs expose the subnet identifiers to enable resources
+# to be created in the appropriate network segments
+#--------------------------------------------------------------
 output "public_subnet_ids" {
   value       = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id]
   description = "List of public subnet IDs"
@@ -20,7 +27,11 @@ output "private_lambda_subnet_ids" {
   description = "List of lambda subnet IDs"
 }
 
+#--------------------------------------------------------------
 # Security Group Resources
+# These outputs expose security group identifiers for attaching
+# to various resources requiring network access controls
+#--------------------------------------------------------------
 output "ecs_tasks_sg_id" {
   value       = aws_security_group.ecs_tasks_sg.id
   description = "Security group ID for ECS tasks"
@@ -41,7 +52,10 @@ output "lambda_sg_id" {
   description = "Security group ID for Lambda functions"
 }
 
+#--------------------------------------------------------------
 # Database Subnet Resources
+# These outputs expose database subnet configuration for RDS instances
+#--------------------------------------------------------------
 output "db_subnet_group_name" {
   value       = aws_db_subnet_group.db_subnet_group.name
   description = "Name of the database subnet group"

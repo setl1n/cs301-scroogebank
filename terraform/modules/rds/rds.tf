@@ -1,5 +1,7 @@
 #----------------------------------------
 # Aurora PostgreSQL Clusters
+# Creates a cluster for each application defined in var.applications
+# Uses PostgreSQL 15.4 with encryption enabled
 #----------------------------------------
 resource "aws_rds_cluster" "aurora_cluster" {
   for_each               = var.applications
@@ -18,6 +20,8 @@ resource "aws_rds_cluster" "aurora_cluster" {
 
 #----------------------------------------
 # Database Instances - Writers
+# Creates a primary DB instance in ap-southeast-1a for each cluster
+# These instances handle write operations and serve as the primary endpoint
 #----------------------------------------
 resource "aws_rds_cluster_instance" "aurora_writer" {
   for_each            = var.applications
@@ -33,6 +37,9 @@ resource "aws_rds_cluster_instance" "aurora_writer" {
 
 #----------------------------------------
 # Database Instances - Readers
+# Creates read replicas in ap-southeast-1b
+# These replicas help distribute read load across multiple instances
+# and provide high availability
 #----------------------------------------
 # resource "aws_rds_cluster_instance" "aurora_readers" {
 #   for_each = var.applications

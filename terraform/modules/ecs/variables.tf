@@ -1,3 +1,7 @@
+# ---------------------------------------------------------------------------------------------------------------------
+# NETWORK CONFIGURATION
+# These variables define the network infrastructure where ECS will be deployed
+# ---------------------------------------------------------------------------------------------------------------------
 variable "public_subnet_ids" {
   type        = list(string)
   description = "List of public subnet ids"
@@ -18,12 +22,19 @@ variable "vpc_id" {
   description = "VPC's id"
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# REGION CONFIGURATION
+# ---------------------------------------------------------------------------------------------------------------------
 variable "aws_region" {
   type        = string
   description = "The region to deploy your apps to"
   default     = "ap-southeast-1"
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# APPLICATION DEPLOYMENT CONFIGURATION
+# These variables control how the application is deployed and monitored
+# ---------------------------------------------------------------------------------------------------------------------
 variable "app_count" {
   type        = number
   description = "Number of docker containers to run"
@@ -36,6 +47,10 @@ variable "health_check_path" {
   description = "Health check path of the app"
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# FARGATE RESOURCE CONFIGURATION
+# These variables define the compute resources allocated to the containers
+# ---------------------------------------------------------------------------------------------------------------------
 variable "fargate_cpu" {
   type        = string
   description = "Fargate instance CPU units to provision (1 vCPU = 1024 CPU units)"
@@ -48,7 +63,10 @@ variable "fargate_memory" {
   default     = "512"
 }
 
-
+# ---------------------------------------------------------------------------------------------------------------------
+# DATABASE CONFIGURATION
+# These variables define the database connection parameters
+# ---------------------------------------------------------------------------------------------------------------------
 variable "database_name" {
   type        = string
   description = "Name of the database"
@@ -66,6 +84,10 @@ variable "database_password" {
   sensitive   = true
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# SERVICE CONFIGURATION
+# This map defines the services to be deployed, their configurations and routing rules
+# ---------------------------------------------------------------------------------------------------------------------
 variable "services" {
   type = map(object({
     cluster_name = string
