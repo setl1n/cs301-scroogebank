@@ -16,6 +16,12 @@ variable "DATABASE_PASSWORD" {
   sensitive   = true
 }
 
+variable "DOMAIN_NAME" {
+  description = "Domain name"
+  type        = string
+  sensitive   = true
+}
+
 variable "applications" {
   description = "Map of applications with their configurations"
   type = map(object({
@@ -84,16 +90,16 @@ variable "lambda_functions" {
 variable "s3_buckets" {
   description = "Map of S3 buckets to create with their configurations"
   type = map(object({
-    name            = string
-    is_website      = bool
-    index_document  = optional(string, "index.html")
-    error_document  = optional(string, "index.html")
+    name           = string
+    is_website     = bool
+    index_document = optional(string, "index.html")
+    error_document = optional(string, "index.html")
   }))
-  
+
   default = {
     main_frontend = {
-      name           = "cs301g2t1-main-frontend-bucket"
-      is_website     = true
+      name       = "cs301g2t1-main-frontend-bucket"
+      is_website = true
     },
     verification_frontend = {
       name       = "cs301g2t1-verification-frontend-bucket"

@@ -51,30 +51,26 @@
 
 module "s3" {
   source = "./modules/s3"
-  
+
   buckets = var.s3_buckets
 }
 
 # New CloudFront module for website buckets
 module "cloudfront" {
   source = "./modules/cloudfront"
-  
-  # Map S3 website buckets to CloudFront configuration
+
   s3_website_buckets = {
     for name, endpoint in module.s3.website_endpoints : name => {
       bucket_id        = module.s3.bucket_ids[name]
       website_endpoint = endpoint
-      
-      # Optional custom configurations
-      domain_name = "${replace(name, "_", "-")}.itsag2t1.com"  # Replace underscores with hyphens
+
+      domain_name         = "${replace(name, "_", "-")}.${var.DOMAIN_NAME}"
       default_root_object = "index.html"
-      price_class      = "PriceClass_100"
+      price_class         = "PriceClass_100"
     }
   }
-  
-  # Uncomment and configure these if you want to use custom domains with HTTPS
-  create_certificate = true
-  certificate_domain = "itsag2t1.com"  # Main domain for the certificate
+
+  certificate_domain = var.DOMAIN_NAME
 }
 
 /*

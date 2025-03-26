@@ -1,12 +1,8 @@
 resource "aws_s3_bucket" "bucket" {
   for_each = var.buckets
-  
-  bucket = each.value.name
-  
-#   # Either set a static value
-#   lifecycle {
-#     prevent_destroy = true
-#   }
+
+  bucket        = each.value.name
+  force_destroy = true
 
 }
 
@@ -15,7 +11,7 @@ resource "aws_s3_bucket_website_configuration" "website" {
   for_each = {
     for k, v in var.buckets : k => v if v.is_website
   }
-  
+
   bucket = aws_s3_bucket.bucket[each.key].id
 
   index_document {
@@ -30,9 +26,9 @@ resource "aws_s3_bucket_website_configuration" "website" {
 # Ownership controls for all buckets
 resource "aws_s3_bucket_ownership_controls" "bucket_ownership" {
   for_each = var.buckets
-  
+
   bucket = aws_s3_bucket.bucket[each.key].id
-  
+
   rule {
     object_ownership = "BucketOwnerPreferred"
   }
@@ -43,17 +39,17 @@ resource "aws_s3_bucket_policy" "website_policy" {
   for_each = {
     for k, v in var.buckets : k => v if v.is_website
   }
-  
+
   # Add explicit dependency on the public access block
   depends_on = [aws_s3_bucket_public_access_block.website_buckets]
-  
+
   bucket = aws_s3_bucket.bucket[each.key].id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid = "PublicReadGetObject"
-        Effect = "Allow"
+        Sid       = "PublicReadGetObject"
+        Effect    = "Allow"
         Principal = "*"
         Action = [
           "s3:GetObject"
@@ -71,7 +67,7 @@ resource "aws_s3_bucket_public_access_block" "website_buckets" {
   for_each = {
     for k, v in var.buckets : k => v if v.is_website
   }
-  
+
   bucket = aws_s3_bucket.bucket[each.key].id
 
   block_public_acls       = false
@@ -85,7 +81,7 @@ resource "aws_s3_bucket_public_access_block" "private_buckets" {
   for_each = {
     for k, v in var.buckets : k => v if !v.is_website
   }
-  
+
   bucket = aws_s3_bucket.bucket[each.key].id
 
   block_public_acls       = true
