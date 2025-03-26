@@ -22,6 +22,12 @@ variable "DOMAIN_NAME" {
   sensitive   = true
 }
 
+variable "ROUTE53_ZONE_ID" {
+  description = "Hosted zone ID for Route53"
+  type        = string
+  sensitive   = true
+}
+
 variable "applications" {
   description = "Map of applications with their configurations"
   type = map(object({

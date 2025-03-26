@@ -1,3 +1,28 @@
+# General variables
+variable "environment" {
+  description = "Environment name (e.g., dev, staging, prod)"
+  type        = string
+  default     = "dev"
+}
+
+variable "common_tags" {
+  description = "Common tags to apply to all resources"
+  type        = map(string)
+  default     = {}
+}
+
+# Domain configuration
+variable "certificate_domain" {
+  description = "Domain name for SSL certificate (e.g., example.com)"
+  type        = string
+}
+
+variable "route53_zone_id" {
+  description = "Route53 hosted zone ID for DNS records"
+  type        = string
+}
+
+# S3 Website configuration
 variable "s3_website_buckets" {
   description = "Map of S3 website bucket configurations"
   type = map(object({
@@ -7,16 +32,4 @@ variable "s3_website_buckets" {
     price_class         = string
     domain_name         = string
   }))
-}
-
-variable "certificate_domain" {
-  description = "Domain name for SSL certificate"
-  type        = string
-  default     = ""
-}
-
-variable "route53_zone_id" {
-  description = "Route53 zone ID for certificate validation"
-  type        = string
-  default     = "Z03081603VBT4ADFWB3RC"
 }

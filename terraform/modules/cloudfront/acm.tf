@@ -1,9 +1,5 @@
-provider "aws" {
-  alias  = "us-east-1"
-  region = "us-east-1"
-}
-
-# ACM Certificate (must be in us-east-1 for CloudFront)
+# ACM Certificate for CloudFront distributions
+# Must be provisioned in us-east-1 region for use with CloudFront
 resource "aws_acm_certificate" "cert" {
   provider          = aws.us-east-1
   domain_name       = "*.${var.certificate_domain}"
@@ -14,11 +10,11 @@ resource "aws_acm_certificate" "cert" {
   }
 
   tags = {
-    Name = "CloudFront Certificate"
+    Name = "cloudfront-certificate"
   }
 }
 
-# Certificate validation resource
+# Certificate validation to ensure ACM certificate is validated before use
 resource "aws_acm_certificate_validation" "cert_validation" {
   provider                = aws.us-east-1
   certificate_arn         = aws_acm_certificate.cert.arn

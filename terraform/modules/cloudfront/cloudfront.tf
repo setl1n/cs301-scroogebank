@@ -1,4 +1,4 @@
-# CloudFront distributions for each website bucket
+# CloudFront distributions for S3 website buckets
 resource "aws_cloudfront_distribution" "s3_distribution" {
   for_each = var.s3_website_buckets
 
@@ -6,8 +6,10 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   is_ipv6_enabled     = true
   default_root_object = each.value.default_root_object
   price_class         = each.value.price_class
+  web_acl_id          = aws_wafv2_web_acl.waf_acl.arn
+  aliases             = [each.value.domain_name]
 
-  # S3 website origin
+  # S3 website origin configuration
   origin {
     domain_name = each.value.website_endpoint
     origin_id   = "S3-Website-${each.value.bucket_id}"
@@ -20,7 +22,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     }
   }
 
-  # Default cache behavior
+  # Default cache behavior settings
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
@@ -39,23 +41,22 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     max_ttl                = 86400
   }
 
+  # SSL certificate configuration
   viewer_certificate {
     acm_certificate_arn      = aws_acm_certificate.cert.arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
 
-  # Restrictions
+  # Geo restriction settings (none by default)
   restrictions {
     geo_restriction {
       restriction_type = "none"
     }
   }
 
-  aliases = [each.value.domain_name]
-
   tags = {
-    Name = "CloudFront-${each.key}"
+    Name = "cloudfront-${replace(each.key, "_", "-")}"
   }
 
   depends_on = [

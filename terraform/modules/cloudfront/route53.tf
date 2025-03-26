@@ -1,8 +1,9 @@
-# Get Route53 zone data
+# Get Route53 hosted zone data for DNS record management
 data "aws_route53_zone" "zone" {
   zone_id = var.route53_zone_id
 }
 
+# Certificate validation DNS records
 resource "aws_route53_record" "cert_validation" {
   for_each = {
     for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
@@ -19,6 +20,7 @@ resource "aws_route53_record" "cert_validation" {
   ttl     = 60
 }
 
+# DNS records pointing to CloudFront distributions
 resource "aws_route53_record" "cloudfront_records" {
   for_each = var.s3_website_buckets
 

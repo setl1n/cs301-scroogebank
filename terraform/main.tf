@@ -71,6 +71,7 @@ module "cloudfront" {
   }
 
   certificate_domain = var.DOMAIN_NAME
+  route53_zone_id    = var.ROUTE53_ZONE_ID
 }
 
 /*
