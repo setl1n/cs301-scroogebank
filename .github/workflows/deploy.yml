@@ -69,13 +69,15 @@ jobs:
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
           DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+          ROUTE53_ZONE_ID: ${{ secrets.ROUTE53_ZONE_ID }}
         run: |
           terraform plan \
             -no-color \
             -var "DATABASE_USERNAME=${DATABASE_USERNAME}" \
             -var "DATABASE_PASSWORD=${DATABASE_PASSWORD}" \
             -var "DATABASE_NAME=${DATABASE_NAME}" \
-            -var "DOMAIN_NAME=${DOMAIN_NAME}"
+            -var "DOMAIN_NAME=${DOMAIN_NAME}" \
+            -var "ROUTE53_ZONE_ID=${ROUTE53_ZONE_ID}"
         if: github.event_name == 'pull_request'
         continue-on-error: true
 
@@ -153,6 +155,7 @@ jobs:
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
           DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+          ROUTE53_ZONE_ID: ${{ secrets.ROUTE53_ZONE_ID }}
         run: |
           terraform apply \
             -auto-approve \
@@ -160,4 +163,5 @@ jobs:
             -var "DATABASE_PASSWORD=${DATABASE_PASSWORD}" \
             -var "DATABASE_NAME=${DATABASE_NAME}" \
             -var "DOMAIN_NAME=${DOMAIN_NAME}" \
+            -var "ROUTE53_ZONE_ID=${ROUTE53_ZONE_ID}" \
             -input=false
