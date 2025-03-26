@@ -68,12 +68,14 @@ jobs:
           DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
         run: |
           terraform plan \
             -no-color \
             -var "DATABASE_USERNAME=${DATABASE_USERNAME}" \
             -var "DATABASE_PASSWORD=${DATABASE_PASSWORD}" \
-            -var "DATABASE_NAME=${DATABASE_NAME}"
+            -var "DATABASE_NAME=${DATABASE_NAME}" \
+            -var "DOMAIN_NAME=${DOMAIN_NAME}"
         if: github.event_name == 'pull_request'
         continue-on-error: true
 
@@ -150,10 +152,12 @@ jobs:
           DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
         run: |
           terraform apply \
             -auto-approve \
             -var "DATABASE_USERNAME=${DATABASE_USERNAME}" \
             -var "DATABASE_PASSWORD=${DATABASE_PASSWORD}" \
             -var "DATABASE_NAME=${DATABASE_NAME}" \
+            -var "DOMAIN_NAME=${DOMAIN_NAME}" \
             -input=false
