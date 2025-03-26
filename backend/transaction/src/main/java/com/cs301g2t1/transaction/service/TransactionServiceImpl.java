@@ -2,16 +2,13 @@ package com.cs301g2t1.transaction.service;
 
 import com.cs301g2t1.transaction.model.Transaction;
 import com.cs301g2t1.transaction.repository.TransactionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.cs301g2t1.transaction.repository.TransactionRepositoryImpl;
+
 import java.util.List;
 
-@Service
 public class TransactionServiceImpl implements TransactionService {
 
-    @Autowired
-    private TransactionRepository transactionRepository;
+    private TransactionRepository transactionRepository = TransactionRepositoryImpl.getInstance();
 
     @Override
     public List<Transaction> getAllTransactions() {
@@ -24,7 +21,6 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseThrow(() -> new IllegalArgumentException("Transaction not found with ID: " + id));
     }
 
-    @Transactional
     @Override
     public Transaction createTransaction(Transaction transaction) {
         return transactionRepository.save(transaction);

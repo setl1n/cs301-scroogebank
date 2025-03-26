@@ -1,0 +1,82 @@
+variable "DATABASE_NAME" {
+  description = "Name of the database to create"
+  type        = string
+  sensitive   = true
+}
+
+variable "DATABASE_USERNAME" {
+  description = "Username for database access"
+  type        = string
+  sensitive   = true
+}
+
+variable "DATABASE_PASSWORD" {
+  description = "Password for database access"
+  type        = string
+  sensitive   = true
+}
+
+variable "applications" {
+  description = "Map of applications with their configurations"
+  type = map(object({
+    identifier = string
+  }))
+  default = {
+    # client = {
+    #   identifier = "client-db"
+    # },
+    # account = {
+    #   identifier = "account-db"
+    # },
+    transaction = {
+      identifier = "transaction-db"
+    },
+  }
+}
+
+variable "lambda_functions" {
+  description = "Configuration for Lambda functions"
+  type = map(object({
+    name        = string
+    handler     = string
+    runtime     = string
+    filename    = string
+    timeout     = optional(number, 10)
+    memory_size = optional(number, 128)
+
+    # Service flags
+    rds_enabled      = optional(bool, false)
+    ses_enabled      = optional(bool, false)
+    dynamodb_enabled = optional(bool, false)
+
+    # Environment variables (optional)
+    environment_variables = optional(map(string), {})
+  }))
+
+  default = {
+    transaction = {
+      name        = "transaction_lambda_function"
+      handler     = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
+      runtime     = "java21"
+      filename    = "../backend/transaction/target/transaction-1.0-SNAPSHOT.jar"
+      timeout     = 15
+      memory_size = 256
+      rds_enabled = true
+    }
+    # Example with other services
+    # notification_sender = {
+    #   name             = "notification-sender"
+    #   handler          = "index.handler"
+    #   runtime          = "nodejs18.x"
+    #   filename         = "${path.module}/lambda_functions/notification_sender.zip"
+    #   ses_enabled      = true
+    # }
+    # data_processor = {
+    #   name             = "data-processor"
+    #   handler          = "processor.handler"
+    #   runtime          = "python3.9"
+    #   filename         = "${path.module}/lambda_functions/data_processor.zip"
+    #   dynamodb_enabled = true
+    # }
+  }
+}

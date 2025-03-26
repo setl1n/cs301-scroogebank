@@ -1,7 +1,13 @@
 package com.cs301g2t1.transaction.repository;
 
 import com.cs301g2t1.transaction.model.Transaction;
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+import java.util.Optional;
 
-public interface TransactionRepository extends JpaRepository<Transaction, Long> {
+public interface TransactionRepository {
+    List<Transaction> findAll();
+    Optional<Transaction> findById(Long id);
+    Transaction save(Transaction transaction);
+    void deleteById(Long id);
+    boolean existsById(Long id);
 }

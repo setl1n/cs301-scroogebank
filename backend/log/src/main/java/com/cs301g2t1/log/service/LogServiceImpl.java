@@ -2,16 +2,14 @@ package com.cs301g2t1.log.service;
 
 import com.cs301g2t1.log.model.LogEntry;
 import com.cs301g2t1.log.repository.LogRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.cs301g2t1.log.repository.LogRepositoryImpl;
+
 import java.util.List;
 
-@Service
+
 public class LogServiceImpl implements LogService {
 
-    @Autowired
-    private LogRepository logRepository;
+    private LogRepository logRepository = LogRepositoryImpl.getInstance();
 
     @Override
     public List<LogEntry> getAllLogs() {
@@ -24,7 +22,6 @@ public class LogServiceImpl implements LogService {
                 .orElseThrow(() -> new IllegalArgumentException("Log not found with ID: " + id));
     }
 
-    @Transactional
     @Override
     public LogEntry createLog(LogEntry logEntry) {
         return logRepository.save(logEntry);

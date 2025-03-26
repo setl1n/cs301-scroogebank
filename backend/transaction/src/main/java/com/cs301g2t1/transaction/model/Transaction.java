@@ -1,6 +1,5 @@
 package com.cs301g2t1.transaction.model;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import jakarta.persistence.Entity;
@@ -28,7 +27,7 @@ public class Transaction {
     private TransactionType transactionType;
 
     @NotNull(message = "Amount is required")
-    private BigDecimal amount;
+    private double amount;
 
     @NotNull(message = "Transaction date is required")
     private LocalDate date;

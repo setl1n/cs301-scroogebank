@@ -1,0 +1,109 @@
+# Database Security Group
+resource "aws_security_group" "db_sg" {
+  name        = "db-sg"
+  description = "Security group for database instances"
+  vpc_id      = aws_vpc.vpc.id
+
+  tags = {
+    Name = "database-security-group"
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_db_ecs" {
+  security_group_id            = aws_security_group.db_sg.id
+  referenced_security_group_id = aws_security_group.ecs_tasks_sg.id
+  from_port                    = 5432
+  ip_protocol                  = "tcp"
+  to_port                      = 5432
+  description                  = "Allow PostgreSQL access from ECS tasks"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_mysql_lambda" {
+  security_group_id            = aws_security_group.db_sg.id
+  referenced_security_group_id = aws_security_group.lambda_sg.id
+  from_port                    = 5432
+  ip_protocol                  = "tcp"
+  to_port                      = 5432
+  description                  = "Allow PostgreSQL access from Lambda functions"
+}
+
+# Load Balancer Security Group
+resource "aws_security_group" "lb_sg" {
+  name        = "lb-sg"
+  description = "Security group for load balancers"
+  vpc_id      = aws_vpc.vpc.id
+
+  tags = {
+    Name = "loadbalancer-security-group"
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_http" {
+  security_group_id = aws_security_group.lb_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 80
+  ip_protocol       = "tcp"
+  to_port           = 80
+  description       = "Allow HTTP traffic from anywhere"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_https" {
+  security_group_id = aws_security_group.lb_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 443
+  ip_protocol       = "tcp"
+  to_port           = 443
+  description       = "Allow HTTPS traffic from anywhere"
+}
+
+resource "aws_vpc_security_group_egress_rule" "allow_traffic_ecs" {
+  security_group_id = aws_security_group.lb_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 8000
+  ip_protocol       = "tcp"
+  to_port           = 8082
+  description       = "Allow outbound traffic to ECS application ports"
+}
+
+# ECS Tasks Security Group
+resource "aws_security_group" "ecs_tasks_sg" {
+  name        = "ecs-tasks-sg"
+  description = "Allow inbound access from the ALB only"
+  vpc_id      = aws_vpc.vpc.id
+
+  tags = {
+    Name = "ecs-tasks-security-group"
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_traffic_from_lb" {
+  security_group_id            = aws_security_group.ecs_tasks_sg.id
+  referenced_security_group_id = aws_security_group.lb_sg.id
+  ip_protocol                  = "-1" # all protocols
+  description                  = "Allow all traffic from load balancer"
+}
+
+resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4_ecs" {
+  security_group_id = aws_security_group.ecs_tasks_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1" # all protocols
+  description       = "Allow all outbound traffic from ECS tasks"
+}
+
+# Lambda Security Group
+resource "aws_security_group" "lambda_sg" {
+  name        = "lambda-sg"
+  description = "Security group for Lambda functions"
+  vpc_id      = aws_vpc.vpc.id
+
+  tags = {
+    Name = "lambda-security-group"
+  }
+}
+
+resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4_lambda" {
+  security_group_id = aws_security_group.lambda_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1" # all protocols
+  description       = "Allow all outbound traffic from Lambda functions"
+}
