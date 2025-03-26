@@ -7,7 +7,7 @@ terraform {
   # Configuration parameters (bucket, key, region) should be provided via CLI or config file
   backend "s3" {
   }
-  
+
   # Define provider requirements
   required_providers {
     aws = {
@@ -15,7 +15,7 @@ terraform {
       version = "~> 5.0"
     }
   }
-  
+
   # Ensure compatible Terraform CLI version
   required_version = ">= 1.2.0"
 }
@@ -26,5 +26,5 @@ terraform {
 #--------------------------------------------------------------
 provider "aws" {
   alias  = "default"
-  region = "ap-southeast-1"  # Singapore region
+  region = "ap-southeast-1" # Singapore region
 }
