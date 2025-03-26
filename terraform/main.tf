@@ -1,52 +1,58 @@
-module "network" {
-  source = "./modules/network"
-}
+# module "network" {
+#   source = "./modules/network"
+# }
 
-module "rds" {
-  source               = "./modules/rds"
-  security_group_id    = module.network.db_sg_id
-  db_subnet_group_name = module.network.db_subnet_group_name
+# module "rds" {
+#   source               = "./modules/rds"
+#   security_group_id    = module.network.db_sg_id
+#   db_subnet_group_name = module.network.db_subnet_group_name
 
-  # Database Connection Credentials
-  database_name     = var.DATABASE_NAME
-  database_username = var.DATABASE_USERNAME
-  database_password = var.DATABASE_PASSWORD
+#   # Database Connection Credentials
+#   database_name     = var.DATABASE_NAME
+#   database_username = var.DATABASE_USERNAME
+#   database_password = var.DATABASE_PASSWORD
 
-  applications = var.applications
-}
+#   applications = var.applications
+# }
 
-module "lambda" {
-  source = "./modules/lambda"
+# module "lambda" {
+#   source = "./modules/lambda"
 
-  private_lambda_subnet_ids = module.network.private_lambda_subnet_ids
-  lambda_sg_id              = module.network.lambda_sg_id
+#   private_lambda_subnet_ids = module.network.private_lambda_subnet_ids
+#   lambda_sg_id              = module.network.lambda_sg_id
 
-  # Define multiple Lambda functions with different use cases
-  lambda_functions = {
-    for name, config in var.lambda_functions : name => merge(config, {
-      source_code_hash = filebase64sha256(config.filename)
+#   # Define multiple Lambda functions with different use cases
+#   lambda_functions = {
+#     for name, config in var.lambda_functions : name => merge(config, {
+#       source_code_hash = filebase64sha256(config.filename)
 
-      # Add dynamic configurations based on service flags
-      rds_config = config.rds_enabled ? {
-        database_host = module.rds.db_endpoints[name]
-        database_name = var.DATABASE_NAME
-        database_user = var.DATABASE_USERNAME
-        database_pass = var.DATABASE_PASSWORD
-      } : null,
+#       # Add dynamic configurations based on service flags
+#       rds_config = config.rds_enabled ? {
+#         database_host = module.rds.db_endpoints[name]
+#         database_name = var.DATABASE_NAME
+#         database_user = var.DATABASE_USERNAME
+#         database_pass = var.DATABASE_PASSWORD
+#       } : null,
 
-      # Add SES configuration if enabled
-      ses_config = config.ses_enabled ? {
-        region     = "ap-southeast-1"
-        from_email = "notifications@yourdomain.com"
-      } : null,
+#       # Add SES configuration if enabled
+#       ses_config = config.ses_enabled ? {
+#         region     = "ap-southeast-1"
+#         from_email = "notifications@yourdomain.com"
+#       } : null,
 
-      # Add DynamoDB configuration if enabled  
-      dynamodb_config = config.dynamodb_enabled ? {
-        region     = "ap-southeast-1"
-        table_name = "${name}-table"
-      } : null,
-    })
-  }
+#       # Add DynamoDB configuration if enabled  
+#       dynamodb_config = config.dynamodb_enabled ? {
+#         region     = "ap-southeast-1"
+#         table_name = "${name}-table"
+#       } : null,
+#     })
+#   }
+# }
+
+module "s3" {
+  source = "./modules/s3"
+  
+  buckets = var.s3_buckets
 }
 
 /*
