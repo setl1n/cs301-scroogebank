@@ -90,13 +90,13 @@ variable "database_password" {
 # ---------------------------------------------------------------------------------------------------------------------
 variable "services" {
   type = map(object({
-    cluster_name = string
-    db_endpoint  = string
+    cluster_name   = string
+    db_endpoint    = string
     redis_endpoint = string
-    redis_port = string
-    app_image    = string
-    app_port     = number
-    path_pattern = list(string)
+    redis_port     = string
+    app_image      = string
+    app_port       = number
+    path_pattern   = list(string)
   }))
 }
 
