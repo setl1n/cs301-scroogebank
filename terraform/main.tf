@@ -98,7 +98,7 @@ module "ecs" {
 
   route53_zone_id = var.ROUTE53_ZONE_ID
 
-
+  depends_on = [module.acm.ap_certificate_validation_id]
 
   # Services map defining ECS service requirements for each app component
   services = {
