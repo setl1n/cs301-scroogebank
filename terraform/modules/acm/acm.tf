@@ -18,9 +18,9 @@ resource "aws_acm_certificate" "us_cert" {
 # ACM Certificate for resources in ap-southeast-1 region
 resource "aws_acm_certificate" "ap_cert" {
   provider                  = aws.ap-southeast-1
-  domain_name       = var.certificate_domain
+  domain_name               = var.certificate_domain
   subject_alternative_names = ["*.${var.certificate_domain}", "alb.${var.certificate_domain}"]
-  validation_method = "DNS"
+  validation_method         = "DNS"
 
   lifecycle {
     create_before_destroy = true

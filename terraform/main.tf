@@ -112,6 +112,7 @@ module "ecs" {
     client = {
       cluster_name   = "client-cluster"
       db_endpoint    = module.rds.db_endpoints["client"]
+      db_port        = 5432
       redis_endpoint = module.elasticache.valkey_endpoints["client"]
       redis_port     = module.elasticache.valkey_port
       app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-client:latest"
