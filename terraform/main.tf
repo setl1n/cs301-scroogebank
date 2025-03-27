@@ -31,7 +31,7 @@ module "acm_route53" {
   route53_zone_id    = var.ROUTE53_ZONE_ID
 
   providers = {
-    aws.us-east-1     = aws.us-east-1
+    aws.us-east-1      = aws.us-east-1
     aws.ap-southeast-1 = aws.ap-southeast-1
   }
 }

@@ -32,7 +32,7 @@ resource "aws_alb_listener" "alb_https_listener" {
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = var.certificate_arn  # Added certificate ARN parameter
+  certificate_arn   = var.certificate_arn # Added certificate ARN parameter
 
   default_action {
     type = "fixed-response"
