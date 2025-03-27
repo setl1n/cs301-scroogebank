@@ -1,3 +1,10 @@
+# IAM roles and policies required for ECS operation
+# This file sets up three main roles:
+# 1. Execution role - allows ECS to pull container images and write logs
+# 2. Task role - allows containers to access AWS services
+# 3. Autoscaling role - allows the autoscaling service to modify ECS services
+
+# Trust policy document for ECS execution role
 data "aws_iam_policy_document" "assume_role_ecs" {
   statement {
     effect = "Allow"
@@ -11,11 +18,13 @@ data "aws_iam_policy_document" "assume_role_ecs" {
   }
 }
 
+# Execution role used by ECS to start tasks (pull images, write logs)
 resource "aws_iam_role" "ecs_execution_role" {
   name               = "ecs-execution-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role_ecs.json
 }
 
+# Trust policy document for ECS task role
 data "aws_iam_policy_document" "assume_role_tasks" {
   statement {
     effect = "Allow"
@@ -28,17 +37,20 @@ data "aws_iam_policy_document" "assume_role_tasks" {
     actions = ["sts:AssumeRole"]
   }
 }
+
+# Task role used by containers themselves to access AWS services
 resource "aws_iam_role" "ecs_tasks_role" {
   name               = "ecs-tasks-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role_tasks.json
 }
 
-
+# Attach the ECS task execution policy to the task role
 resource "aws_iam_role_policy_attachment" "task_execution_role_policy_attachment" {
   role       = aws_iam_role.ecs_tasks_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# Trust policy document for autoscaling role
 data "aws_iam_policy_document" "assume_role_autoscaling" {
   statement {
     effect = "Allow"
@@ -52,11 +64,13 @@ data "aws_iam_policy_document" "assume_role_autoscaling" {
   }
 }
 
+# Autoscaling role allowing Application Autoscaling to modify ECS services
 resource "aws_iam_role" "ecs_autoscaling_role" {
   name               = "ecs-autoscaling-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role_autoscaling.json
 }
 
+# Attach the autoscaling policy to the autoscaling role
 resource "aws_iam_role_policy_attachment" "ecs_autoscaling_policy_attachment" {
   role       = aws_iam_role.ecs_autoscaling_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole"

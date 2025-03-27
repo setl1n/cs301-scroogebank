@@ -1,8 +1,14 @@
+# ECS infrastructure configuration
+# This file defines the ECS clusters, task definitions, and services
+
+# Create a separate ECS cluster for each service
 resource "aws_ecs_cluster" "service_cluster" {
   for_each = var.services
   name     = each.value.cluster_name
 }
 
+# Task definitions specify container configurations including CPU, memory, and environment variables
+# These use a template file to generate the container definitions JSON
 resource "aws_ecs_task_definition" "app" {
   for_each = var.services
 
@@ -14,6 +20,7 @@ resource "aws_ecs_task_definition" "app" {
   memory                   = var.fargate_memory
 
   container_definitions = templatefile("./template/ecs_json.tpl", {
+    # Template variables for container configuration
     app_name          = each.key
     app_image         = each.value.app_image
     app_port          = each.value.app_port
@@ -29,21 +36,25 @@ resource "aws_ecs_task_definition" "app" {
   })
 }
 
+# ECS services manage the deployment and scaling of task instances
+# They also handle registration with load balancers
 resource "aws_ecs_service" "app" {
   for_each = var.services
 
   name            = "${each.key}-service"
-  cluster         = aws_ecs_cluster.service_cluster[each.key].id # Associate the service with its cluster
+  cluster         = aws_ecs_cluster.service_cluster[each.key].id
   task_definition = aws_ecs_task_definition.app[each.key].arn
   desired_count   = var.app_count
   launch_type     = "FARGATE"
 
+  # Network configuration for the Fargate tasks
   network_configuration {
     security_groups  = var.ecs_tasks_sg_ids
     subnets          = var.public_subnet_ids
     assign_public_ip = true
   }
 
+  # Register the service with the load balancer
   load_balancer {
     target_group_arn = aws_alb_target_group.app[each.key].id
     container_name   = each.key

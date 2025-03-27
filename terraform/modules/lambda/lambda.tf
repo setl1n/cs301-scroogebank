@@ -1,6 +1,16 @@
 #----------------------------------------
+# Lambda Module
+# 
+# This module creates Lambda functions with appropriate IAM roles and
+# permissions based on which AWS services each function needs to access.
+# Supports configuring access to RDS, DynamoDB, SES, and other services.
+#----------------------------------------
+
+#----------------------------------------
 # Lambda Functions
 #----------------------------------------
+# Creates Lambda functions based on the provided configurations,
+# dynamically setting up VPC access and environment variables
 resource "aws_lambda_function" "lambda_functions" {
   for_each = var.lambda_functions
 
@@ -48,9 +58,10 @@ resource "aws_lambda_function" "lambda_functions" {
 }
 
 #----------------------------------------
-# IAM Policies
+# IAM Policies and Roles
 #----------------------------------------
-# Create locals to filter Lambda functions with specific configurations
+# These locals filter Lambda functions by which AWS services they need to access
+# This makes it easy to attach the appropriate policies only to functions that need them
 locals {
   lambda_with_rds = nonsensitive({
     for k, v in var.lambda_functions : k => true if try(v.rds_config != null, false)
@@ -63,7 +74,8 @@ locals {
   })
 }
 
-# Create role for Lambda functions
+# Create IAM role for each Lambda function
+# These roles will have different policies attached based on what services each Lambda needs
 resource "aws_iam_role" "lambda_role" {
   for_each = var.lambda_functions
 
@@ -83,7 +95,7 @@ resource "aws_iam_role" "lambda_role" {
   })
 }
 
-# Attach policies based on what services each Lambda needs
+# Basic execution permission for CloudWatch Logs - needed by all Lambda functions
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   for_each = var.lambda_functions
 
@@ -91,7 +103,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# VPC access for Lambda functions that need it
+# VPC access for Lambda functions that need to connect to RDS or other VPC resources
 resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
   for_each = local.lambda_with_rds
 
@@ -99,7 +111,10 @@ resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }
 
-# DynamoDB access for Lambda functions that need it
+#----------------------------------------
+# Service-Specific Permissions
+#----------------------------------------
+# DynamoDB access permissions
 resource "aws_iam_policy" "dynamodb_access" {
   for_each = local.lambda_with_dynamodb
 
@@ -130,7 +145,7 @@ resource "aws_iam_role_policy_attachment" "dynamodb_access" {
   policy_arn = aws_iam_policy.dynamodb_access[each.key].arn
 }
 
-# SES access for Lambda functions that need it
+# SES access for Lambda functions that need to send emails
 resource "aws_iam_policy" "ses_access" {
   for_each = local.lambda_with_ses
 

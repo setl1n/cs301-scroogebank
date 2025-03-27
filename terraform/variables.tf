@@ -1,3 +1,13 @@
+#--------------------------------------------------------------
+# CS301 Group 2 Team 1 Project Variables
+# This file defines all input variables used throughout the Terraform configuration.
+# Sensitive values should be supplied via terraform.tfvars (not committed to version control).
+#--------------------------------------------------------------
+
+#--------------------------------------------------------------
+# Database Configuration
+# These credentials will be used for RDS instance setup
+#--------------------------------------------------------------
 variable "DATABASE_NAME" {
   description = "Name of the database to create"
   type        = string
@@ -16,6 +26,26 @@ variable "DATABASE_PASSWORD" {
   sensitive   = true
 }
 
+#--------------------------------------------------------------
+# Domain Configuration
+# Used for setting up Route53 DNS records and certificates
+#--------------------------------------------------------------
+variable "DOMAIN_NAME" {
+  description = "Domain name"
+  type        = string
+  sensitive   = true
+}
+
+variable "ROUTE53_ZONE_ID" {
+  description = "Hosted zone ID for Route53"
+  type        = string
+  sensitive   = true
+}
+
+#--------------------------------------------------------------
+# Application Database Configurations
+# Defines database identifiers for each microservice
+#--------------------------------------------------------------
 variable "applications" {
   description = "Map of applications with their configurations"
   type = map(object({
@@ -34,6 +64,12 @@ variable "applications" {
   }
 }
 
+#--------------------------------------------------------------
+# Lambda Functions Configuration
+# Each Lambda function can have different configurations and permissions
+# - Service flags enable appropriate IAM permissions
+# - Environment variables can be passed to each function
+#--------------------------------------------------------------
 variable "lambda_functions" {
   description = "Configuration for Lambda functions"
   type = map(object({
@@ -78,5 +114,36 @@ variable "lambda_functions" {
     #   filename         = "${path.module}/lambda_functions/data_processor.zip"
     #   dynamodb_enabled = true
     # }
+  }
+}
+
+#--------------------------------------------------------------
+# S3 Bucket Configurations
+# Defines buckets for:
+# - Frontend hosting (configured as static websites)
+# - Document storage
+#--------------------------------------------------------------
+variable "s3_buckets" {
+  description = "Map of S3 buckets to create with their configurations"
+  type = map(object({
+    name           = string
+    is_website     = bool
+    index_document = optional(string, "index.html")
+    error_document = optional(string, "index.html")
+  }))
+
+  default = {
+    main_frontend = {
+      name       = "cs301g2t1-main-frontend-bucket"
+      is_website = true
+    },
+    verification_frontend = {
+      name       = "cs301g2t1-verification-frontend-bucket"
+      is_website = true
+    },
+    verification_documents = {
+      name       = "cs301g2t1-verification-documents-bucket"
+      is_website = false
+    }
   }
 }

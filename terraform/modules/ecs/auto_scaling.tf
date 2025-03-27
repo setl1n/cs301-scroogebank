@@ -1,3 +1,7 @@
+# Auto Scaling configuration for ECS services
+# This enables automatic scaling of tasks based on CPU utilization
+
+# Defines the scalable target (the ECS service) with min/max capacity
 resource "aws_appautoscaling_target" "app" {
   for_each           = var.services
   service_namespace  = "ecs"
@@ -10,7 +14,7 @@ resource "aws_appautoscaling_target" "app" {
   depends_on = [aws_iam_role_policy_attachment.ecs_autoscaling_policy_attachment]
 }
 
-# Scale Up Policy
+# Policy to scale up (add tasks) when CPU utilization increases
 resource "aws_appautoscaling_policy" "scale_up" {
   for_each = var.services
 
@@ -33,7 +37,7 @@ resource "aws_appautoscaling_policy" "scale_up" {
   depends_on = [aws_appautoscaling_target.app, ]
 }
 
-# Automatically scale capacity down by one
+# Policy to scale down (remove tasks) when CPU utilization decreases
 resource "aws_appautoscaling_policy" "scale_down" {
   for_each = var.services
 
@@ -56,7 +60,7 @@ resource "aws_appautoscaling_policy" "scale_down" {
   depends_on = [aws_appautoscaling_target.app]
 }
 
-# CloudWatch Alarm for scaling up (high CPU)
+# CloudWatch alarm that triggers the scale-up policy when CPU is high
 resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   for_each            = var.services
   alarm_name          = "${each.key}-cpu-high"
@@ -76,7 +80,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   alarm_actions = [aws_appautoscaling_policy.scale_up[each.key].arn]
 }
 
-# CloudWatch Alarm for scaling down (low CPU)
+# CloudWatch alarm that triggers the scale-down policy when CPU is low
 resource "aws_cloudwatch_metric_alarm" "cpu_low" {
   for_each            = var.services
   alarm_name          = "${each.key}-cpu-low"

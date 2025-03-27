@@ -1,4 +1,14 @@
+#--------------------------------------------------------------
+# Network Module - Security Groups
+# This file defines security groups that control traffic flow
+# between different components of the application architecture
+#--------------------------------------------------------------
+
+#--------------------------------------------------------------
 # Database Security Group
+# Controls access to database instances, allowing connections
+# only from application and lambda tiers
+#--------------------------------------------------------------
 resource "aws_security_group" "db_sg" {
   name        = "db-sg"
   description = "Security group for database instances"
@@ -9,6 +19,7 @@ resource "aws_security_group" "db_sg" {
   }
 }
 
+# Allow PostgreSQL access from ECS application containers
 resource "aws_vpc_security_group_ingress_rule" "allow_db_ecs" {
   security_group_id            = aws_security_group.db_sg.id
   referenced_security_group_id = aws_security_group.ecs_tasks_sg.id
@@ -18,6 +29,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_db_ecs" {
   description                  = "Allow PostgreSQL access from ECS tasks"
 }
 
+# Allow PostgreSQL access from Lambda functions
 resource "aws_vpc_security_group_ingress_rule" "allow_mysql_lambda" {
   security_group_id            = aws_security_group.db_sg.id
   referenced_security_group_id = aws_security_group.lambda_sg.id
@@ -27,7 +39,11 @@ resource "aws_vpc_security_group_ingress_rule" "allow_mysql_lambda" {
   description                  = "Allow PostgreSQL access from Lambda functions"
 }
 
+#--------------------------------------------------------------
 # Load Balancer Security Group
+# Controls traffic to/from the load balancer, allowing public HTTP/HTTPS
+# access and restricting outbound traffic to application ports
+#--------------------------------------------------------------
 resource "aws_security_group" "lb_sg" {
   name        = "lb-sg"
   description = "Security group for load balancers"
@@ -38,6 +54,7 @@ resource "aws_security_group" "lb_sg" {
   }
 }
 
+# Allow HTTP from internet to load balancer
 resource "aws_vpc_security_group_ingress_rule" "allow_http" {
   security_group_id = aws_security_group.lb_sg.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -47,6 +64,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_http" {
   description       = "Allow HTTP traffic from anywhere"
 }
 
+# Allow HTTPS from internet to load balancer
 resource "aws_vpc_security_group_ingress_rule" "allow_https" {
   security_group_id = aws_security_group.lb_sg.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -56,6 +74,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_https" {
   description       = "Allow HTTPS traffic from anywhere"
 }
 
+# Restrict outbound traffic from load balancer to application ports
 resource "aws_vpc_security_group_egress_rule" "allow_traffic_ecs" {
   security_group_id = aws_security_group.lb_sg.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -65,7 +84,11 @@ resource "aws_vpc_security_group_egress_rule" "allow_traffic_ecs" {
   description       = "Allow outbound traffic to ECS application ports"
 }
 
+#--------------------------------------------------------------
 # ECS Tasks Security Group
+# Controls traffic to/from ECS containers, allowing ingress only
+# from the load balancer and permitting all outbound traffic
+#--------------------------------------------------------------
 resource "aws_security_group" "ecs_tasks_sg" {
   name        = "ecs-tasks-sg"
   description = "Allow inbound access from the ALB only"
@@ -76,6 +99,7 @@ resource "aws_security_group" "ecs_tasks_sg" {
   }
 }
 
+# Allow all traffic from load balancer to ECS tasks
 resource "aws_vpc_security_group_ingress_rule" "allow_traffic_from_lb" {
   security_group_id            = aws_security_group.ecs_tasks_sg.id
   referenced_security_group_id = aws_security_group.lb_sg.id
@@ -83,6 +107,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_traffic_from_lb" {
   description                  = "Allow all traffic from load balancer"
 }
 
+# Allow all outbound traffic from ECS tasks (for updates, API calls, etc.)
 resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4_ecs" {
   security_group_id = aws_security_group.ecs_tasks_sg.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -90,7 +115,11 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4_ecs" {
   description       = "Allow all outbound traffic from ECS tasks"
 }
 
+#--------------------------------------------------------------
 # Lambda Security Group
+# Controls traffic to/from Lambda functions running in VPC mode,
+# permitting all outbound traffic for API calls and dependencies
+#--------------------------------------------------------------
 resource "aws_security_group" "lambda_sg" {
   name        = "lambda-sg"
   description = "Security group for Lambda functions"
@@ -101,6 +130,7 @@ resource "aws_security_group" "lambda_sg" {
   }
 }
 
+# Allow all outbound traffic from Lambda functions (for updates, API calls, etc.)
 resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4_lambda" {
   security_group_id = aws_security_group.lambda_sg.id
   cidr_ipv4         = "0.0.0.0/0"
