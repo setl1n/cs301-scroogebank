@@ -28,3 +28,15 @@ provider "aws" {
   alias  = "default"
   region = "ap-southeast-1" # Singapore region
 }
+
+# Provider for US East 1 region (required for CloudFront certificates)
+provider "aws" {
+  alias  = "us-east-1"
+  region = "us-east-1"
+}
+
+# Provider for AP Southeast 1 region (explicit provider for regional resources)
+provider "aws" {
+  alias  = "ap-southeast-1"
+  region = "ap-southeast-1"
+}

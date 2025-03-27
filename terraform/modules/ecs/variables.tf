@@ -97,3 +97,8 @@ variable "services" {
     path_pattern = list(string)
   }))
 }
+
+variable "certificate_arn" {
+  description = "ARN of the SSL certificate for HTTPS listener"
+  type        = string
+}
