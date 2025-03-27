@@ -110,7 +110,7 @@ module "ecs" {
       db_endpoint  = ""
       app_image    = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/client-repository:latest"
       app_port     = 8080
-      path_pattern = ["/api/v1/tournaments*", "/api/v1/locations*"]
+      path_pattern = ["/clients"]
     }
   }
 }
