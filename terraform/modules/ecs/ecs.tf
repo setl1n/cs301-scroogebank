@@ -33,6 +33,8 @@ resource "aws_ecs_task_definition" "app" {
     DATABASE_NAME     = var.database_name
     DATABASE_USER     = var.database_username
     DATABASE_PASSWORD = var.database_password
+    REDIS_HOST      = each.value.redis_endpoint
+    REDIS_PORT      = each.value.redis_port
   })
 }
 

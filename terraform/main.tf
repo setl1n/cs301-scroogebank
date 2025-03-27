@@ -68,16 +68,16 @@ module "acm_route53" {
 #   certificate_arn    = module.acm_route53.us_certificate_arn
 # }
 
-# # ElastiCache module - In-memory data store for caching and session management
-# # Configures ElastiCache clusters for different application components
-# module "elasticache" {
-#   source              = "./modules/elasticache"
-#   security_group_id   = module.network.db_sg_id
-#   db_subnet_group_ids = module.network.db_subnet_group_ids
+# ElastiCache module - In-memory data store for caching and session management
+# Configures ElastiCache clusters for different application components
+module "elasticache" {
+  source              = "./modules/elasticache"
+  security_group_id   = module.network.db_sg_id
+  db_subnet_group_ids = module.network.db_subnet_group_ids
 
-#   # Applications map defining cache requirements for each app component
-#   applications = var.applications
-# }
+  # Applications map defining cache requirements for each app component
+  applications = var.applications
+}
 
 # ECS module - Container orchestration service for running microservices
 # Configures ECS clusters, services, and tasks for different application components
@@ -108,6 +108,8 @@ module "ecs" {
       cluster_name = "client-cluster"
       # db_endpoint  = module.rds.db_endpoints["client"]
       db_endpoint  = ""
+      redis_endpoint = module.elasticache.valkey_endpoints["client"]
+      redis_port = module.elasticache.valkey_port
       app_image    = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/client-repository:latest"
       app_port     = 8080
       path_pattern = ["/clients"]
