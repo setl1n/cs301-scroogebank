@@ -26,6 +26,11 @@ variable "route53_zone_id" {
   type        = string
 }
 
+variable "certificate_arn" {
+  description = "ARN of the ACM certificate to use for CloudFront distributions"
+  type        = string
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # S3 Website configuration - Contains all details needed for CloudFront distributions
 # This complex map allows for multiple S3 website origins to be configured with CloudFront

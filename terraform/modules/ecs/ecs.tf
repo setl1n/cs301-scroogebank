@@ -29,10 +29,12 @@ resource "aws_ecs_task_definition" "app" {
     aws_region        = var.aws_region
     log_group         = "/ecs/${each.key}"
     DATABASE_HOST     = each.value.db_endpoint
-    DATABASE_PORT     = 3306
+    DATABASE_PORT     = each.value.db_port
     DATABASE_NAME     = var.database_name
     DATABASE_USER     = var.database_username
     DATABASE_PASSWORD = var.database_password
+    REDIS_HOST        = each.value.redis_endpoint
+    REDIS_PORT        = each.value.redis_port
   })
 }
 

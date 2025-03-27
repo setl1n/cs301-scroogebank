@@ -11,6 +11,8 @@
       {"name": "DATABASE_NAME", "value": "${DATABASE_NAME}"},
       {"name": "DATABASE_USER", "value": "${DATABASE_USER}"},
       {"name": "DATABASE_PASSWORD", "value": "${DATABASE_PASSWORD}"},
+      {"name": "REDIS_HOST", "value": "${REDIS_HOST}"},
+      {"name": "REDIS_PORT", "value": "${REDIS_PORT}"}
     ],
     "logConfiguration": {
         "logDriver": "awslogs",

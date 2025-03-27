@@ -90,10 +90,28 @@ variable "database_password" {
 # ---------------------------------------------------------------------------------------------------------------------
 variable "services" {
   type = map(object({
-    cluster_name = string
-    db_endpoint  = string
-    app_image    = string
-    app_port     = number
-    path_pattern = list(string)
+    cluster_name   = string
+    db_endpoint    = string
+    db_port        = string
+    redis_endpoint = string
+    redis_port     = string
+    app_image      = string
+    app_port       = number
+    path_pattern   = list(string)
   }))
+}
+
+variable "certificate_arn" {
+  description = "ARN of the SSL certificate for HTTPS listener"
+  type        = string
+}
+
+variable "certificate_domain" {
+  description = "Domain name for the certificate"
+  type        = string
+}
+
+variable "route53_zone_id" {
+  description = "The Route53 hosted zone ID to create DNS records in"
+  type        = string
 }

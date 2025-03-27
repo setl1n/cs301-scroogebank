@@ -3,7 +3,7 @@
 
 # Main application load balancer that will distribute traffic to our services
 resource "aws_alb" "main" {
-  name                 = "lb"
+  name                 = "alb"
   subnets              = var.public_subnet_ids
   security_groups      = var.lb_sg_ids
   preserve_host_header = true
@@ -32,6 +32,7 @@ resource "aws_alb_listener" "alb_https_listener" {
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = var.certificate_arn # Added certificate ARN parameter
 
   default_action {
     type = "fixed-response"

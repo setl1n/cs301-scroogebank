@@ -52,15 +52,15 @@ variable "applications" {
     identifier = string
   }))
   default = {
-    # client = {
-    #   identifier = "client-db"
-    # },
+    client = {
+      identifier = "client-db"
+    },
     # account = {
     #   identifier = "account-db"
     # },
-    transaction = {
-      identifier = "transaction-db"
-    },
+    # transaction = {
+    #   identifier = "transaction-db"
+    # },
   }
 }
 
