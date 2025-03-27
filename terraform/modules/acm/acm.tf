@@ -18,7 +18,7 @@ resource "aws_acm_certificate" "us_cert" {
 # ACM Certificate for resources in ap-southeast-1 region
 resource "aws_acm_certificate" "ap_cert" {
   provider                  = aws.ap-southeast-1
-  domain_name               = var.certificate_domain
+  domain_name               = "alb.${var.certificate_domain}"
   subject_alternative_names = ["*.${var.certificate_domain}"]
 
   validation_method = "DNS"
@@ -38,12 +38,11 @@ resource "aws_acm_certificate" "ap_cert" {
 resource "aws_acm_certificate_validation" "us_cert_validation" {
   provider                = aws.us-east-1
   certificate_arn         = aws_acm_certificate.us_cert.arn
-  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
+  validation_record_fqdns = [for record in aws_route53_record.us_cert_validation : record.fqdn]
 }
 
-# Certificate validation for ap-southeast-1 certificate
 resource "aws_acm_certificate_validation" "ap_cert_validation" {
   provider                = aws.ap-southeast-1
   certificate_arn         = aws_acm_certificate.ap_cert.arn
-  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
+  validation_record_fqdns = [for record in aws_route53_record.ap_cert_validation : record.fqdn]
 }

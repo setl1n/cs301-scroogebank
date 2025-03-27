@@ -18,9 +18,14 @@ output "ap_certificate_validation_id" {
   value       = aws_acm_certificate_validation.ap_cert_validation.id
 }
 
-output "certificate_validation_records" {
-  description = "The certificate validation records created in Route53"
-  value       = aws_route53_record.cert_validation
+output "us_certificate_validation_records" {
+  description = "The us-east-1 certificate validation records created in Route53"
+  value       = aws_route53_record.us_cert_validation
+}
+
+output "ap_certificate_validation_records" {
+  description = "The ap-southeast-1 certificate validation records created in Route53"
+  value       = aws_route53_record.ap_cert_validation
 }
 
 output "certificate_domain" {
