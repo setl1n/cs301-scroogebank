@@ -3,7 +3,7 @@
 
 # Main application load balancer that will distribute traffic to our services
 resource "aws_alb" "main" {
-  name                 = "lb"
+  name                 = "alb"
   subnets              = var.public_subnet_ids
   security_groups      = var.lb_sg_ids
   preserve_host_header = true

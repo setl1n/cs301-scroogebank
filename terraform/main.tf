@@ -9,24 +9,24 @@ module "network" {
 
 # RDS module - Manages database instances for application data persistence
 # Creates database instances for different application components
-# module "rds" {
-#   source               = "./modules/rds"
-#   security_group_id    = module.network.db_sg_id
-#   db_subnet_group_name = module.network.db_subnet_group_name
+module "rds" {
+  source               = "./modules/rds"
+  security_group_id    = module.network.db_sg_id
+  db_subnet_group_name = module.network.db_subnet_group_name
 
-#   # Database Connection Credentials - Passed from variables for security
-#   database_name     = var.DATABASE_NAME
-#   database_username = var.DATABASE_USERNAME
-#   database_password = var.DATABASE_PASSWORD
+  # Database Connection Credentials - Passed from variables for security
+  database_name     = var.DATABASE_NAME
+  database_username = var.DATABASE_USERNAME
+  database_password = var.DATABASE_PASSWORD
 
-#   # Applications map defining database requirements for each app component
-#   applications = var.applications
-# }
+  # Applications map defining database requirements for each app component
+  applications = var.applications
+}
 
 # ACM and Route53 module - Manages SSL certificates and DNS records
 # Creates and validates certificates for use with CloudFront and other services
 module "acm_route53" {
-  source             = "./modules/acm_route53"
+  source             = "./modules/acm"
   certificate_domain = var.DOMAIN_NAME
   route53_zone_id    = var.ROUTE53_ZONE_ID
 
@@ -93,7 +93,12 @@ module "ecs" {
   database_username = var.DATABASE_USERNAME
   database_password = var.DATABASE_PASSWORD
 
-  certificate_arn = module.acm_route53.ap_certificate_arn
+  certificate_arn    = module.acm_route53.ap_certificate_arn
+  certificate_domain = var.DOMAIN_NAME
+
+  route53_zone_id = var.ROUTE53_ZONE_ID
+
+
 
   # Services map defining ECS service requirements for each app component
   services = {

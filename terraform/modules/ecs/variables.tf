@@ -104,3 +104,13 @@ variable "certificate_arn" {
   description = "ARN of the SSL certificate for HTTPS listener"
   type        = string
 }
+
+variable "certificate_domain" {
+  description = "Domain name for the certificate"
+  type        = string
+}
+
+variable "route53_zone_id" {
+  description = "The Route53 hosted zone ID to create DNS records in"
+  type        = string
+}
