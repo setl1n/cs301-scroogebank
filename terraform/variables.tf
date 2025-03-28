@@ -147,3 +147,13 @@ variable "s3_buckets" {
     }
   }
 }
+
+#--------------------------------------------------------------
+# Cognito Configuration
+# Defines AWS Cognito settings for user authentication
+#--------------------------------------------------------------
+variable "aws_region" {
+  description = "AWS region for Cognito"
+  type        = string
+  default     = "ap-southeast-1"
+}

@@ -19,7 +19,7 @@ public class CognitoLogoutHandler extends SimpleUrlLogoutSuccessHandler {
     /**
      * The domain of your user pool.
      */
-    private String domain = "https://ap-southeast-1toptkzj85.auth.ap-southeast-1.amazoncognito.com";
+    private String domain = System.getenv("COGNITO_DOMAIN");
     /**
      * An allowed callback URL. Change this eventually to whatever screen to redirect them to!!
      */

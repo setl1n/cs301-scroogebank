@@ -50,6 +50,9 @@ public class SecurityConfig {
         // Instantiate your custom Cognito logout handler
         CognitoLogoutHandler cognitoLogoutHandler = new CognitoLogoutHandler();
 
+        // Read from ENV to facilitate Terraform automatic output
+        String jwksUrl = System.getenv("COGNITO_JWKS_URL");
+
         http.csrf(Customizer.withDefaults())
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/").permitAll()
@@ -59,7 +62,7 @@ public class SecurityConfig {
             // Add resource server configuration for JWT validation
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> {
-                    jwt.jwkSetUri("https://cognito-idp.ap-southeast-1.amazonaws.com/ap-southeast-1_tOPTKzj85/.well-known/jwks.json");
+                    jwt.jwkSetUri(jwksUrl);
                     jwt.jwtAuthenticationConverter(jwtAuthenticationConverter());
                 })
             )
