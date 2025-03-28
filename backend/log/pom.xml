@@ -16,6 +16,19 @@
         <spring-boot.version>3.2.0</spring-boot.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>2.31.6</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
     <dependencies>
     <!-- For unit testing stuffs-->
         <dependency>
@@ -54,15 +67,6 @@
             <version>1.6.0</version>
         </dependency>
 
-        <!-- AWS SDK BOM -->
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>bom</artifactId>
-            <version>2.31.6</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
-
         <!-- dotenv-java for loading environment variables -->
         <dependency>
             <groupId>io.github.cdimascio</groupId>
@@ -94,6 +98,13 @@
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.36</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
         </plugins>
