@@ -1,0 +1,39 @@
+@bearer_token = "H4sIAAAAAAAAAAHjABz/3tkouJ9oBoGhAqzZxpKKdTIuKxUYo/e6t8n+eZulBAE/Ee+0kpCXSfLo5x0wdiEb9ifOfEXf0Ino/r96unW2Ak4FUUlRHsPlBzStDfZgvGn7H8dsjsRSBnAgn89dnfO7y+jKhESXQXjpd5waViy2eEAwbx9V68qqAfJf99IamfrVTAsY7BY0W/vNISW6kW5yPPBXdpX0Y7/5sB0VX+4ooNvL08O+zb4vA0slpWFiXKvh18eF8m8jTakY0xl95g7O6NIeA1w1oNRXLccYr4n+YzVvCTm80eHWSFnW17eNncyAIKygU/Cy4wAAAA==.H4sIAAAAAAAAAPsQmNmYp13dxcLLuYEtd88m/0M+QRnNiXaP14eUOKzgkAUAmegXXiAAAAA=.4"
+
+
+GET http://localhost:8080/token/me
+
+GET http://localhost:8080/users/me
+Authorization: Bearer {{bearer_token}}
+
+### GET all users (Admin)
+GET http://localhost:8080/users
+Authorization: Bearer {{bearer_token}}
+
+### Create a new user (Admin)
+POST http://localhost:8080/users
+Authorization: Bearer {{bearer_token}}
+Content-Type: application/json
+
+{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "role": "ADMIN"
+}
+
+### Update an existing user (Admin)
+PUT http://localhost:8080/users/1
+Authorization: Bearer {{bearer_token}}
+Content-Type: application/json
+
+{
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "email": "jane.doe@example.com",
+    "role": "ADMIN"
+}
+
+### Delete a user (Admin)
+DELETE http://localhost:8080/users/1
+Authorization: Bearer {{bearer_token}}
