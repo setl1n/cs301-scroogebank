@@ -99,6 +99,16 @@ variable "lambda_functions" {
       memory_size = 256
       rds_enabled = true
     }
+    log = {
+      name = "log_lambda_function"
+      handler = "com.cs301g2t1.log.LogHandler::handleRequest"
+      runtime = "java21"
+      filename = "../backend/log/target/log-1.0-SNAPSHOT.jar"
+      table_name = "application-logs"
+      timeout = 15
+      memory_size = 256
+      dynamodb_enabled = true
+    }
     # Example with other services
     # notification_sender = {
     #   name             = "notification-sender"
