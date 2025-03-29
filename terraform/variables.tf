@@ -90,14 +90,23 @@ variable "lambda_functions" {
   }))
 
   default = {
-    transaction = {
-      name        = "transaction_lambda_function"
-      handler     = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
-      runtime     = "java21"
-      filename    = "../backend/transaction/target/transaction-1.0-SNAPSHOT.jar"
-      timeout     = 15
-      memory_size = 256
-      rds_enabled = true
+    # transaction = {
+    #   name        = "transaction_lambda_function"
+    #   handler     = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
+    #   runtime     = "java21"
+    #   filename    = "../backend/transaction/target/transaction-1.0-SNAPSHOT.jar"
+    #   timeout     = 15
+    #   memory_size = 256
+    #   rds_enabled = true
+    # }
+    log = {
+      name             = "log_lambda_function"
+      handler          = "com.cs301g2t1.log.LogHandler::handleRequest"
+      runtime          = "java21"
+      filename         = "../backend/log/target/log-1.0-SNAPSHOT.jar"
+      timeout          = 15
+      memory_size      = 256
+      dynamodb_enabled = true
     }
     # Example with other services
     # notification_sender = {
