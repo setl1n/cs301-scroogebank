@@ -9,14 +9,14 @@ module "network" {
 
 module "dynamodb" {
   source = "./modules/dynamodb"
-  
+
   table_name = "application-logs"
-  
+
   # Optional: Configure other DynamoDB settings
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "id"
   range_key    = "dateTimeStr"
-  
+
   # Add tags for better resource management
   tags = {
     Environment = "development"

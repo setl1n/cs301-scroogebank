@@ -29,13 +29,13 @@ resource "aws_dynamodb_table" "logs_table" {
     attribute_name = var.ttl_attribute
     enabled        = var.ttl_enabled
   }
-  
-  stream_enabled   = false
+
+  stream_enabled = false
 
   # Add tags
   tags = merge(
     {
-      Name = var.table_name
+      Name    = var.table_name
       Service = "Logging"
     },
     var.tags
