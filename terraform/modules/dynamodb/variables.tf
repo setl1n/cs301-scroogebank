@@ -7,19 +7,19 @@ variable "table_name" {
 variable "billing_mode" {
   description = "DynamoDB billing mode (PROVISIONED or PAY_PER_REQUEST)"
   type        = string
-  default     = "PAY_PER_REQUEST"
+  default     = "PROVISIONED"
 }
 
-variable "read_capacity" {
+variable "read_capacity" { # baseline, not peak capacity
   description = "Read capacity units for the table (only used in PROVISIONED mode)"
   type        = number
-  default     = 5
+  default     = 1
 }
 
-variable "write_capacity" {
+variable "write_capacity" { # baseline, not peak capacity
   description = "Write capacity units for the table (only used in PROVISIONED mode)"
   type        = number
-  default     = 5
+  default     = 1
 }
 
 variable "hash_key" {
