@@ -30,7 +30,7 @@
 
 
     <dependencies>
-    <!-- For unit testing stuffs-->
+        <!-- For unit testing stuffs-->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -44,6 +44,18 @@
             <artifactId>lombok</artifactId>
             <version>1.18.36</version>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- AWS DynamoDB SDK -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>dynamodb</artifactId>
+            <version>2.21.33</version>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>dynamodb-enhanced</artifactId>
+            <version>2.21.33</version>
         </dependency>
 
         <!-- AWS Lambda Core -->
