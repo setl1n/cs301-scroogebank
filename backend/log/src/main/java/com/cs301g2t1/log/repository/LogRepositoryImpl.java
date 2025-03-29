@@ -11,16 +11,27 @@ import java.util.stream.Collectors;
 
 public class LogRepositoryImpl implements LogRepository {
 
-    private static final String TABLE_NAME = System.getenv("DYNAMODB_TABLE_NAME");
-    private static final String REGION = System.getenv().getOrDefault("AWS_REGION", "ap-southeast-1");
+    private static final String TABLE_NAME = System.getenv("DYNAMODB_TABLE");
+    private static final String REGION = System.getenv("DYNAMODB_REGION");
     
     private final DynamoDbClient dynamoDbClient;
     private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbTable<LogEntry> logTable;
     
-    private static LogRepositoryImpl instance;
+    // Volatile for thread safety in singleton pattern
+    private static volatile LogRepositoryImpl instance;
 
     private LogRepositoryImpl() {
+        // Validate environment variables at initialization time
+        if (TABLE_NAME == null || TABLE_NAME.trim().isEmpty()) {
+            throw new IllegalStateException("DYNAMODB_TABLE_NAME environment variable is not set");
+        }
+        
+        if (REGION == null || REGION.trim().isEmpty()) {
+            throw new IllegalStateException("AWS_REGION environment variable is not set");
+        }
+        
+        System.out.println("Initializing DynamoDb client for table '" + TABLE_NAME + "' in region '" + REGION + "'");
 
         this.dynamoDbClient = DynamoDbClient.builder()
                 .region(Region.of(REGION))
@@ -34,9 +45,13 @@ public class LogRepositoryImpl implements LogRepository {
                 TableSchema.fromBean(LogEntry.class));
     }
 
-    public static synchronized LogRepositoryImpl getInstance() {
+    public static LogRepositoryImpl getInstance() {
         if (instance == null) {
-            instance = new LogRepositoryImpl();
+            synchronized (LogRepositoryImpl.class) {
+                if (instance == null) {
+                    instance = new LogRepositoryImpl();
+                }
+            }
         }
         return instance;
     }
@@ -80,12 +95,21 @@ public class LogRepositoryImpl implements LogRepository {
                 logEntry.setId(UUID.randomUUID().toString());
             }
             
-            // Save to DynamoDB
-            logTable.putItem(logEntry);
+            // Set TTL value (30 days from now)
+            long ttl = System.currentTimeMillis() / 1000 + (30 * 24 * 60 * 60);
+            logEntry.setExpireAt(ttl);
             
+            System.out.println("Saving item to table: " + TABLE_NAME);
+            System.out.println("Item ID: " + logEntry.getId());
+            System.out.println("Item details: " + logEntry);
+            
+            logTable.putItem(logEntry);
             return logEntry;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to save log entry to DynamoDB", e);
+            System.err.println("SAVE ERROR - Exception type: " + e.getClass().getName());
+            System.err.println("SAVE ERROR - Error message: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to save log entry to DynamoDB: " + e.getMessage(), e);
         }
     }
 

@@ -22,7 +22,7 @@ resource "aws_dynamodb_table" "logs_table" {
   }
 
   point_in_time_recovery {
-    enabled = true
+    enabled = false // costs money - vince 1984 CANNOT SPEND
   }
 
   ttl {

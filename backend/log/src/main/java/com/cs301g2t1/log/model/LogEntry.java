@@ -28,20 +28,25 @@ public class LogEntry {
     private String agentId;
     private String clientId;
     
-    private LocalDateTime dateTime;
-
-    @DynamoDbSortKey
-    public LocalDateTime getDateTime() {
-        return dateTime;
-    }
-
-    public void setDateTime(LocalDateTime dateTime) {
-        this.dateTime = dateTime;
-    }
+    // Remove the dateTime field & standard getter/setter
+    // private LocalDateTime dateTime; (Lombok won't generate these methods now)
+    
+    // Store as string in DynamoDB but present as LocalDateTime in Java
+    private String dateTimeStr;
     
     private Long expireAt;
 
-    public Long getIdAsLong() {  // backwards compatability
+    @DynamoDbSecondaryPartitionKey(indexNames = "TTLIndex")
+    public Long getExpireAt() {
+        return expireAt;
+    }
+
+    public void setExpireAt(Long expireAt) {
+        this.expireAt = expireAt;
+    }
+
+    // Helper methods for backward compatibility
+    public Long getIdAsLong() { 
         return id != null ? Long.parseLong(id) : null; 
     }
     
@@ -65,13 +70,25 @@ public class LogEntry {
         this.clientId = longClientId != null ? longClientId.toString() : null; 
     }
     
+    // Special methods for dateTime handling
     @DynamoDbSortKey
-    @DynamoDbAttribute("dateTime")
-    public String getDateTimeAsString() {
-        return dateTime != null ? dateTime.toString() : null;
+    @DynamoDbAttribute("dateTimeStr")
+    public String getDateTimeStr() {
+        return dateTimeStr;
     }
     
-    public void setDateTimeAsString(String dateTimeStr) {
-        this.dateTime = dateTimeStr != null ? LocalDateTime.parse(dateTimeStr) : null;
+    public void setDateTimeStr(String dateTimeStr) {
+        this.dateTimeStr = dateTimeStr;
+    }
+    
+    // Virtual property - not stored directly in DynamoDB
+    @DynamoDbIgnore
+    public LocalDateTime getDateTime() {
+        return dateTimeStr != null ? LocalDateTime.parse(dateTimeStr) : null;
+    }
+    
+    @DynamoDbIgnore
+    public void setDateTime(LocalDateTime dateTime) {
+        this.dateTimeStr = dateTime != null ? dateTime.toString() : null;
     }
 }
