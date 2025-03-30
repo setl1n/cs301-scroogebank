@@ -152,7 +152,7 @@ jobs:
             // Filter and delete comments made by the GitHub Actions bot
             const botComments = comments.filter(comment => {
               return comment.user.type === 'Bot' && 
-                     comment.body.includes('Terraform Format and Style');
+                     comment.body.includes('Terraform Infrastructure Deployment');
             });
             
             // Delete each previous bot comment

@@ -207,10 +207,10 @@ module "lambda" {
       # Add dynamic configurations based on service flags
       rds_config = config.rds_enabled ? {
         # database_host = module.rds.db_endpoints[name]
-        database_host     = ""
-        database_name     = var.DATABASE_NAME
-        database_user     = var.DATABASE_USERNAME
-        database_pass     = var.DATABASE_PASSWORD
+        database_host = ""
+        database_name = var.DATABASE_NAME
+        database_user = var.DATABASE_USERNAME
+        database_pass = var.DATABASE_PASSWORD
       } : null,
 
       # Add SES configuration if enabled
@@ -230,7 +230,7 @@ module "lambda" {
       cognito_config = config.cognito_enabled ? {
         user_pool_id  = module.cognito.user_pool_id
         app_client_id = module.cognito.user_pool_client_id
-        region         = var.aws_region
+        region        = var.aws_region
       } : null,
     })
   }
