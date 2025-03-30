@@ -84,6 +84,7 @@ variable "lambda_functions" {
     rds_enabled      = optional(bool, false)
     ses_enabled      = optional(bool, false)
     dynamodb_enabled = optional(bool, false)
+    cognito_enabled  = optional(bool, false)
 
     # Environment variables (optional)
     environment_variables = optional(map(string), {})
@@ -106,6 +107,7 @@ variable "lambda_functions" {
       filename    = "../backend/user/target/user-0.0.1-SNAPSHOT.jar" // seems to be this .jar
       timeout     = 15
       memory_size = 256
+      cognito_enabled = true
       environment_variables = {}
     },
     # transaction = {

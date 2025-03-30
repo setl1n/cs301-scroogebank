@@ -66,6 +66,102 @@ resource "aws_cognito_user_group" "agent_group" {
   precedence   = 1
 }
 
+#--------------------------------------------------------------
+# IAM Policy for Cognito Access
+#--------------------------------------------------------------
+
+resource "aws_iam_policy" "cognito_access_policy" {
+  name        = "cognito-access-policy"
+  description = "Policy for Lambda functions to access Cognito User Pools"
+  
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = [
+          "cognito-idp:AdminCreateUser",
+          "cognito-idp:AdminGetUser",
+          "cognito-idp:ListUsers",
+          "cognito-idp:AdminDeleteUser",
+          "cognito-idp:AdminUpdateUserAttributes",
+          "cognito-idp:AdminAddUserToGroup",
+          "cognito-idp:AdminRemoveUserFromGroup",
+          "cognito-idp:AdminListGroupsForUser"
+        ],
+        Resource = "arn:aws:cognito-idp:${var.aws_region}:*:userpool/${aws_cognito_user_pool.user_pool.id}"
+      }
+    ]
+  })
+}
+
+#--------------------------------------------------------------
+# Lambda Stuffs for Cognito to pass environment variables to
+#--------------------------------------------------------------
+resource "aws_lambda_function" "lambda_function" {
+  for_each = var.lambda_functions
+
+  function_name = each.value.name
+  handler       = each.value.handler
+  runtime       = each.value.runtime
+  filename      = each.value.filename
+  timeout       = each.value.timeout
+  memory_size   = each.value.memory_size
+  role          = aws_iam_role.lambda_role[each.key].arn
+
+  environment {
+    variables = merge(
+      each.value.environment_variables,
+      # Add Cognito environment variables if enabled
+      each.value.cognito_enabled ? {
+        COGNITO_USER_POOL_ID = aws_cognito_user_pool.user_pool.id
+        COGNITO_APP_CLIENT_ID = aws_cognito_user_pool_client.user_pool_client.id
+        COGNITO_REGION = var.aws_region
+      } : {}
+    )
+  }
+}
+
+# IAM role for Lambda functions
+resource "aws_iam_role" "lambda_role" {
+  for_each = var.lambda_functions
+  
+  name = "${each.value.name}_role"
+  
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Effect = "Allow"
+        Sid    = ""
+      }
+    ]
+  })
+}
+
+# Attach policies based on enabled services
+resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
+  for_each = var.lambda_functions
+  
+  role       = aws_iam_role.lambda_role[each.key].name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Attach Cognito policy if enabled
+resource "aws_iam_role_policy_attachment" "cognito_policy_attachment" {
+  for_each = {
+    for k, v in var.lambda_functions : k => v
+    if v.cognito_enabled == true
+  }
+  
+  role       = aws_iam_role.lambda_role[each.key].name
+  policy_arn = aws_iam_policy.cognito_access_policy.arn
+}
+
 #########################
 # Outputs for Lambda Integration
 #########################
