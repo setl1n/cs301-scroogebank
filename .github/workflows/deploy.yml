@@ -45,6 +45,16 @@ jobs:
         run: terraform fmt -check
         continue-on-error: true
 
+      - name: Format Error Handling
+        id: fmt_error
+        if: steps.fmt.outcome == 'failure'
+        run: |
+          echo "::error::Terraform formatting check failed. Code formatting does not comply with Terraform standards."
+          echo "::error::Action required: Run 'terraform fmt' locally to automatically format your code."
+          echo "::error::Then commit and push the changes."
+          echo "message=⚠️ **Terraform Formatting Error**: Code formatting does not comply with Terraform standards. Run \`terraform fmt\` locally to fix formatting issues." >> $GITHUB_OUTPUT
+          exit 1
+
       - name: Terraform Init
         id: init
         env:
@@ -58,9 +68,32 @@ jobs:
             -backend-config="region=${AWS_REGION}" \
             -backend-config="dynamodb_table=${AWS_DYNAMODB_TABLE}"
 
+      - name: Init Error Handling
+        id: init_error
+        if: steps.init.outcome == 'failure'
+        run: |
+          echo "::error::Terraform initialization failed. Possible issues:"
+          echo "::error::- AWS credentials may be incorrect or missing permissions"
+          echo "::error::- S3 bucket may not exist or is inaccessible"
+          echo "::error::- DynamoDB table may not exist or is inaccessible"
+          echo "::error::- Check that all required backend configuration secrets are properly set in GitHub"
+          echo "::error::Action required: Verify backend configuration and AWS permissions."
+          echo "message=⚠️ **Terraform Init Error**: Initialization failed. Check AWS credentials, S3 bucket access, and DynamoDB table configuration. Verify all backend secrets are properly set in GitHub." >> $GITHUB_OUTPUT
+          exit 1
+
       - name: Terraform Validate
         id: validate
         run: terraform validate -no-color
+
+      - name: Validate Error Handling
+        id: validate_error
+        if: steps.validate.outcome == 'failure'
+        run: |
+          echo "::error::Terraform validation failed. Your configuration contains syntax errors."
+          echo "::error::Check the error messages above for specific issues in your Terraform files."
+          echo "::error::Action required: Fix the syntax errors in your Terraform configuration."
+          echo "message=⚠️ **Terraform Validation Error**: Configuration contains syntax errors. Review error messages above for specific details." >> $GITHUB_OUTPUT
+          exit 1
 
       - name: Terraform Plan
         id: plan
@@ -70,8 +103,8 @@ jobs:
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
           DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
           ROUTE53_ZONE_ID: ${{ secrets.ROUTE53_ZONE_ID }}
-          COGNITO_CALLBACK_URLS: ${{ secrets.COGNITO_CALLBACK_URLS }}
-          COGNITO_LOGOUT_URLS: ${{ secrets.COGNITO_LOGOUT_URLS }}
+          COGNITO_CALLBACK_URL: ${{ secrets.COGNITO_CALLBACK_URL }}
+          COGNITO_LOGOUT_URL: ${{ secrets.COGNITO_LOGOUT_URL }}
           COGNITO_DOMAIN: ${{ secrets.COGNITO_DOMAIN }}
         run: |
           terraform plan \
@@ -82,16 +115,33 @@ jobs:
             -var "DATABASE_NAME=${DATABASE_NAME}" \
             -var "DOMAIN_NAME=${DOMAIN_NAME}" \
             -var "ROUTE53_ZONE_ID=${ROUTE53_ZONE_ID}" \
-            -var "COGNITO_CALLBACK_URLS=${COGNITO_CALLBACK_URLS}" \
-            -var "COGNITO_LOGOUT_URLS=${COGNITO_LOGOUT_URLS}" \
+            -var "COGNITO_CALLBACK_URL=${COGNITO_CALLBACK_URL}" \
+            -var "COGNITO_LOGOUT_URL=${COGNITO_LOGOUT_URL}" \
             -var "COGNITO_DOMAIN=${COGNITO_DOMAIN}"
         if: github.event_name == 'pull_request'
         continue-on-error: true
+
+      - name: Plan Error Handling
+        id: plan_error
+        if: steps.plan.outcome == 'failure' && github.event_name == 'pull_request'
+        run: |
+          echo "::error::Terraform plan failed. Possible issues:"
+          echo "::error::- Required variables might be missing or have invalid values"
+          echo "::error::- AWS provider might not have required permissions"
+          echo "::error::- Resources might have configuration errors"
+          echo "::error::Action required: Check that all required secrets are set in GitHub."
+          echo "::error::Review the error message above for specific details on what's causing the issue."
+          echo "message=⚠️ **Terraform Plan Error**: Plan generation failed. Check for missing variables, insufficient permissions, or resource configuration errors. Ensure all required secrets are set in GitHub." >> $GITHUB_OUTPUT
+          # Don't exit with error code here since the plan step already has continue-on-error set
 
       - uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
         env:
           PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+          FMT_ERROR: ${{ steps.fmt_error.outputs.message || '' }}
+          INIT_ERROR: ${{ steps.init_error.outputs.message || '' }}
+          VALIDATE_ERROR: ${{ steps.validate_error.outputs.message || '' }}
+          PLAN_ERROR: ${{ steps.plan_error.outputs.message || '' }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -119,8 +169,24 @@ jobs:
             }
             
             // Create the new comment
+            let errorSection = '';
+            if (process.env.FMT_ERROR || process.env.INIT_ERROR || 
+                process.env.VALIDATE_ERROR || process.env.PLAN_ERROR) {
+              errorSection = `
+              ### ❌ Errors Detected
+              
+              ${process.env.FMT_ERROR ? process.env.FMT_ERROR + '\n\n' : ''}
+              ${process.env.INIT_ERROR ? process.env.INIT_ERROR + '\n\n' : ''}
+              ${process.env.VALIDATE_ERROR ? process.env.VALIDATE_ERROR + '\n\n' : ''}
+              ${process.env.PLAN_ERROR ? process.env.PLAN_ERROR + '\n\n' : ''}
+              
+              Please fix the errors above before proceeding.
+              `;
+            }
+            
             const output = `## Terraform Infrastructure Deployment 🚀
             ---
+            ${errorSection}
             #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
@@ -163,8 +229,8 @@ jobs:
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
           DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
           ROUTE53_ZONE_ID: ${{ secrets.ROUTE53_ZONE_ID }}
-          COGNITO_CALLBACK_URLS: ${{ secrets.COGNITO_CALLBACK_URLS }}
-          COGNITO_LOGOUT_URLS: ${{ secrets.COGNITO_LOGOUT_URLS }}
+          COGNITO_CALLBACK_URL: ${{ secrets.COGNITO_CALLBACK_URL }}
+          COGNITO_LOGOUT_URL: ${{ secrets.COGNITO_LOGOUT_URL }}
           COGNITO_DOMAIN: ${{ secrets.COGNITO_DOMAIN }}
 
         run: |
@@ -175,7 +241,7 @@ jobs:
             -var "DATABASE_NAME=${DATABASE_NAME}" \
             -var "DOMAIN_NAME=${DOMAIN_NAME}" \
             -var "ROUTE53_ZONE_ID=${ROUTE53_ZONE_ID}" \
-            -var "COGNITO_CALLBACK_URLS=${COGNITO_CALLBACK_URLS}" \
-            -var "COGNITO_LOGOUT_URLS=${COGNITO_LOGOUT_URLS}" \
+            -var "COGNITO_CALLBACK_URL=${COGNITO_CALLBACK_URL}" \
+            -var "COGNITO_LOGOUT_URL=${COGNITO_LOGOUT_URL}" \
             -var "COGNITO_DOMAIN=${COGNITO_DOMAIN}" \
             -input=false

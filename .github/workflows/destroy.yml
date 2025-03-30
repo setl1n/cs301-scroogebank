@@ -51,8 +51,8 @@ jobs:
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
           DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
           ROUTE53_ZONE_ID: ${{ secrets.ROUTE53_ZONE_ID }}
-          COGNITO_CALLBACK_URLS: ${{ secrets.COGNITO_CALLBACK_URLS }}
-          COGNITO_LOGOUT_URLS: ${{ secrets.COGNITO_LOGOUT_URLS }}
+          COGNITO_CALLBACK_URL: ${{ secrets.COGNITO_CALLBACK_URL }}
+          COGNITO_LOGOUT_URL: ${{ secrets.COGNITO_LOGOUT_URL }}
           COGNITO_DOMAIN: ${{ secrets.COGNITO_DOMAIN }}
         run: |
           TF_LOG=DEBUG terraform destroy \
@@ -62,6 +62,6 @@ jobs:
             -var "DATABASE_NAME=${DATABASE_NAME}" \
             -var "DOMAIN_NAME=${DOMAIN_NAME}" \
             -var "ROUTE53_ZONE_ID=${ROUTE53_ZONE_ID}" \
-            -var "COGNITO_CALLBACK_URLS=${COGNITO_CALLBACK_URLS}" \
-            -var "COGNITO_LOGOUT_URLS=${COGNITO_LOGOUT_URLS}" \
+            -var "COGNITO_CALLBACK_URL=${COGNITO_CALLBACK_URL}" \
+            -var "COGNITO_LOGOUT_URL=${COGNITO_LOGOUT_URL}" \
             -var "COGNITO_DOMAIN=${COGNITO_DOMAIN}"
