@@ -142,7 +142,7 @@ resource "aws_iam_policy" "dynamodb_access" {
           "dynamodb:Query"
         ]
         Effect   = "Allow"
-        Resource = "arn:aws:dynamodb:*:*:table/${var.lambda_functions[each.key].dynamodb_config.table_name}"
+        Resource = "arn:aws:dynamodb:${var.lambda_functions[each.key].dynamodb_config.region}:*:table/${var.lambda_functions[each.key].dynamodb_config.table_name}"
       }
     ]
   })
@@ -169,7 +169,7 @@ resource "aws_iam_policy" "ses_access" {
           "ses:SendRawEmail"
         ]
         Effect   = "Allow"
-        Resource = "*"
+        Resource = "*" # Consider restricting to specific identities if possible
       }
     ]
   })

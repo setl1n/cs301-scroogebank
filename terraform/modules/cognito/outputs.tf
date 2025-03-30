@@ -24,7 +24,22 @@ output "jwks_url" {
   value       = "https://cognito-idp.${var.aws_region}.amazonaws.com/${aws_cognito_user_pool.user_pool.id}/.well-known/jwks.json"
 }
 
-output "cognito_access_policy_arn" {
-  description = "The ARN of the Cognito access policy"
-  value       = aws_iam_policy.cognito_access_policy.arn
+output "hosted_ui_url" {
+  description = "URL for the Cognito Hosted UI login page"
+  value       = "https://${aws_cognito_user_pool_domain.user_pool_domain.domain}.auth.${var.aws_region}.amazoncognito.com/login"
+}
+
+output "admin_group_name" {
+  description = "Name of the admin user group"
+  value       = aws_cognito_user_group.admin_group.name
+}
+
+output "agent_group_name" {
+  description = "Name of the agent user group"
+  value       = aws_cognito_user_group.agent_group.name
+}
+
+output "issuer_url" {
+  description = "The issuer URL for the Cognito User Pool (for JWT verification)"
+  value       = "https://cognito-idp.${var.aws_region}.amazonaws.com/${aws_cognito_user_pool.user_pool.id}"
 }

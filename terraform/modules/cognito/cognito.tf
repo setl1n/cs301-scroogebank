@@ -56,39 +56,12 @@ resource "aws_cognito_user_group" "admin_group" {
   user_pool_id = aws_cognito_user_pool.user_pool.id
   name         = "ADMIN"
   precedence   = 0
+  description  = "Administrator group with highest privileges"
 }
 
 resource "aws_cognito_user_group" "agent_group" {
   user_pool_id = aws_cognito_user_pool.user_pool.id
   name         = "AGENT"
   precedence   = 1
-}
-
-#--------------------------------------------------------------
-# IAM Policy for Cognito Access
-#--------------------------------------------------------------
-
-resource "aws_iam_policy" "cognito_access_policy" {
-  name        = "cognito-access-policy"
-  description = "Policy for Lambda functions to access Cognito User Pools"
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "cognito-idp:AdminCreateUser",
-          "cognito-idp:AdminGetUser",
-          "cognito-idp:ListUsers",
-          "cognito-idp:AdminDeleteUser",
-          "cognito-idp:AdminUpdateUserAttributes",
-          "cognito-idp:AdminAddUserToGroup",
-          "cognito-idp:AdminRemoveUserFromGroup",
-          "cognito-idp:AdminListGroupsForUser"
-        ],
-        Resource = "arn:aws:cognito-idp:${var.aws_region}:*:userpool/${aws_cognito_user_pool.user_pool.id}"
-      }
-    ]
-  })
+  description  = "Agent group with standard access"
 }

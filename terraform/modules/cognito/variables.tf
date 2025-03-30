@@ -14,6 +14,10 @@ variable "password_min_length" {
   description = "Minimum length of the password"
   type        = number
   default     = 8
+  validation {
+    condition     = var.password_min_length >= 8
+    error_message = "Password minimum length must be at least 8 characters."
+  }
 }
 
 variable "password_require_lowercase" {
@@ -44,6 +48,10 @@ variable "mfa_configuration" {
   description = "MFA configuration for the user pool. Can be 'OFF', 'ON', or 'OPTIONAL'"
   type        = string
   default     = "OFF"
+  validation {
+    condition     = contains(["OFF", "ON", "OPTIONAL"], var.mfa_configuration)
+    error_message = "MFA configuration must be one of: OFF, ON, or OPTIONAL."
+  }
 }
 
 variable "cognito_domain" {
@@ -64,19 +72,4 @@ variable "logout_urls" {
 variable "aws_region" {
   description = "AWS region for the Cognito User Pool"
   type        = string
-}
-
-variable "lambda_functions" {
-  description = "Map of Lambda functions to create"
-  type = map(object({
-    name                  = string
-    handler               = string
-    runtime               = string
-    filename              = string
-    timeout               = number
-    memory_size           = number
-    environment_variables = map(string)
-    cognito_enabled       = bool
-  }))
-  default = {}
 }

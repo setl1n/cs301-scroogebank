@@ -21,6 +21,11 @@ variable "lambda_sg_id" {
   default     = ""
 }
 
+variable "aws_region" {
+  description = "AWS region for the Cognito User Pool"
+  type        = string
+}
+
 #----------------------------------------
 # Lambda Function Configurations
 #----------------------------------------
