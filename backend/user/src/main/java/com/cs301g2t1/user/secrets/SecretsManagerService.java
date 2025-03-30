@@ -14,7 +14,7 @@ public class SecretsManagerService {
     
     public SecretsManagerService() {
         this.client = SecretsManagerClient.builder()
-                .region(Region.of("us-east-1")) // Set your region
+                .region(Region.of("ap-southeast-1"))
                 .build();
     }
     
