@@ -1,11 +1,11 @@
-# # AWS Infrastructure Configuration
-# # This file defines the main infrastructure components used in the application
+# AWS Infrastructure Configuration
+# This file defines the main infrastructure components used in the application
 
-# # Network module - Sets up VPC, subnets, security groups, and other networking resources
-# # This forms the foundation for all other infrastructure components
-# module "network" {
-#   source = "./modules/network"
-# }
+# Network module - Sets up VPC, subnets, security groups, and other networking resources
+# This forms the foundation for all other infrastructure components
+module "network" {
+  source = "./modules/network"
+}
 
 # module "dynamodb" {
 #   source = "./modules/dynamodb"
@@ -139,36 +139,66 @@
 # #     }
 # #   }
 # # }
-# module "lambda" {
-#   source = "./modules/lambda"
 
-#   private_lambda_subnet_ids = module.network.private_lambda_subnet_ids
-#   lambda_sg_id              = module.network.lambda_sg_id
+module "cognito" {
+  source = "./modules/cognito"
 
-#   # Define multiple Lambda functions with different use cases
-#   lambda_functions = {
-#     for name, config in var.lambda_functions : name => merge(config, {
-#       source_code_hash = filebase64sha256(config.filename)
+  user_pool_name        = "CS301-G2-T1"
+  user_pool_client_name = "CS301-G2-T1-AppClient"
 
-#       # Add dynamic configurations based on service flags
-#       # rds_config = config.rds_enabled ? {
-#       #   database_host = module.rds.db_endpoints[name]
-#       #   database_name = var.DATABASE_NAME
-#       #   database_user = var.DATABASE_USERNAME
-#       #   database_pass = var.DATABASE_PASSWORD
-#       # } : null,
+  password_min_length        = 8
+  password_require_lowercase = true
+  password_require_uppercase = true
+  password_require_numbers   = true
+  password_require_symbols   = false
 
-#       # Add SES configuration if enabled
-#       ses_config = config.ses_enabled ? {
-#         region     = "ap-southeast-1"
-#         from_email = "notifications@yourdomain.com"
-#       } : null,
+  mfa_configuration = "OFF"
 
-#       # Add DynamoDB configuration if enabled  
-#       dynamodb_config = config.dynamodb_enabled ? {
-#         region     = "ap-southeast-1"
-#         table_name = "application-logs"
-#       } : null,
-#     })
-#   }
-# }
+  cognito_domain = var.COGNITO_DOMAIN
+  callback_urls  = var.COGNITO_CALLBACK_URLS
+  logout_urls    = var.COGNITO_LOGOUT_URLS
+
+  aws_region       = var.aws_region
+  lambda_functions = var.lambda_functions
+}
+
+module "lambda" {
+  source = "./modules/lambda"
+
+  private_lambda_subnet_ids = module.network.private_lambda_subnet_ids
+  lambda_sg_id              = module.network.lambda_sg_id
+
+  # Define multiple Lambda functions with different use cases
+  lambda_functions = {
+    for name, config in var.lambda_functions : name => merge(config, {
+      source_code_hash = filebase64sha256(config.filename)
+
+      # Add dynamic configurations based on service flags
+      # rds_config = config.rds_enabled ? {
+      #   database_host = module.rds.db_endpoints[name]
+      #   database_name = var.DATABASE_NAME
+      #   database_user = var.DATABASE_USERNAME
+      #   database_pass = var.DATABASE_PASSWORD
+      # } : null,
+
+      # Add SES configuration if enabled
+      ses_config = config.ses_enabled ? {
+        region     = "ap-southeast-1"
+        from_email = "notifications@yourdomain.com"
+      } : null,
+
+      # Add DynamoDB configuration if enabled  
+      dynamodb_config = config.dynamodb_enabled ? {
+        region     = "ap-southeast-1"
+        table_name = "application-logs"
+      } : null,
+
+      # Add Cognito configuration if enabled
+      cognito_config = config.cognito_enabled ? {
+        user_pool_id  = module.cognito.user_pool_id
+        app_client_id = module.cognito.user_pool_client_id
+        region        = var.aws_region
+      } : null,
+    })
+  }
+}

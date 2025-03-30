@@ -3,7 +3,7 @@
 # 
 # This module creates Lambda functions with appropriate IAM roles and
 # permissions based on which AWS services each function needs to access.
-# Supports configuring access to RDS, DynamoDB, SES, and other services.
+# Supports configuring access to RDS, DynamoDB, SES, Cognito, and other services.
 #----------------------------------------
 
 #----------------------------------------
@@ -52,6 +52,13 @@ resource "aws_lambda_function" "lambda_functions" {
       each.value.ses_config != null ? {
         SES_REGION = each.value.ses_config.region
         FROM_EMAIL = each.value.ses_config.from_email
+      } : {},
+
+      # Cognito configuration
+      each.value.cognito_config != null ? {
+        COGNITO_USER_POOL_ID  = each.value.cognito_config.user_pool_id
+        COGNITO_APP_CLIENT_ID = each.value.cognito_config.app_client_id
+        COGNITO_REGION        = each.value.cognito_config.region
       } : {}
     )
   }
@@ -71,6 +78,9 @@ locals {
   })
   lambda_with_ses = nonsensitive({
     for k, v in var.lambda_functions : k => true if try(v.ses_config != null, false)
+  })
+  lambda_with_cognito = nonsensitive({
+    for k, v in var.lambda_functions : k => true if try(v.cognito_config != null, false)
   })
 }
 
@@ -170,4 +180,39 @@ resource "aws_iam_role_policy_attachment" "ses_access" {
 
   role       = aws_iam_role.lambda_role[each.key].name
   policy_arn = aws_iam_policy.ses_access[each.key].arn
+}
+
+# Cognito access for Lambda functions that need to interact with Cognito User Pools
+resource "aws_iam_policy" "cognito_access" {
+  for_each = local.lambda_with_cognito
+
+  name        = "${var.lambda_functions[each.key].name}-cognito-policy"
+  description = "Policy for Lambda functions to access Cognito User Pools"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "cognito-idp:AdminCreateUser",
+          "cognito-idp:AdminGetUser",
+          "cognito-idp:ListUsers",
+          "cognito-idp:AdminDeleteUser",
+          "cognito-idp:AdminUpdateUserAttributes",
+          "cognito-idp:AdminAddUserToGroup",
+          "cognito-idp:AdminRemoveUserFromGroup",
+          "cognito-idp:AdminListGroupsForUser"
+        ],
+        Resource = "arn:aws:cognito-idp:${var.lambda_functions[each.key].cognito_config.region}:*:userpool/${var.lambda_functions[each.key].cognito_config.user_pool_id}"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cognito_access" {
+  for_each = local.lambda_with_cognito
+
+  role       = aws_iam_role.lambda_role[each.key].name
+  policy_arn = aws_iam_policy.cognito_access[each.key].arn
 }
