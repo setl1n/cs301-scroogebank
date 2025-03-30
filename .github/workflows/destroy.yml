@@ -51,6 +51,9 @@ jobs:
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
           DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
           ROUTE53_ZONE_ID: ${{ secrets.ROUTE53_ZONE_ID }}
+          COGNITO_CALLBACK_URLS: ${{ secrets.COGNITO_CALLBACK_URLS }}
+          COGNITO_LOGOUT_URLS: ${{ secrets.COGNITO_LOGOUT_URLS }}
+          COGNITO_DOMAIN: ${{ secrets.COGNITO_DOMAIN }}
         run: |
           TF_LOG=DEBUG terraform destroy \
             -auto-approve \

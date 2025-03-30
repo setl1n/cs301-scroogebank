@@ -17,8 +17,8 @@ public class UserRepositoryImpl implements UserRepository {
     // references .env for now
     private static final String USER_POOL_ID = System.getenv("COGNITO_USER_POOL_ID");
     private static final String APP_CLIENT_ID = System.getenv("COGNITO_APP_CLIENT_ID");
-    private static final Region REGION = Region.AP_SOUTHEAST_1;
-    
+    private static final Region REGION = Region.of(System.getenv("COGNITO_REGION") != null ? System.getenv("COGNITO_REGION") : "ap-southeast-1");
+        
     private final CognitoIdentityProviderClient cognitoClient;
     private static UserRepositoryImpl instance;
     
