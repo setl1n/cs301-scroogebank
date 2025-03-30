@@ -210,7 +210,7 @@ module "lambda" {
         database_host     = ""
         database_name     = var.DATABASE_NAME
         database_user     = var.DATABASE_USERNAME
-        database_password = var.DATABASE_PASSWORD
+        database_pass     = var.DATABASE_PASSWORD
       } : null,
 
       # Add SES configuration if enabled
