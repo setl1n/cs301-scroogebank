@@ -32,8 +32,8 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
   allowed_oauth_scopes      = ["email", "openid", "profile"]
 
   # Update with actual callback and logout url later, this for testing
-  callback_urls             = ["http://localhost:8080/login/oauth2/code/cognito"]
-  logout_urls               = ["http://localhost:8080/logout"]
+  callback_urls = var.cognito_callback_urls
+  logout_urls   = var.cognito_logout_urls
   supported_identity_providers = ["COGNITO"]
 
   explicit_auth_flows = [
@@ -47,8 +47,7 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
 # Cognito User Pool Domain
 #########################
 resource "aws_cognito_user_pool_domain" "user_pool_domain" {
-  # hmm
-  domain       = "cs301-g2-t1"
+  domain       = var.cognito_domain
   user_pool_id = aws_cognito_user_pool.user_pool.id
 }
 

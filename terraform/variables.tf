@@ -157,3 +157,18 @@ variable "aws_region" {
   type        = string
   default     = "ap-southeast-1"
 }
+
+variable "cognito_callback_urls" {
+  description = "List of callback URLs for the Cognito User Pool Client"
+  type        = list(string)
+}
+
+variable "cognito_logout_urls" {
+  description = "List of logout URLs for the Cognito User Pool Client"
+  type        = list(string)
+}
+
+variable "cognito_domain" {
+  description = "Custom domain name for the Cognito User Pool"
+  type        = string
+}
