@@ -75,12 +75,13 @@ jobs:
           COGNITO_DOMAIN: ${{ secrets.COGNITO_DOMAIN }}
         run: |
           terraform plan \
+            -input=false \
             -no-color \
             -var "DATABASE_USERNAME=${DATABASE_USERNAME}" \
             -var "DATABASE_PASSWORD=${DATABASE_PASSWORD}" \
             -var "DATABASE_NAME=${DATABASE_NAME}" \
             -var "DOMAIN_NAME=${DOMAIN_NAME}" \
-            -var "ROUTE53_ZONE_ID=${ROUTE53_ZONE_ID}"
+            -var "ROUTE53_ZONE_ID=${ROUTE53_ZONE_ID}" \
             -var "COGNITO_CALLBACK_URLS=${COGNITO_CALLBACK_URLS}" \
             -var "COGNITO_LOGOUT_URLS=${COGNITO_LOGOUT_URLS}" \
             -var "COGNITO_DOMAIN=${COGNITO_DOMAIN}"
