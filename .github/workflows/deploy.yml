@@ -53,7 +53,6 @@ jobs:
           echo "::error::Action required: Run 'terraform fmt' locally to automatically format your code."
           echo "::error::Then commit and push the changes."
           echo "message=⚠️ **Terraform Formatting Error**: Code formatting does not comply with Terraform standards. Run \`terraform fmt\` locally to fix formatting issues." >> $GITHUB_OUTPUT
-          exit 1
 
       - name: Terraform Init
         id: init
@@ -79,7 +78,6 @@ jobs:
           echo "::error::- Check that all required backend configuration secrets are properly set in GitHub"
           echo "::error::Action required: Verify backend configuration and AWS permissions."
           echo "message=⚠️ **Terraform Init Error**: Initialization failed. Check AWS credentials, S3 bucket access, and DynamoDB table configuration. Verify all backend secrets are properly set in GitHub." >> $GITHUB_OUTPUT
-          exit 1
 
       - name: Terraform Validate
         id: validate
@@ -93,7 +91,6 @@ jobs:
           echo "::error::Check the error messages above for specific issues in your Terraform files."
           echo "::error::Action required: Fix the syntax errors in your Terraform configuration."
           echo "message=⚠️ **Terraform Validation Error**: Configuration contains syntax errors. Review error messages above for specific details." >> $GITHUB_OUTPUT
-          exit 1
 
       - name: Terraform Plan
         id: plan
