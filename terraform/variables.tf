@@ -98,6 +98,18 @@ variable "lambda_functions" {
       timeout     = 15
       memory_size = 256
       rds_enabled = true
+    },
+    user = {
+      name        = "user_lambda_function"
+      handler     = "com.cs301g2t1.user.UserHandler::handleRequest"
+      runtime     = "java21"
+      filename    = "../backend/user/target/user-0.0.1-SNAPSHOT.jar" // seems to be this .jar
+      timeout     = 15
+      memory_size = 256
+      environment_variables = {
+        "COGNITO_USER_POOL_ID" = "${aws_cognito_user_pool.user_pool.id}"
+        "COGNITO_APP_CLIENT_ID" = "${aws_cognito_user_pool_client.user_pool_client.id}"
+      }
     }
     # Example with other services
     # notification_sender = {

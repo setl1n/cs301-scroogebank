@@ -56,13 +56,13 @@ resource "aws_cognito_user_pool_domain" "user_pool_domain" {
 #########################
 resource "aws_cognito_user_group" "admin_group" {
   user_pool_id = aws_cognito_user_pool.user_pool.id
-  name   = "Admin"
+  name   = "ADMIN"
   precedence   = 0
 }
 
 resource "aws_cognito_user_group" "agent_group" {
   user_pool_id = aws_cognito_user_pool.user_pool.id
-  name   = "Agent"
+  name   = "AGENT"
   precedence   = 1
 }
 
