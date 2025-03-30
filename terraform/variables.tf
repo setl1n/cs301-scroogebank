@@ -106,10 +106,8 @@ variable "lambda_functions" {
       filename    = "../backend/user/target/user-0.0.1-SNAPSHOT.jar" // seems to be this .jar
       timeout     = 15
       memory_size = 256
-      environment_variables = {
-        "COGNITO_USER_POOL_ID" = "${aws_cognito_user_pool.user_pool.id}"
-        "COGNITO_APP_CLIENT_ID" = "${aws_cognito_user_pool_client.user_pool_client.id}"
-      }
+      environment_variables = {}
+    },
     # transaction = {
     #   name        = "transaction_lambda_function"
     #   handler     = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
