@@ -50,7 +50,7 @@ jobs:
         if: steps.fmt.outcome == 'failure'
         run: |
           echo "::error::Terraform formatting check failed. Code formatting does not comply with Terraform standards."
-          echo "::error::Action required: Run 'terraform fmt' locally to automatically format your code."
+          echo "::error::Action required: Run 'terraform fmt -recursive' locally to automatically format your code."
           echo "::error::Then commit and push the changes."
           echo "message=⚠️ **Terraform Formatting Error**: Code formatting does not comply with Terraform standards. Run \`terraform fmt\` locally to fix formatting issues." >> $GITHUB_OUTPUT
 
@@ -221,6 +221,14 @@ jobs:
               repo: context.repo.repo,
               body: output
             })
+
+      - name: Check for Terraform Errors
+        if: github.event_name == 'pull_request'
+        run: |
+          if [[ "${{ steps.fmt.outcome }}" == "failure" || "${{ steps.init.outcome }}" == "failure" || "${{ steps.validate.outcome }}" == "failure" || "${{ steps.plan.outcome }}" == "failure" ]]; then
+            echo "::error::Errors were found during Terraform execution. Please fix the errors before proceeding."
+            exit 1
+          fi
 
       - name: Terraform Plan Status
         if: steps.plan.outcome == 'failure'
