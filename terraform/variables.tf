@@ -110,15 +110,6 @@ variable "lambda_functions" {
       cognito_enabled       = true
       environment_variables = {}
     },
-    # transaction = {
-    #   name        = "transaction_lambda_function"
-    #   handler     = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
-    #   runtime     = "java21"
-    #   filename    = "../backend/transaction/target/transaction-1.0-SNAPSHOT.jar"
-    #   timeout     = 15
-    #   memory_size = 256
-    #   rds_enabled = true
-    # }
     log = {
       name             = "log_lambda_function"
       handler          = "com.cs301g2t1.log.LogHandler::handleRequest"
@@ -187,14 +178,14 @@ variable "aws_region" {
   default     = "ap-southeast-1"
 }
 
-variable "COGNITO_CALLBACK_URLS" {
-  description = "List of callback URLs for the Cognito User Pool Client"
-  type        = list(string)
+variable "COGNITO_CALLBACK_URL" {
+  description = "Callback URL for the Cognito User Pool Client"
+  type        = string
 }
 
-variable "COGNITO_LOGOUT_URLS" {
-  description = "List of logout URLs for the Cognito User Pool Client"
-  type        = list(string)
+variable "COGNITO_LOGOUT_URL" {
+  description = "Logout URL for the Cognito User Pool Client"
+  type        = string
 }
 
 variable "COGNITO_DOMAIN" {
