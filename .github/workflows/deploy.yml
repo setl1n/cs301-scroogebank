@@ -171,41 +171,49 @@ jobs:
                 process.env.VALIDATE_ERROR || process.env.PLAN_ERROR) {
               errorSection = `
               ### ❌ Errors Detected
-              
-              ${process.env.FMT_ERROR ? process.env.FMT_ERROR + '\n\n' : ''}
-              ${process.env.INIT_ERROR ? process.env.INIT_ERROR + '\n\n' : ''}
-              ${process.env.VALIDATE_ERROR ? process.env.VALIDATE_ERROR + '\n\n' : ''}
-              ${process.env.PLAN_ERROR ? process.env.PLAN_ERROR + '\n\n' : ''}
-              
-              Please fix the errors above before proceeding.
-              `;
-            }
-            
-            const output = `## Terraform Infrastructure Deployment 🚀
-            ---
-            ${errorSection}
-            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-            <details><summary>Validation Output</summary>
 
-            \`\`\`\n
-            ${{ steps.validate.outputs.stdout }}
-            \`\`\`
+              ${process.env.FMT_ERROR ? '- ' + process.env.FMT_ERROR + '\n' : ''}
+              ${process.env.INIT_ERROR ? '- ' + process.env.INIT_ERROR + '\n' : ''}
+              ${process.env.VALIDATE_ERROR ? '- ' + process.env.VALIDATE_ERROR + '\n' : ''}
+              ${process.env.PLAN_ERROR ? '- ' + process.env.PLAN_ERROR + '\n' : ''}
 
-            </details>
+              **Please fix the errors above before proceeding.**
 
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+              ---`;
+                          }
+                          
+                          const output = `## Terraform Infrastructure Deployment 🚀
 
-            <details><summary>Show Plan</summary>
+              ${errorSection}
 
-            \`\`\`\n
-            ${process.env.PLAN}
-            \`\`\`
+              ### Status Summary
+              | Step | Status |
+              |------|--------|
+              | Format and Style 🖌 | \`${{ steps.fmt.outcome }}\` |
+              | Initialization ⚙️ | \`${{ steps.init.outcome }}\` |
+              | Validation 🤖 | \`${{ steps.validate.outcome }}\` |
+              | Plan 📖 | \`${{ steps.plan.outcome }}\` |
 
-            </details>
+              ### Detailed Results
 
-            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+              <details>
+                <summary><b>Validation Output</b></summary>
+
+              \`\`\`
+              ${{ steps.validate.outputs.stdout }}
+              \`\`\`
+              </details>
+
+              <details>
+                <summary><b>Terraform Plan</b></summary>
+
+              \`\`\`
+              ${process.env.PLAN}
+              \`\`\`
+              </details>
+
+              ---
+              *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
