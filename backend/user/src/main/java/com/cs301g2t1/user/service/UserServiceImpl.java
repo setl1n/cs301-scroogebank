@@ -2,18 +2,17 @@ package com.cs301g2t1.user.service;
 
 import com.cs301g2t1.user.model.User;
 import com.cs301g2t1.user.repository.UserRepository;
+import com.cs301g2t1.user.repository.UserRepositoryImpl;
 
 import java.util.List;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private UserRepository userRepository = UserRepositoryImpl.getInstance();
 
     @Override
     public List<User> getAllUsers() {
