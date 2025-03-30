@@ -110,6 +110,23 @@ variable "lambda_functions" {
         "COGNITO_USER_POOL_ID" = "${aws_cognito_user_pool.user_pool.id}"
         "COGNITO_APP_CLIENT_ID" = "${aws_cognito_user_pool_client.user_pool_client.id}"
       }
+    # transaction = {
+    #   name        = "transaction_lambda_function"
+    #   handler     = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
+    #   runtime     = "java21"
+    #   filename    = "../backend/transaction/target/transaction-1.0-SNAPSHOT.jar"
+    #   timeout     = 15
+    #   memory_size = 256
+    #   rds_enabled = true
+    # }
+    log = {
+      name             = "log_lambda_function"
+      handler          = "com.cs301g2t1.log.LogHandler::handleRequest"
+      runtime          = "java21"
+      filename         = "../backend/log/target/log-1.0-SNAPSHOT.jar"
+      timeout          = 15
+      memory_size      = 256
+      dynamodb_enabled = true
     }
     # Example with other services
     # notification_sender = {
