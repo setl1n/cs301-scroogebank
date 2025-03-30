@@ -28,12 +28,12 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
   # Generate a secret for backend authentication
   generate_secret = true
 
-  allowed_oauth_flows       = ["code"]
-  allowed_oauth_scopes      = ["email", "openid", "profile"]
+  allowed_oauth_flows  = ["code"]
+  allowed_oauth_scopes = ["email", "openid", "profile"]
 
   # Update with actual callback and logout url later, this for testing
-  callback_urls = var.COGNITO_CALLBACK_URLS
-  logout_urls   = var.COGNITO_LOGOUT_URLS
+  callback_urls                = var.COGNITO_CALLBACK_URLS
+  logout_urls                  = var.COGNITO_LOGOUT_URLS
   supported_identity_providers = ["COGNITO"]
 
   explicit_auth_flows = [
@@ -56,13 +56,13 @@ resource "aws_cognito_user_pool_domain" "user_pool_domain" {
 #########################
 resource "aws_cognito_user_group" "admin_group" {
   user_pool_id = aws_cognito_user_pool.user_pool.id
-  name   = "ADMIN"
+  name         = "ADMIN"
   precedence   = 0
 }
 
 resource "aws_cognito_user_group" "agent_group" {
   user_pool_id = aws_cognito_user_pool.user_pool.id
-  name   = "AGENT"
+  name         = "AGENT"
   precedence   = 1
 }
 
@@ -73,13 +73,13 @@ resource "aws_cognito_user_group" "agent_group" {
 resource "aws_iam_policy" "cognito_access_policy" {
   name        = "cognito-access-policy"
   description = "Policy for Lambda functions to access Cognito User Pools"
-  
+
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Effect   = "Allow",
-        Action   = [
+        Effect = "Allow",
+        Action = [
           "cognito-idp:AdminCreateUser",
           "cognito-idp:AdminGetUser",
           "cognito-idp:ListUsers",
@@ -114,9 +114,9 @@ resource "aws_lambda_function" "lambda_function" {
       each.value.environment_variables,
       # Add Cognito environment variables if enabled
       each.value.cognito_enabled ? {
-        COGNITO_USER_POOL_ID = aws_cognito_user_pool.user_pool.id
+        COGNITO_USER_POOL_ID  = aws_cognito_user_pool.user_pool.id
         COGNITO_APP_CLIENT_ID = aws_cognito_user_pool_client.user_pool_client.id
-        COGNITO_REGION = var.aws_region
+        COGNITO_REGION        = var.aws_region
       } : {}
     )
   }
@@ -125,9 +125,9 @@ resource "aws_lambda_function" "lambda_function" {
 # IAM role for Lambda functions
 resource "aws_iam_role" "lambda_role" {
   for_each = var.lambda_functions
-  
+
   name = "${each.value.name}_role"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -146,7 +146,7 @@ resource "aws_iam_role" "lambda_role" {
 # Attach policies based on enabled services
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   for_each = var.lambda_functions
-  
+
   role       = aws_iam_role.lambda_role[each.key].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
@@ -157,7 +157,7 @@ resource "aws_iam_role_policy_attachment" "cognito_policy_attachment" {
     for k, v in var.lambda_functions : k => v
     if v.cognito_enabled == true
   }
-  
+
   role       = aws_iam_role.lambda_role[each.key].name
   policy_arn = aws_iam_policy.cognito_access_policy.arn
 }
