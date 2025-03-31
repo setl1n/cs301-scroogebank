@@ -249,3 +249,10 @@ module "sftp_server" {
   vpc_id           = module.network.vpc_id
   lambda_sg_id     = module.lambda.lambda_sg_id
 }
+#--------------------------------------------------------------
+# NAT Gateway Module
+# Creates a NAT Gateway for private subnets to access the internet
+#--------------------------------------------------------------
+module "nat" {
+  source = "./modules/nat"
+}
