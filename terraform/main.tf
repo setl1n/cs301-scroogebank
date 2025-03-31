@@ -235,3 +235,17 @@ module "lambda" {
     })
   }
 }
+
+#--------------------------------------------------------------
+# SFTP Module 
+# EC2 instance for file retrieval via SFTP
+#--------------------------------------------------------------
+module "sftp_server" {
+  source           = "./modules/sftp-server"
+  ami_id           = "ami-0a2e29e3b4fc39212" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
+  instance_type    = "t2.micro"
+  key_name         = "my-key-pair"
+  public_subnet_id = module.network.public_subnet_ids[0]
+  vpc_id           = module.network.vpc_id
+  lambda_sg_id     = module.lambda.lambda_sg_id
+}

@@ -23,6 +23,15 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
+# NAT Gateway for outbound requests from private subnets in VPC
+resource "aws_eip" "nat" {
+  vpc_id = aws_vpc.vpc.id
+  
+  tags = {
+    Name = "nat-eip"
+  }
+}
+
 # Public route table for subnets that need direct internet access
 resource "aws_route_table" "public_route_table" {
   vpc_id = aws_vpc.vpc.id
@@ -46,4 +55,11 @@ resource "aws_route_table" "private_route_table" {
   tags = {
     Name = "private-route-table"
   }
+}
+
+# Route in the private route table to direct traffic to the NAT Gateway
+resource "aws_route" "private_to_nat" {
+  route_table_id         = aws_route_table.private_route_table.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat.id
 }
