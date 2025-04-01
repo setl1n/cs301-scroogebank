@@ -247,12 +247,5 @@ module "sftp_server" {
   key_name         = "my-key-pair"
   public_subnet_id = module.network.public_subnet_ids[0]
   vpc_id           = module.network.vpc_id
-  lambda_sg_id     = module.lambda.lambda_sg_id
-}
-#--------------------------------------------------------------
-# NAT Gateway Module
-# Creates a NAT Gateway for private subnets to access the internet
-#--------------------------------------------------------------
-module "nat" {
-  source = "./modules/nat"
-}
+  lambda_sg_id     = module.network.lambda_sg_id
+  }

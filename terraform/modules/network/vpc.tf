@@ -23,11 +23,24 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
-# NAT Gateway for outbound requests from private subnets in VPC
+# Elastic IP for the NAT Gateway
 resource "aws_eip" "nat" {
-  
+
   tags = {
     Name = "nat-eip"
+  }
+}
+
+# NAT Gateway for outbound requests from private subnets in VPC
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public_subnet_a.id
+  
+  # Explicitly depend on the Internet Gateway
+  depends_on = [aws_internet_gateway.igw]
+  
+  tags = {
+    Name = "main-nat-gateway"
   }
 }
 
@@ -60,5 +73,6 @@ resource "aws_route_table" "private_route_table" {
 resource "aws_route" "private_to_nat" {
   route_table_id         = aws_route_table.private_route_table.id
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = module.nat.nat_gateway_id
+  nat_gateway_id         = aws_nat_gateway.nat.id
 }
+ 
