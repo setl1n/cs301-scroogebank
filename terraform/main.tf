@@ -229,7 +229,7 @@ module "lambda" {
       # Add Cognito configuration if enabled
       cognito_config = config.cognito_enabled ? {
         # user_pool_id  = module.cognito.user_pool_id
-        user_pool_id  = ""
+        user_pool_id = ""
         # app_client_id = module.cognito.user_pool_client_id
         app_client_id = ""
         region        = var.aws_region
@@ -264,7 +264,7 @@ module "eventbridge" {
   rule_description = "Triggers the Lambda function to fetch SFTP data daily"
   target_arn       = module.lambda.lambda_function_arns["transaction_lambda_function"] # ARN of the Lambda function
   role_name        = "eventbridge-role"
-  role_policy      = jsonencode({
+  role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
