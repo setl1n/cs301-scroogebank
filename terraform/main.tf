@@ -244,10 +244,34 @@ module "lambda" {
 #--------------------------------------------------------------
 module "sftp_server" {
   source           = "./modules/sftp-server"
-  ami_id           = "ami-0a2e29e3b4fc39212" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
+  ami_id           = "ami-0aebd6a41cf6ab2eb" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
   instance_type    = "t2.micro"
   key_name         = "my-key-pair"
   public_subnet_id = module.network.public_subnet_ids[0]
   vpc_id           = module.network.vpc_id
   lambda_sg_id     = module.network.lambda_sg_id
-  }
+}
+
+#--------------------------------------------------------------
+# EventBridge Module
+# Manages EventBridge rules and targets for scheduling tasks
+#--------------------------------------------------------------
+module "eventbridge" {
+  source = "./modules/eventbridge"
+
+  # Pass required variables
+  rule_name        = "daily-sftp-fetch-rule"
+  rule_description = "Triggers the Lambda function to fetch SFTP data daily"
+  target_arn       = module.lambda.lambda_function_arns["transaction_lambda_function"] # ARN of the Lambda function
+  role_name        = "eventbridge-role"
+  role_policy      = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = "lambda:InvokeFunction"
+        Effect   = "Allow"
+        Resource = module.lambda.lambda_function_arns["transaction_lambda_function"]
+      }
+    ]
+  })
+}
