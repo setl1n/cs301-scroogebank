@@ -166,26 +166,26 @@ module "network" {
 # Cognito Module
 # User authentication, authorization and user pool management
 #--------------------------------------------------------------
-module "cognito" {
-  source = "./modules/cognito"
+# module "cognito" {
+#   source = "./modules/cognito"
 
-  user_pool_name        = "CS301-G2-T1"
-  user_pool_client_name = "CS301-G2-T1-AppClient"
+#   user_pool_name        = "CS301-G2-T1"
+#   user_pool_client_name = "CS301-G2-T1-AppClient"
 
-  password_min_length        = 8
-  password_require_lowercase = true
-  password_require_uppercase = true
-  password_require_numbers   = true
-  password_require_symbols   = false
+#   password_min_length        = 8
+#   password_require_lowercase = true
+#   password_require_uppercase = true
+#   password_require_numbers   = true
+#   password_require_symbols   = false
 
-  mfa_configuration = "OFF"
+#   mfa_configuration = "OFF"
 
-  cognito_domain = var.COGNITO_DOMAIN
-  callback_urls  = [var.COGNITO_CALLBACK_URL]
-  logout_urls    = [var.COGNITO_LOGOUT_URL]
+#   cognito_domain = var.COGNITO_DOMAIN
+#   callback_urls  = [var.COGNITO_CALLBACK_URL]
+#   logout_urls    = [var.COGNITO_LOGOUT_URL]
 
-  aws_region = var.aws_region
-}
+#   aws_region = var.aws_region
+# }
 
 #--------------------------------------------------------------
 # Lambda Module
@@ -228,10 +228,50 @@ module "lambda" {
 
       # Add Cognito configuration if enabled
       cognito_config = config.cognito_enabled ? {
-        user_pool_id  = module.cognito.user_pool_id
-        app_client_id = module.cognito.user_pool_client_id
+        # user_pool_id  = module.cognito.user_pool_id
+        user_pool_id = ""
+        # app_client_id = module.cognito.user_pool_client_id
+        app_client_id = ""
         region        = var.aws_region
       } : null,
     })
   }
+}
+
+#--------------------------------------------------------------
+# SFTP Module 
+# EC2 instance for file retrieval via SFTP
+#--------------------------------------------------------------
+module "sftp_server" {
+  source           = "./modules/sftp-server"
+  ami_id           = "ami-0aebd6a41cf6ab2eb" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
+  instance_type    = "t2.micro"
+  key_name         = "my-key-pair"
+  public_subnet_id = module.network.public_subnet_ids[0]
+  vpc_id           = module.network.vpc_id
+  lambda_sg_id     = module.network.lambda_sg_id
+}
+
+#--------------------------------------------------------------
+# EventBridge Module
+# Manages EventBridge rules and targets for scheduling tasks
+#--------------------------------------------------------------
+module "eventbridge" {
+  source = "./modules/eventbridge"
+
+  # Pass required variables
+  rule_name        = "daily-sftp-fetch-rule"
+  rule_description = "Triggers the Lambda function to fetch SFTP data daily"
+  target_arn       = module.lambda.lambda_function_arns["transaction_lambda_function"] # ARN of the Lambda function
+  role_name        = "eventbridge-role"
+  role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = "lambda:InvokeFunction"
+        Effect   = "Allow"
+        Resource = module.lambda.lambda_function_arns["transaction_lambda_function"]
+      }
+    ]
+  })
 }
