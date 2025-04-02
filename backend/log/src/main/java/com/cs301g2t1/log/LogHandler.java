@@ -39,50 +39,27 @@ public class LogHandler implements RequestHandler<SQSEvent, Void> {
         }
     }
 
+    public void dateTimeMapping(Request request) {
+        if (request.getLogEntry().getDateTime() != null && !request.getLogEntry().getDateTime().toString().isEmpty()) {
+            String dateTimeStr = request.getLogEntry().getDateTime().toString();
+            request.getLogEntry().setDateTimeStr(dateTimeStr);
+        }
+        else {
+            String currentTime = java.time.LocalDateTime.now().toString();
+            request.getLogEntry().setDateTimeStr(currentTime);
+        }
+    }
+
     @Override
     public Void handleRequest(SQSEvent event, Context context) {
         context.getLogger().log("Received " + event.getRecords().size() + " messages");
 
         for (SQSEvent.SQSMessage message : event.getRecords()) {
+
             try {
-                context.getLogger().log("Processing message: " + message.getBody());
-                Request request = GSON.fromJson(message.getBody(), Request.class);
-                
-                // Debug the LogEntry before any modifications
-                context.getLogger().log("*** BEFORE FIX ***");
-                context.getLogger().log("LogEntry: " + (request.getLogEntry() != null ? "not null" : "null"));
-                if (request.getLogEntry() != null) {
-                    context.getLogger().log("- dateTime: " + request.getLogEntry().getDateTime());
-                    context.getLogger().log("- dateTimeStr: " + request.getLogEntry().getDateTimeStr());
-                }
-                
-                // Fix dateTimeStr issue - always ensure it's populated for POST operations
-                if ("POST".equalsIgnoreCase(request.getOperation()) && request.getLogEntry() != null) {
-                    // If dateTime is set but dateTimeStr is null
-                    if (request.getLogEntry().getDateTime() != null) {
-                        String dateTimeStr = request.getLogEntry().getDateTime().toString();
-                        request.getLogEntry().setDateTimeStr(dateTimeStr);
-                        context.getLogger().log("Set dateTimeStr from dateTime: " + dateTimeStr);
-                    }
-                    // If neither is set, use current time
-                    else if (request.getLogEntry().getDateTimeStr() == null) {
-                        String currentTime = java.time.LocalDateTime.now().toString();
-                        request.getLogEntry().setDateTimeStr(currentTime);
-                        context.getLogger().log("Set dateTimeStr to current time: " + currentTime);
-                    }
-                    
-                    // Double-check the field was set properly
-                    context.getLogger().log("*** AFTER FIX ***");
-                    context.getLogger().log("- dateTimeStr: " + request.getLogEntry().getDateTimeStr());
-                    
-                    // Final safeguard - if still null, add a dummy value
-                    if (request.getLogEntry().getDateTimeStr() == null) {
-                        request.getLogEntry().setDateTimeStr("2025-01-01T00:00:00");
-                        context.getLogger().log("Emergency fallback - set dateTimeStr to dummy value");
-                    }
-                }
-                
+                Request request = GSON.fromJson(message.getBody(), Request.class);    
                 processRequest(request, context);
+
             } catch (Exception e) {
                 context.getLogger().log("Error processing message: " + e.getMessage());
                 e.printStackTrace();
@@ -102,6 +79,7 @@ public class LogHandler implements RequestHandler<SQSEvent, Void> {
             } 
 
             else if ("POST".equalsIgnoreCase(op)) {
+                dateTimeMapping(request); // handle difference
                 LogEntry logEntry = logService.createLog(request.getLogEntry());
                 context.getLogger().log("POST operation processed: " + logEntry);
             } 
