@@ -1,6 +1,14 @@
-#--------------------------------------------------------------
-# Lambda IAM Role
-#--------------------------------------------------------------
+#==============================================================================
+# Lambda IAM Roles and Policies
+#
+# This file defines all IAM roles and policies needed for Lambda functions
+# to access different AWS services (RDS, DynamoDB, SES, SQS, etc.)
+#==============================================================================
+
+#------------------------------------------------------------------------------
+# Base Lambda Execution Role
+# Creates the fundamental IAM role for each Lambda function
+#------------------------------------------------------------------------------
 resource "aws_iam_role" "lambda_role" {
   for_each = var.lambda_functions
 
@@ -18,9 +26,11 @@ resource "aws_iam_role" "lambda_role" {
   })
 }
 
-#--------------------------------------------------------------
-# Lambda Basic Execution Policy Attachment
-#--------------------------------------------------------------
+#------------------------------------------------------------------------------
+# Base Lambda Permissions
+# These permissions are required for all Lambda functions
+#------------------------------------------------------------------------------
+# Allows Lambda to write logs to CloudWatch
 resource "aws_iam_role_policy_attachment" "lambda_basic" {
   for_each = var.lambda_functions
 
@@ -28,9 +38,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-#--------------------------------------------------------------
-# Lambda VPC Access Policy Attachment
-#--------------------------------------------------------------
+# Allows Lambda to connect to VPC resources
 resource "aws_iam_role_policy_attachment" "lambda_vpc" {
   for_each = var.lambda_functions
 
@@ -38,10 +46,12 @@ resource "aws_iam_role_policy_attachment" "lambda_vpc" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }
 
-#--------------------------------------------------------------
-# Lambda SFTP Access Policy
-#--------------------------------------------------------------
+#------------------------------------------------------------------------------
+# SFTP Access Permissions
+# For Lambda functions that need to interact with SFTP servers
+#------------------------------------------------------------------------------
 resource "aws_iam_policy" "lambda_sftp_policy" {
+  # Create only for functions that have sftp_enabled flag set to true
   for_each = {
     for name, config in var.lambda_functions : name => config
     if lookup(config, "sftp_enabled", false) == true
@@ -67,9 +77,6 @@ resource "aws_iam_policy" "lambda_sftp_policy" {
   })
 }
 
-#--------------------------------------------------------------
-# Lambda SFTP Policy Attachment
-#--------------------------------------------------------------
 resource "aws_iam_role_policy_attachment" "lambda_sftp" {
   for_each = {
     for name, config in var.lambda_functions : name => config
@@ -80,17 +87,19 @@ resource "aws_iam_role_policy_attachment" "lambda_sftp" {
   policy_arn = aws_iam_policy.lambda_sftp_policy[each.key].arn
 }
 
-#----------------------------------------
-# Service-Specific Permissions
-#----------------------------------------
-# DynamoDB access permissions
+#------------------------------------------------------------------------------
+# DynamoDB Access Permissions
+# For Lambda functions that need to interact with DynamoDB tables
+#------------------------------------------------------------------------------
 resource "aws_iam_policy" "dynamodb_access" {
+  # Create only for functions that have dynamodb_enabled flag set to true
   for_each = {
     for name, config in var.lambda_functions : name => config
     if lookup(config, "dynamodb_enabled", false) == true
   }
 
   name = "${var.lambda_functions[each.key].name}-dynamodb-policy"
+  
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -120,14 +129,19 @@ resource "aws_iam_role_policy_attachment" "dynamodb_access" {
   policy_arn = aws_iam_policy.dynamodb_access[each.key].arn
 }
 
-# SES access for Lambda functions that need to send emails
+#------------------------------------------------------------------------------
+# SES Access Permissions
+# For Lambda functions that need to send emails via SES
+#------------------------------------------------------------------------------
 resource "aws_iam_policy" "ses_access" {
+  # Create only for functions that have ses_enabled flag set to true
   for_each = {
     for name, config in var.lambda_functions : name => config
     if lookup(config, "ses_enabled", false) == true
   }
 
   name = "${var.lambda_functions[each.key].name}-ses-policy"
+  
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -153,8 +167,12 @@ resource "aws_iam_role_policy_attachment" "ses_access" {
   policy_arn = aws_iam_policy.ses_access[each.key].arn
 }
 
-
+#------------------------------------------------------------------------------
+# SQS Access Permissions
+# For Lambda functions that need to process messages from SQS queues
+#------------------------------------------------------------------------------
 resource "aws_iam_policy" "lambda_sqs_policy" {
+  # Create only for functions that have sqs_enabled flag set to true and sqs_config defined
   for_each = {
     for name, config in var.lambda_functions : name => config
     if lookup(config, "sqs_enabled", false) == true &&
