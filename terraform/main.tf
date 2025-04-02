@@ -197,11 +197,11 @@ module "sqs" {
   # Define the SQS queue for log processing
   queues = {
     logs_queue = {
-      name                      = "application-logs-queue"
-      delay_seconds             = 0
-      max_message_size          = 262144  # 256 KB
-      message_retention_seconds = 86400   # 24 hours
-      receive_wait_time_seconds = 10
+      name                       = "application-logs-queue"
+      delay_seconds              = 0
+      max_message_size           = 262144 # 256 KB
+      message_retention_seconds  = 86400  # 24 hours
+      receive_wait_time_seconds  = 10
       visibility_timeout_seconds = 30
     }
   }
@@ -216,8 +216,7 @@ module "lambda" {
 
   private_lambda_subnet_ids = module.network.private_lambda_subnet_ids
   lambda_sg_id              = module.network.lambda_sg_id
-
-  aws_region = var.aws_region
+  aws_region                = var.aws_region
 
   # Define multiple Lambda functions with different use cases
   lambda_functions = {
@@ -241,22 +240,22 @@ module "lambda" {
 
       # Add DynamoDB configuration if enabled  
       dynamodb_config = config.dynamodb_enabled ? {
-        region = var.aws_region
+        region     = var.aws_region
         table_name = module.dynamodb.table_name
       } : null,
 
       # Add Cognito configuration if enabled
       cognito_config = config.cognito_enabled ? {
-        user_pool_id = ""
+        user_pool_id  = ""
         app_client_id = ""
         region        = var.aws_region
       } : null,
-      
+
       # Add SQS configuration if enabled
       sqs_config = config.sqs_enabled ? {
-        queue_url  = module.sqs.queue_urls["logs_queue"]
-        queue_arn  = module.sqs.queue_arns["logs_queue"]
-        region     = var.aws_region
+        queue_url = module.sqs.queue_urls["logs_queue"]
+        queue_arn = module.sqs.queue_arns["logs_queue"]
+        region    = var.aws_region
       } : null,
     })
   }

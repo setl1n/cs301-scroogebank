@@ -86,10 +86,10 @@ variable "lambda_functions" {
     dynamodb_enabled = optional(bool, false)
     cognito_enabled  = optional(bool, false)
     sqs_enabled      = optional(bool, false)
-    
+
     # SQS specific configuration
-    sqs_trigger_enabled = optional(bool, false)
-    sqs_batch_size = optional(number, 10)
+    sqs_trigger_enabled         = optional(bool, false)
+    sqs_batch_size              = optional(number, 10)
     sqs_batching_window_seconds = optional(number, 0)
 
     # Environment variables (optional)
@@ -117,16 +117,16 @@ variable "lambda_functions" {
     #   environment_variables = {}
     # },
     log = {
-      name             = "log_lambda_function"
-      handler          = "com.cs301g2t1.log.LogHandler::handleRequest"
-      runtime          = "java21"
-      filename         = "../backend/log/target/log-1.0-SNAPSHOT.jar"
-      timeout          = 15
-      memory_size      = 256
-      dynamodb_enabled = true
-      sqs_enabled      = true
-      sqs_trigger_enabled = true  # Enable SQS triggering
-      sqs_batch_size   = 10       # Process 10 messages at a time
+      name                = "log_lambda_function"
+      handler             = "com.cs301g2t1.log.LogHandler::handleRequest"
+      runtime             = "java21"
+      filename            = "../backend/log/target/log-1.0-SNAPSHOT.jar"
+      timeout             = 15
+      memory_size         = 256
+      dynamodb_enabled    = true
+      sqs_enabled         = true
+      sqs_trigger_enabled = true # Enable SQS triggering
+      sqs_batch_size      = 10   # Process 10 messages at a time
     }
     # Example with other services
     # notification_sender = {

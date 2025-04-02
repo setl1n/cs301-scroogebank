@@ -53,7 +53,7 @@ resource "aws_lambda_function" "lambda_functions" {
         SES_REGION = each.value.ses_config.region
         FROM_EMAIL = each.value.ses_config.from_email
       } : {},
-      
+
       # SQS configuration - added only when SQS config is provided
       each.value.sqs_config != null ? {
         SQS_QUEUE_URL = each.value.sqs_config.queue_url
@@ -75,17 +75,17 @@ resource "aws_lambda_event_source_mapping" "sqs_event_source" {
   }
 
   # Core configuration
-  event_source_arn        = each.value.sqs_config.queue_arn
-  function_name           = aws_lambda_function.lambda_functions[each.key].arn
-  
+  event_source_arn = each.value.sqs_config.queue_arn
+  function_name    = aws_lambda_function.lambda_functions[each.key].arn
+
   # Batch processing settings
-  batch_size              = lookup(each.value.sqs_config, "batch_size", 10)
+  batch_size                         = lookup(each.value.sqs_config, "batch_size", 10)
   maximum_batching_window_in_seconds = lookup(each.value.sqs_config, "maximum_batching_window_in_seconds", 0)
-  
+
   # Optional configurations with sensible defaults
   enabled                 = lookup(each.value.sqs_config, "enabled", true)
   function_response_types = lookup(each.value.sqs_config, "function_response_types", null)
-  
+
   # Concurrency settings to control Lambda scaling
   scaling_config {
     maximum_concurrency = lookup(each.value.sqs_config, "maximum_concurrency", 10)

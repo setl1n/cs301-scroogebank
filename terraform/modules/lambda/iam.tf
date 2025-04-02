@@ -99,7 +99,7 @@ resource "aws_iam_policy" "dynamodb_access" {
   }
 
   name = "${var.lambda_functions[each.key].name}-dynamodb-policy"
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -141,7 +141,7 @@ resource "aws_iam_policy" "ses_access" {
   }
 
   name = "${var.lambda_functions[each.key].name}-ses-policy"
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
