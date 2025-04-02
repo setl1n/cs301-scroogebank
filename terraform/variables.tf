@@ -84,21 +84,32 @@ variable "lambda_functions" {
     rds_enabled      = optional(bool, false)
     ses_enabled      = optional(bool, false)
     dynamodb_enabled = optional(bool, false)
+    cognito_enabled  = optional(bool, false)
 
     # Environment variables (optional)
     environment_variables = optional(map(string), {})
   }))
 
   default = {
-    # transaction = {
-    #   name        = "transaction_lambda_function"
-    #   handler     = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
-    #   runtime     = "java21"
-    #   filename    = "../backend/transaction/target/transaction-1.0-SNAPSHOT.jar"
-    #   timeout     = 15
-    #   memory_size = 256
-    #   rds_enabled = true
-    # }
+    transaction = {
+      name        = "transaction_lambda_function"
+      handler     = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
+      runtime     = "java21"
+      filename    = "../backend/transaction/target/transaction-1.0-SNAPSHOT.jar"
+      timeout     = 15
+      memory_size = 256
+      rds_enabled = true
+    },
+    user = {
+      name                  = "user_lambda_function"
+      handler               = "com.cs301g2t1.user.UserHandler::handleRequest"
+      runtime               = "java21"
+      filename              = "../backend/user/target/user-0.0.1-SNAPSHOT.jar" // seems to be this .jar
+      timeout               = 15
+      memory_size           = 256
+      cognito_enabled       = true
+      environment_variables = {}
+    },
     log = {
       name             = "log_lambda_function"
       handler          = "com.cs301g2t1.log.LogHandler::handleRequest"
@@ -155,4 +166,29 @@ variable "s3_buckets" {
       is_website = false
     }
   }
+}
+
+#--------------------------------------------------------------
+# Cognito Configuration
+# Defines AWS Cognito settings for user authentication
+#--------------------------------------------------------------
+variable "aws_region" {
+  description = "AWS region for Cognito"
+  type        = string
+  default     = "ap-southeast-1"
+}
+
+variable "COGNITO_CALLBACK_URL" {
+  description = "Callback URL for the Cognito User Pool Client"
+  type        = string
+}
+
+variable "COGNITO_LOGOUT_URL" {
+  description = "Logout URL for the Cognito User Pool Client"
+  type        = string
+}
+
+variable "COGNITO_DOMAIN" {
+  description = "Custom domain name for the Cognito User Pool"
+  type        = string
 }
