@@ -10,7 +10,7 @@
 # Network Configuration Variables
 #----------------------------------------
 variable "private_lambda_subnet_ids" {
-  description = "List of subnet IDs for Lambda functions that need VPC access"
+  description = "List of subnet IDs for Lambda functions"
   type        = list(string)
   default     = []
 }
@@ -22,48 +22,15 @@ variable "lambda_sg_id" {
 }
 
 variable "aws_region" {
-  description = "AWS region for the Cognito User Pool"
+  description = "AWS region for creating resources"
   type        = string
+  default     = "ap-southeast-1"
 }
 
 #----------------------------------------
 # Lambda Function Configurations
 #----------------------------------------
 variable "lambda_functions" {
-  description = "Configuration for Lambda functions"
-  type = map(object({
-    name             = string
-    handler          = string
-    runtime          = string
-    filename         = string
-    source_code_hash = string
-    timeout          = number
-    memory_size      = number
-
-    environment_variables = map(string)
-
-    # Service-specific configurations
-    rds_config = optional(object({
-      database_host = string
-      database_name = string
-      database_user = string
-      database_pass = string
-    }))
-
-    dynamodb_config = optional(object({
-      table_name = string
-      region     = string
-    }))
-
-    ses_config = optional(object({
-      region     = string
-      from_email = string
-    }))
-
-    cognito_config = optional(object({
-      user_pool_id  = string
-      app_client_id = string
-      region        = string
-    }))
-  }))
+  description = "Map of Lambda functions configuration"
+  type        = map(any)
 }

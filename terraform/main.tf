@@ -17,23 +17,23 @@ module "network" {
 # DynamoDB Module 
 # Provides NoSQL database for application logging
 #--------------------------------------------------------------
-# module "dynamodb" {
-#   source = "./modules/dynamodb"
+module "dynamodb" {
+  source = "./modules/dynamodb"
 
-#   table_name = "application-logs"
+  table_name = "application-logs"
 
-#   # Optional: Configure other DynamoDB settings
-#   billing_mode = "PAY_PER_REQUEST"
-#   hash_key     = "id"
-#   range_key    = "dateTimeStr"
+  # Optional: Configure other DynamoDB settings
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
+  range_key    = "dateTimeStr"
 
-#   # Add tags for better resource management
-#   tags = {
-#     Environment = "development"
-#     Service     = "logging"
-#     ManagedBy   = "terraform"
-#   }
-# }
+  # Add tags for better resource management
+  tags = {
+    Environment = "development"
+    Service     = "logging"
+    ManagedBy   = "terraform"
+  }
+}
 
 #--------------------------------------------------------------
 # RDS Module 
@@ -188,6 +188,26 @@ module "network" {
 # }
 
 #--------------------------------------------------------------
+# SQS Module 
+# Simple Queue Service for message queuing
+#--------------------------------------------------------------
+module "sqs" {
+  source = "./modules/sqs"
+
+  # Define the SQS queue for log processing
+  queues = {
+    logs_queue = {
+      name                      = "application-logs-queue"
+      delay_seconds             = 0
+      max_message_size          = 262144  # 256 KB
+      message_retention_seconds = 86400   # 24 hours
+      receive_wait_time_seconds = 10
+      visibility_timeout_seconds = 30
+    }
+  }
+}
+
+#--------------------------------------------------------------
 # Lambda Module
 # Serverless compute service for running backend functions
 #--------------------------------------------------------------
@@ -222,17 +242,21 @@ module "lambda" {
       # Add DynamoDB configuration if enabled  
       dynamodb_config = config.dynamodb_enabled ? {
         region = var.aws_region
-        # table_name = module.dynamodb.table_name
-        table_name = ""
+        table_name = module.dynamodb.table_name
       } : null,
 
       # Add Cognito configuration if enabled
       cognito_config = config.cognito_enabled ? {
-        # user_pool_id  = module.cognito.user_pool_id
         user_pool_id = ""
-        # app_client_id = module.cognito.user_pool_client_id
         app_client_id = ""
         region        = var.aws_region
+      } : null,
+      
+      # Add SQS configuration if enabled
+      sqs_config = config.sqs_enabled ? {
+        queue_url  = module.sqs.queue_urls["logs_queue"]
+        queue_arn  = module.sqs.queue_arns["logs_queue"]
+        region     = var.aws_region
       } : null,
     })
   }
@@ -242,36 +266,36 @@ module "lambda" {
 # SFTP Module 
 # EC2 instance for file retrieval via SFTP
 #--------------------------------------------------------------
-module "sftp_server" {
-  source           = "./modules/sftp-server"
-  ami_id           = "ami-0aebd6a41cf6ab2eb" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
-  instance_type    = "t2.micro"
-  key_name         = "my-key-pair"
-  public_subnet_id = module.network.public_subnet_ids[0]
-  vpc_id           = module.network.vpc_id
-  lambda_sg_id     = module.network.lambda_sg_id
-}
+# module "sftp_server" {
+#   source           = "./modules/sftp-server"
+#   ami_id           = "ami-0aebd6a41cf6ab2eb" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
+#   instance_type    = "t2.micro"
+#   key_name         = "my-key-pair"
+#   public_subnet_id = module.network.public_subnet_ids[0]
+#   vpc_id           = module.network.vpc_id
+#   lambda_sg_id     = module.network.lambda_sg_id
+# }
 
 #--------------------------------------------------------------
 # EventBridge Module
 # Manages EventBridge rules and targets for scheduling tasks
 #--------------------------------------------------------------
-module "eventbridge" {
-  source = "./modules/eventbridge"
+# module "eventbridge" {
+#   source = "./modules/eventbridge"
 
-  # Pass required variables
-  rule_name        = "daily-sftp-fetch-rule"
-  rule_description = "Triggers the Lambda function to fetch SFTP data daily"
-  target_arn       = module.lambda.lambda_function_arns["transaction_lambda_function"] # ARN of the Lambda function
-  role_name        = "eventbridge-role"
-  role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action   = "lambda:InvokeFunction"
-        Effect   = "Allow"
-        Resource = module.lambda.lambda_function_arns["transaction_lambda_function"]
-      }
-    ]
-  })
-}
+#   # Pass required variables
+#   rule_name        = "daily-sftp-fetch-rule"
+#   rule_description = "Triggers the Lambda function to fetch SFTP data daily"
+#   target_arn       = module.lambda.lambda_function_arns["transaction_lambda_function"] # ARN of the Lambda function
+#   role_name        = "eventbridge-role"
+#   role_policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action   = "lambda:InvokeFunction"
+#         Effect   = "Allow"
+#         Resource = module.lambda.lambda_function_arns["transaction_lambda_function"]
+#       }
+#     ]
+#   })
+# }
