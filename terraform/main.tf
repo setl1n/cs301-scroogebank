@@ -234,6 +234,17 @@ module "lambda" {
         app_client_id = ""
         region        = var.aws_region
       } : null,
+
+      # Add the SFTP_HOST dynamically from the SFTP server's public IP for transaction Lambda
+      environment_variables = merge(
+        config.environment_variables,
+        (try(config.sftp_enabled, false) && name == "transaction") ? {
+          SFTP_HOST = module.sftp_server.sftp_server_public_ip,
+          # Reuse DB user and password for SFTP access
+          SFTP_USER = var.DATABASE_USERNAME,
+          SFTP_PASS = var.DATABASE_PASSWORD,
+        } : {}
+      ),
     })
   }
 }
