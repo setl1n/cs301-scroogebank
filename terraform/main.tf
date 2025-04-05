@@ -252,12 +252,12 @@ module "lambda" {
 # EC2 instance for file retrieval via SFTP
 #--------------------------------------------------------------
 module "sftp_server" {
-  source           = "./modules/sftp-server"
-  ami_id           = "ami-0aebd6a41cf6ab2eb" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
-  instance_type    = "t2.micro"
-  key_name         = "my-key-pair"
-  public_subnet_id = module.network.public_subnet_ids[0]
-  vpc_id           = module.network.vpc_id
+  source            = "./modules/sftp-server"
+  ami_id            = "ami-0aebd6a41cf6ab2eb" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
+  instance_type     = "t2.micro"
+  key_name          = "my-key-pair"
+  public_subnet_id  = module.network.public_subnet_ids[0]
+  vpc_id            = module.network.vpc_id
   security_group_id = module.network.sftp_sg_id
 }
 
