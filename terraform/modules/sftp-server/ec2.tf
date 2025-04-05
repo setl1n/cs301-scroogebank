@@ -3,7 +3,8 @@ resource "aws_instance" "sftp_server" {
   instance_type = var.instance_type
   subnet_id     = var.public_subnet_id
   key_name      = var.key_name
-
+  vpc_security_group_ids = [var.security_group_id]
+  
   tags = {
     Name = "sftp-server"
   }

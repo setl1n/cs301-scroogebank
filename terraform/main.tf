@@ -260,7 +260,7 @@ module "sftp_server" {
   key_name         = "my-key-pair"
   public_subnet_id = module.network.public_subnet_ids[0]
   vpc_id           = module.network.vpc_id
-  lambda_sg_id     = module.network.lambda_sg_id
+  security_group_id = module.network.sftp_sg_id
 }
 
 #--------------------------------------------------------------

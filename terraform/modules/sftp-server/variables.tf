@@ -24,7 +24,7 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "lambda_sg_id" {
-  description = "Security group ID for the Lambda function"
+variable "security_group_id" {
   type        = string
+  description = "Security Group ID to be used by the SFTP server"
 }
