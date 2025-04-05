@@ -16,7 +16,7 @@ import lombok.Data;
 @Entity
 public class Transaction {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    // @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @NotNull(message = "Client ID is required")

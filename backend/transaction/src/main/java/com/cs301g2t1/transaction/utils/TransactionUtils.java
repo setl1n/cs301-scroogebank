@@ -14,7 +14,7 @@ import com.cs301g2t1.transaction.model.TransactionType;
 
 public class TransactionUtils {
     public static List<Transaction> parseCsvToTransactions(InputStream inputStream) throws IOException {
-        List<Transaction> transactions = new ArrayList<>();
+        List<Transaction> transactions = new ArrayList<Transaction>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
 
@@ -25,13 +25,14 @@ public class TransactionUtils {
 
             while ((line = reader.readLine()) != null) {
                 String[] fields = line.split(",");
-                // clientId | transactionType | amount | date | status
+                // Id | clientId | transactionType | amount | date | status
                 Transaction transaction = new Transaction();
-                transaction.setClientId(Long.parseLong(fields[0]));
-                transaction.setTransactionType(TransactionType.valueOf(fields[1].toUpperCase()));
-                transaction.setAmount(Double.parseDouble(fields[2]));
-                transaction.setDate(LocalDate.parse(fields[3]));
-                transaction.setStatus(TransactionStatus.valueOf(fields[4].toUpperCase()));
+                transaction.setId(Long.parseLong(fields[0])); // Assuming ID is in the first column
+                transaction.setClientId(Long.parseLong(fields[1]));
+                transaction.setTransactionType(TransactionType.valueOf(fields[2].toUpperCase()));
+                transaction.setAmount(Double.parseDouble(fields[3]));
+                transaction.setDate(LocalDate.parse(fields[4]));
+                transaction.setStatus(TransactionStatus.valueOf(fields[5].toUpperCase()));
                 transactions.add(transaction);
             }
         }
