@@ -4,8 +4,8 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.cs301g2t1.transaction.service.TransactionService;
 import com.cs301g2t1.transaction.service.TransactionServiceImpl;
-import com.cs301g2t1.transaction.utils.SSHBuilder;
-import com.cs301g2t1.transaction.utils.SSHBuilderImpl;
+import com.cs301g2t1.transaction.utils.SFTPFacade;
+import com.cs301g2t1.transaction.utils.SFTPFacadeImpl;
 import com.cs301g2t1.transaction.utils.TransactionUtils;
 
 import java.io.InputStream;
@@ -41,12 +41,12 @@ public class TransactionHandler implements RequestHandler<TransactionHandler.Req
                         String errorDirectory = sftpTarget + "/../.error";
 
                         // Establish SFTP connection
-                        try (SSHBuilder sshBuilder = new SSHBuilderImpl()) {
-                            sshBuilder.connect();
-                            List<String> csvFiles = sshBuilder.listFiles(sftpTarget, "*.csv");
+                        try (SFTPFacade sftpFacade = new SFTPFacadeImpl()) {
+                            sftpFacade.connect();
+                            List<String> csvFiles = sftpFacade.listFiles(sftpTarget, "*.csv");
 
                             for (String csvFile : csvFiles) {
-                                try (InputStream inputStream = sshBuilder.downloadFile(sftpTarget + "/" + csvFile)) {
+                                try (InputStream inputStream = sftpFacade.downloadFile(sftpTarget + "/" + csvFile)) {
                                     // Parse CSV file
                                     List<Transaction> transactions = TransactionUtils.parseCsvToTransactions(inputStream);
 
@@ -56,11 +56,11 @@ public class TransactionHandler implements RequestHandler<TransactionHandler.Req
                                     }
 
                                     // Move file to .done directory
-                                    sshBuilder.moveFile(sftpTarget + "/" + csvFile, doneDirectory + "/" + csvFile);
+                                    sftpFacade.moveFile(sftpTarget + "/" + csvFile, doneDirectory + "/" + csvFile);
                                 } catch (Exception e) {
                                     context.getLogger().log("Error processing file " + csvFile + ": " + e.getMessage());
                                     // Move file to .error directory
-                                    sshBuilder.moveFile(sftpTarget + "/" + csvFile, errorDirectory + "/" + csvFile);
+                                    sftpFacade.moveFile(sftpTarget + "/" + csvFile, errorDirectory + "/" + csvFile);
                                 }
                             }
                         }

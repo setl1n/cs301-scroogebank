@@ -14,11 +14,11 @@ import java.util.regex.Pattern;
 import java.util.logging.Logger;
 
 // Implementation utilizing Apache MINA SSHD for SFTP operations
-public class SSHBuilderImpl implements SSHBuilder {
+public class SFTPFacadeImpl implements SFTPFacade {
     private SshClient sshClient;
     private ClientSession session;
     private SftpClient sftpClient;
-    private static final Logger logger = Logger.getLogger(SSHBuilderImpl.class.getName());
+    private static final Logger logger = Logger.getLogger(SFTPFacadeImpl.class.getName());
 
     public void connect() throws Exception {
         String host = System.getenv("SFTP_HOST");

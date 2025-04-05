@@ -3,7 +3,7 @@ package com.cs301g2t1.transaction.utils;
 import java.util.List;
 import java.io.InputStream;
 
-public interface SSHBuilder extends AutoCloseable {
+public interface SFTPFacade extends AutoCloseable {
     // Establish connection to the SFTP server
     void connect() throws Exception;
 
