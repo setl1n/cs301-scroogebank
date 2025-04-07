@@ -241,6 +241,7 @@ module "lambda" {
         name == "transaction" ? {
           SFTP_USER = var.DATABASE_USERNAME,
           SFTP_PASS = var.DATABASE_PASSWORD
+          SFTP_HOST = module.sftp_server.sftp_server_public_ip,
         } : {}
       ),
     })
