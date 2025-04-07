@@ -259,6 +259,8 @@ module "sftp_server" {
   public_subnet_id  = module.network.public_subnet_ids[0]
   vpc_id            = module.network.vpc_id
   security_group_id = module.network.sftp_sg_id
+  # private_key_path  = "~/.ssh/id_rsa"  # Update this to your actual key path
+  csv_file_path     = "${path.root}/../mock_transactions.csv"  # Path to the CSV file
 }
 
 #--------------------------------------------------------------

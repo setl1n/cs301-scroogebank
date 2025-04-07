@@ -1,30 +1,41 @@
 variable "ami_id" {
-  description = "AMI ID for the EC2 instance"
+  description = "The AMI ID to use for the SFTP server"
   type        = string
 }
 
 variable "instance_type" {
-  description = "Instance type for the EC2 instance"
+  description = "The instance type to use for the SFTP server"
   type        = string
   default     = "t2.micro"
 }
 
 variable "key_name" {
-  description = "Key pair name for SSH access"
+  description = "The key pair name to use for SSH access"
   type        = string
 }
 
 variable "public_subnet_id" {
-  description = "Public subnet ID for the EC2 instance"
-  type        = string
-}
-
-variable "vpc_id" {
-  description = "VPC ID for the EC2 instance"
+  description = "The public subnet ID where the SFTP server will be deployed"
   type        = string
 }
 
 variable "security_group_id" {
+  description = "The security group ID for the SFTP server"
   type        = string
-  description = "Security Group ID to be used by the SFTP server"
+}
+
+variable "vpc_id" {
+  description = "The VPC ID where the SFTP server will be deployed"
+  type        = string
+}
+
+# variable "private_key_path" {
+#   description = "The path to the private key for SSH connections"
+#   type        = string
+#   default     = "~/.ssh/id_rsa"  # Default path, can be overridden
+# }
+
+variable "csv_file_path" {
+  description = "The path to the CSV file to upload to the SFTP server"
+  type        = string
 }
