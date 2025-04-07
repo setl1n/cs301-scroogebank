@@ -10,22 +10,27 @@
 # Network Configuration Variables
 #----------------------------------------
 variable "private_lambda_subnet_ids" {
-  description = "List of private subnet IDs for Lambda functions that need VPC access"
+  description = "List of subnet IDs for Lambda functions that need VPC access"
   type        = list(string)
   default     = []
 }
 
 variable "lambda_sg_id" {
-  description = "Security group ID for Lambda functions that need VPC access"
+  description = "Security group ID for Lambda functions"
   type        = string
   default     = ""
+}
+
+variable "aws_region" {
+  description = "AWS region for the Cognito User Pool"
+  type        = string
 }
 
 #----------------------------------------
 # Lambda Function Configurations
 #----------------------------------------
 variable "lambda_functions" {
-  description = "Map of Lambda functions with their configurations"
+  description = "Configuration for Lambda functions"
   type = map(object({
     name             = string
     handler          = string
@@ -35,8 +40,9 @@ variable "lambda_functions" {
     timeout          = number
     memory_size      = number
 
-    # Service connections (optional)
-    # RDS configuration for database access
+    environment_variables = map(string)
+
+    # Service-specific configurations
     rds_config = optional(object({
       database_host = string
       database_name = string
@@ -44,19 +50,20 @@ variable "lambda_functions" {
       database_pass = string
     }))
 
-    # DynamoDB configuration for NoSQL access
     dynamodb_config = optional(object({
       table_name = string
       region     = string
     }))
 
-    # SES configuration for email sending capabilities
     ses_config = optional(object({
       region     = string
       from_email = string
     }))
 
-    # Custom environment variables specific to each Lambda function
-    environment_variables = optional(map(string))
+    cognito_config = optional(object({
+      user_pool_id  = string
+      app_client_id = string
+      region        = string
+    }))
   }))
 }

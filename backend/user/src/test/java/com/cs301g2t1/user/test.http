@@ -1,0 +1,39 @@
+@bearer_token =
+
+
+GET http://localhost:8080/token/me
+
+GET http://localhost:8080/users/me
+Authorization: Bearer {{bearer_token}}
+
+### GET all users (Admin)
+GET http://localhost:8080/users
+Authorization: Bearer {{bearer_token}}
+
+### Create a new user (Admin)
+POST http://localhost:8080/users
+Authorization: Bearer {{bearer_token}}
+Content-Type: application/json
+
+{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "role": "ADMIN"
+}
+
+### Update an existing user (Admin)
+PUT http://localhost:8080/users/1
+Authorization: Bearer {{bearer_token}}
+Content-Type: application/json
+
+{
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "email": "jane.doe@example.com",
+    "role": "ADMIN"
+}
+
+### Delete a user (Admin)
+DELETE http://localhost:8080/users/1
+Authorization: Bearer {{bearer_token}}

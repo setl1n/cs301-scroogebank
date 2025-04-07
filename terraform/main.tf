@@ -1,32 +1,44 @@
-# AWS Infrastructure Configuration
-# This file defines the main infrastructure components used in the application
+#--------------------------------------------------------------
+# CS301 Group 2 Team 1 Project - Main Infrastructure Configuration
+#
+# This file defines the core AWS infrastructure components used in the application.
+# Some modules are currently commented out and can be uncommented when needed.
+#--------------------------------------------------------------
 
-# Network module - Sets up VPC, subnets, security groups, and other networking resources
-# This forms the foundation for all other infrastructure components
+#--------------------------------------------------------------
+# Network Module
+# Sets up foundational network infrastructure: VPC, subnets, security groups
+#--------------------------------------------------------------
 module "network" {
   source = "./modules/network"
 }
 
-module "dynamodb" {
-  source = "./modules/dynamodb"
+#--------------------------------------------------------------
+# DynamoDB Module 
+# Provides NoSQL database for application logging
+#--------------------------------------------------------------
+# module "dynamodb" {
+#   source = "./modules/dynamodb"
 
-  table_name = "application-logs"
+#   table_name = "application-logs"
 
-  # Optional: Configure other DynamoDB settings
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "id"
-  range_key    = "dateTimeStr"
+#   # Optional: Configure other DynamoDB settings
+#   billing_mode = "PAY_PER_REQUEST"
+#   hash_key     = "id"
+#   range_key    = "dateTimeStr"
 
-  # Add tags for better resource management
-  tags = {
-    Environment = "development"
-    Service     = "logging"
-    ManagedBy   = "terraform"
-  }
-}
+#   # Add tags for better resource management
+#   tags = {
+#     Environment = "development"
+#     Service     = "logging"
+#     ManagedBy   = "terraform"
+#   }
+# }
 
-# RDS module - Manages database instances for application data persistence
-# Creates database instances for different application components
+#--------------------------------------------------------------
+# RDS Module 
+# Manages PostgreSQL database instances for persistent data storage
+#--------------------------------------------------------------
 # module "rds" {
 #   source               = "./modules/rds"
 #   security_group_id    = module.network.db_sg_id
@@ -41,8 +53,10 @@ module "dynamodb" {
 #   applications = var.applications
 # }
 
-# ACM and Route53 module - Manages SSL certificates and DNS records
-# Creates and validates certificates for use with CloudFront and other services
+#--------------------------------------------------------------
+# ACM and Route53 Module 
+# Manages SSL certificates and DNS records for secure connections
+#--------------------------------------------------------------
 # module "acm" {
 #   source             = "./modules/acm"
 #   certificate_domain = var.DOMAIN_NAME
@@ -54,8 +68,10 @@ module "dynamodb" {
 #   }
 # }
 
-# # S3 module - Object storage for static assets, backups, and website hosting
-# # Creates and configures S3 buckets for different purposes
+#--------------------------------------------------------------
+# S3 Module 
+# Object storage for static assets, backups, and website hosting
+#--------------------------------------------------------------
 # module "s3" {
 #   source = "./modules/s3"
 
@@ -63,8 +79,10 @@ module "dynamodb" {
 #   buckets = var.s3_buckets
 # }
 
-# # CloudFront module - Content delivery network for static website hosting
-# # Configures CloudFront distributions for S3 website buckets to improve performance and security
+#--------------------------------------------------------------
+# CloudFront Module 
+# Content delivery network for static website hosting
+#--------------------------------------------------------------
 # module "cloudfront" {
 #   source = "./modules/cloudfront"
 
@@ -86,8 +104,10 @@ module "dynamodb" {
 #   certificate_arn    = module.acm_route53.us_certificate_arn
 # }
 
-# ElastiCache module - In-memory data store for caching and session management
-# Configures ElastiCache clusters for different application components
+#--------------------------------------------------------------
+# ElastiCache Module 
+# In-memory data store for caching and session management
+#--------------------------------------------------------------
 # module "elasticache" {
 #   source              = "./modules/elasticache"
 #   security_group_id   = module.network.db_sg_id
@@ -97,8 +117,10 @@ module "dynamodb" {
 #   applications = var.applications
 # }
 
-# ECS module - Container orchestration service for running microservices
-# Configures ECS clusters, services, and tasks for different application components
+#--------------------------------------------------------------
+# ECS Module 
+# Container orchestration service for running microservices
+#--------------------------------------------------------------
 # module "ecs" {
 #   source            = "./modules/ecs"
 #   lb_sg_ids         = [module.network.lb_sg_id]
@@ -139,11 +161,43 @@ module "dynamodb" {
 #     }
 #   }
 # }
+
+#--------------------------------------------------------------
+# Cognito Module
+# User authentication, authorization and user pool management
+#--------------------------------------------------------------
+# module "cognito" {
+#   source = "./modules/cognito"
+
+#   user_pool_name        = "CS301-G2-T1"
+#   user_pool_client_name = "CS301-G2-T1-AppClient"
+
+#   password_min_length        = 8
+#   password_require_lowercase = true
+#   password_require_uppercase = true
+#   password_require_numbers   = true
+#   password_require_symbols   = false
+
+#   mfa_configuration = "OFF"
+
+#   cognito_domain = var.COGNITO_DOMAIN
+#   callback_urls  = [var.COGNITO_CALLBACK_URL]
+#   logout_urls    = [var.COGNITO_LOGOUT_URL]
+
+#   aws_region = var.aws_region
+# }
+
+#--------------------------------------------------------------
+# Lambda Module
+# Serverless compute service for running backend functions
+#--------------------------------------------------------------
 module "lambda" {
   source = "./modules/lambda"
 
   private_lambda_subnet_ids = module.network.private_lambda_subnet_ids
   lambda_sg_id              = module.network.lambda_sg_id
+
+  aws_region = var.aws_region
 
   # Define multiple Lambda functions with different use cases
   lambda_functions = {
@@ -151,24 +205,73 @@ module "lambda" {
       source_code_hash = filebase64sha256(config.filename)
 
       # Add dynamic configurations based on service flags
-      # rds_config = config.rds_enabled ? {
-      #   database_host = module.rds.db_endpoints[name]
-      #   database_name = var.DATABASE_NAME
-      #   database_user = var.DATABASE_USERNAME
-      #   database_pass = var.DATABASE_PASSWORD
-      # } : null,
+      rds_config = config.rds_enabled ? {
+        # database_host = module.rds.db_endpoints[name]
+        database_host = ""
+        database_name = var.DATABASE_NAME
+        database_user = var.DATABASE_USERNAME
+        database_pass = var.DATABASE_PASSWORD
+      } : null,
 
       # Add SES configuration if enabled
       ses_config = config.ses_enabled ? {
-        region     = "ap-southeast-1"
+        region     = var.aws_region
         from_email = "notifications@yourdomain.com"
       } : null,
 
       # Add DynamoDB configuration if enabled  
       dynamodb_config = config.dynamodb_enabled ? {
-        region     = "ap-southeast-1"
-        table_name = "application-logs"
+        region = var.aws_region
+        # table_name = module.dynamodb.table_name
+        table_name = ""
+      } : null,
+
+      # Add Cognito configuration if enabled
+      cognito_config = config.cognito_enabled ? {
+        # user_pool_id  = module.cognito.user_pool_id
+        user_pool_id = ""
+        # app_client_id = module.cognito.user_pool_client_id
+        app_client_id = ""
+        region        = var.aws_region
       } : null,
     })
   }
+}
+
+#--------------------------------------------------------------
+# SFTP Module 
+# EC2 instance for file retrieval via SFTP
+#--------------------------------------------------------------
+module "sftp_server" {
+  source           = "./modules/sftp-server"
+  ami_id           = "ami-0aebd6a41cf6ab2eb" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
+  instance_type    = "t2.micro"
+  key_name         = "my-key-pair"
+  public_subnet_id = module.network.public_subnet_ids[0]
+  vpc_id           = module.network.vpc_id
+  lambda_sg_id     = module.network.lambda_sg_id
+}
+
+#--------------------------------------------------------------
+# EventBridge Module
+# Manages EventBridge rules and targets for scheduling tasks
+#--------------------------------------------------------------
+module "eventbridge" {
+  source = "./modules/eventbridge"
+
+  # Pass required variables
+  rule_name        = "daily-sftp-fetch-rule"
+  rule_description = "Triggers the Lambda function to fetch SFTP data daily"
+  target_arn       = module.lambda.lambda_function_arns["transaction_lambda_function"] # ARN of the Lambda function
+  role_name        = "eventbridge-role"
+  role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = "lambda:InvokeFunction"
+        Effect   = "Allow"
+        Resource = module.lambda.lambda_function_arns["transaction_lambda_function"]
+      }
+    ]
+  })
 }

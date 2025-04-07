@@ -65,3 +65,8 @@ output "db_subnet_group_ids" {
   value       = aws_db_subnet_group.db_subnet_group.subnet_ids
   description = "List of subnet IDs in the database subnet group"
 }
+
+output "nat_gateway_id" {
+  value       = aws_nat_gateway.nat.id
+  description = "The ID of the NAT Gateway"
+}

@@ -137,3 +137,34 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4_lambda" {
   ip_protocol       = "-1" # all protocols
   description       = "Allow all outbound traffic from Lambda functions"
 }
+
+#--------------------------------------------------------------
+# SFTP Server Security Group
+# Controls traffic to/from SFTP server within the VPC,
+# permitting all outbound traffic for API calls and dependencies
+# Simulating an external SFTP server for file transfers
+#--------------------------------------------------------------
+
+resource "aws_security_group" "sftp_sg" {
+  name        = "sftp-sg"
+  description = "Security group for SFTP server"
+  vpc_id      = aws_vpc.vpc.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    security_groups = [aws_security_group.lambda_sg.id] # Allow access from Lambda SG
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "sftp-security-group"
+  }
+}
