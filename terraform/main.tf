@@ -238,7 +238,7 @@ module "lambda" {
       # Add the SFTP_HOST dynamically from the SFTP server's public IP for transaction Lambda
       environment_variables = merge(
         config.environment_variables,
-        name == "transaction_lambda_function" ? {
+        name == "transaction" ? {
           SFTP_USER = var.DATABASE_USERNAME,
           SFTP_PASS = var.DATABASE_PASSWORD
         } : {}
