@@ -85,39 +85,48 @@ variable "lambda_functions" {
     ses_enabled      = optional(bool, false)
     dynamodb_enabled = optional(bool, false)
     cognito_enabled  = optional(bool, false)
+    sqs_enabled      = optional(bool, false)
+
+    # SQS specific configuration
+    sqs_trigger_enabled         = optional(bool, false)
+    sqs_batch_size              = optional(number, 10)
+    sqs_batching_window_seconds = optional(number, 0)
 
     # Environment variables (optional)
     environment_variables = optional(map(string), {})
   }))
 
   default = {
-    transaction = {
-      name        = "transaction_lambda_function"
-      handler     = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
-      runtime     = "java21"
-      filename    = "../backend/transaction/target/transaction-1.0-SNAPSHOT.jar"
-      timeout     = 15
-      memory_size = 256
-      rds_enabled = true
-    },
-    user = {
-      name                  = "user_lambda_function"
-      handler               = "com.cs301g2t1.user.UserHandler::handleRequest"
-      runtime               = "java21"
-      filename              = "../backend/user/target/user-0.0.1-SNAPSHOT.jar" // seems to be this .jar
-      timeout               = 15
-      memory_size           = 256
-      cognito_enabled       = true
-      environment_variables = {}
-    },
+    # transaction = {
+    #   name        = "transaction_lambda_function"
+    #   handler     = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
+    #   runtime     = "java21"
+    #   filename    = "../backend/transaction/target/transaction-1.0-SNAPSHOT.jar"
+    #   timeout     = 15
+    #   memory_size = 256
+    #   rds_enabled = true
+    # },
+    # user = {
+    #   name                  = "user_lambda_function"
+    #   handler               = "com.cs301g2t1.user.UserHandler::handleRequest"
+    #   runtime               = "java21"
+    #   filename              = "../backend/user/target/user-0.0.1-SNAPSHOT.jar" // seems to be this .jar
+    #   timeout               = 15
+    #   memory_size           = 256
+    #   cognito_enabled       = true
+    #   environment_variables = {}
+    # },
     log = {
-      name             = "log_lambda_function"
-      handler          = "com.cs301g2t1.log.LogHandler::handleRequest"
-      runtime          = "java21"
-      filename         = "../backend/log/target/log-1.0-SNAPSHOT.jar"
-      timeout          = 15
-      memory_size      = 256
-      dynamodb_enabled = true
+      name                = "log_lambda_function"
+      handler             = "com.cs301g2t1.log.LogHandler::handleRequest"
+      runtime             = "java21"
+      filename            = "../backend/log/target/log-1.0-SNAPSHOT.jar"
+      timeout             = 15
+      memory_size         = 256
+      dynamodb_enabled    = true
+      sqs_enabled         = true
+      sqs_trigger_enabled = true # Enable SQS triggering
+      sqs_batch_size      = 10   # Process 10 messages at a time
     }
     # Example with other services
     # notification_sender = {
