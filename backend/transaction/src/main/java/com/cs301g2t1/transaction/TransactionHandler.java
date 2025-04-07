@@ -10,6 +10,7 @@ import com.cs301g2t1.transaction.utils.TransactionUtils;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 
 import com.cs301g2t1.transaction.model.*;
 
@@ -23,7 +24,7 @@ public class TransactionHandler implements RequestHandler<TransactionHandler.Req
     public static class Request {
         public String operation;
         public Long transactionId;
-        public Transaction transaction;
+        public Optional<Transaction> transaction = Optional.empty();
     }
 
     @Override
@@ -31,99 +32,131 @@ public class TransactionHandler implements RequestHandler<TransactionHandler.Req
         try {
             switch (request.operation) {
                 case "dailyFetch":
-                    try {
-                        String sftpTarget = System.getenv("SFTP_TARGET");
-                        if (sftpTarget == null || sftpTarget.isEmpty()) {
-                            throw new IllegalArgumentException("SFTP_TARGET environment variable is not set.");
-                        }
+                    return handleDailyFetch(request, context);
 
-                        String doneDirectory = sftpTarget + "/../.done";
-                        String errorDirectory = sftpTarget + "/../.error";
-
-                        // Establish SFTP connection
-                        try (SFTPFacade sftpFacade = new SFTPFacadeImpl()) {
-                            sftpFacade.connect();
-                            List<String> csvFiles = sftpFacade.listFiles(sftpTarget, "*.csv");
-
-                            for (String csvFile : csvFiles) {
-                                try (InputStream inputStream = sftpFacade.downloadFile(sftpTarget + "/" + csvFile)) {
-                                    // Parse CSV file
-                                    List<Transaction> transactions = TransactionUtils.parseCsvToTransactions(inputStream);
-
-                                    // Insert transactions into the database
-                                    for (Transaction transaction : transactions) {
-                                        transactionService.createTransaction(transaction);
-                                    }
-
-                                    // Move file to .done directory
-                                    sftpFacade.moveFile(sftpTarget + "/" + csvFile, doneDirectory + "/" + csvFile);
-                                } catch (Exception e) {
-                                    context.getLogger().log("Error processing file " + csvFile + ": " + e.getMessage());
-                                    // Move file to .error directory
-                                    sftpFacade.moveFile(sftpTarget + "/" + csvFile, errorDirectory + "/" + csvFile);
-                                }
-                            }
-                        }
-
-                        return new Response(true, "Daily fetch completed successfully.", null);
-                    } catch (Exception e) {
-                        context.getLogger().log("Error during dailyFetch: " + e.getMessage());
-                        return new Response(false, "Failed to complete daily fetch: " + e.getMessage(), null);
-                    }
                 case "CREATE":
-                    try {
-                        // Log the incoming transaction data in more detail
-                        context.getLogger().log("Creating transaction: " + request.transaction);
-                        if (request.transaction == null) {
-                            return new Response(false, "Transaction data is null", null);
-                        }
-                        
-                        // Log each field to help debug
-                        context.getLogger().log("Transaction details - clientId: " + request.transaction.getClientId() 
-                            + ", type: " + request.transaction.getTransactionType()
-                            + ", amount: " + request.transaction.getAmount()
-                            + ", date: " + request.transaction.getDate()
-                            + ", status: " + request.transaction.getStatus());
-                            
-                        Transaction transaction = transactionService.createTransaction(request.transaction);
-                        return new Response(true, "", transaction);
-                    } catch (Exception e) {
-                        // Enhanced error logging
-                        context.getLogger().log("Error creating transaction: " + e.getMessage());
-                        context.getLogger().log("Error stack trace: " + e.getStackTrace());
-                        if (e.getCause() != null) {
-                            context.getLogger().log("Caused by: " + e.getCause().getMessage());
-                        }
-                        return new Response(false, "Failed to create transaction: " + e.getMessage(), null);
-                    }
+                    return handleCreate(request, context);
+
                 case "READ":
-                    try {
-                        Transaction transaction = transactionService.getTransactionById(request.transactionId);
-                        return new Response(true, "", transaction);
-                    } catch (Exception e) {
-                        return new Response(false, e.getMessage(), null);
-                    }
+                    return handleRead(request, context);
+
                 case "UPDATE":
-                    try {
-                        Transaction transaction = transactionService.updateTransaction(request.transactionId,
-                                request.transaction);
-                        return new Response(true, "", transaction);
-                    } catch (Exception e) {
-                        return new Response(false, e.getMessage(), null);
-                    }
+                    return handleUpdate(request, context);
+
                 case "DELETE":
-                    try {
-                        transactionService.deleteTransaction(request.transactionId);
-                        return new Response(true, "", null);
-                    } catch (Exception e) {
-                        return new Response(false, e.getMessage(), null);
-                    }
+                    return handleDelete(request, context);
+
                 default:
                     throw new IllegalArgumentException("Invalid operation: " + request.operation);
             }
         } catch (Exception e) {
             context.getLogger().log("Failed to process request: " + e.getMessage());
-            throw new RuntimeException(e);
+            return new Response(false, "Error: " + e.getMessage(), null);
+        }
+    }
+
+    private Response handleDailyFetch(Request request, Context context) {
+        try {
+            String sftpTarget = System.getenv("SFTP_TARGET");
+            if (sftpTarget == null || sftpTarget.isEmpty()) {
+                throw new IllegalArgumentException("SFTP_TARGET environment variable is not set.");
+            }
+
+            String doneDirectory = sftpTarget + "/../.done";
+            String errorDirectory = sftpTarget + "/../.error";
+
+            // Establish SFTP connection
+            try (SFTPFacade sftpFacade = new SFTPFacadeImpl()) {
+                sftpFacade.connect();
+                List<String> csvFiles = sftpFacade.listFiles(sftpTarget, "*.csv");
+
+                for (String csvFile : csvFiles) {
+                    try (InputStream inputStream = sftpFacade.downloadFile(sftpTarget + "/" + csvFile)) {
+                        // Parse CSV file
+                        List<Transaction> transactions = TransactionUtils.parseCsvToTransactions(inputStream);
+
+                        // Insert transactions into the database
+                        for (Transaction transaction : transactions) {
+                            transactionService.createTransaction(transaction);
+                        }
+
+                        // Move file to .done directory
+                        sftpFacade.moveFile(sftpTarget + "/" + csvFile, doneDirectory + "/" + csvFile);
+                    } catch (Exception e) {
+                        context.getLogger().log("Error processing file " + csvFile + ": " + e.getMessage());
+                        // Move file to .error directory
+                        sftpFacade.moveFile(sftpTarget + "/" + csvFile, errorDirectory + "/" + csvFile);
+                    }
+                }
+            }
+
+            return new Response(true, "Daily fetch completed successfully.", null);
+        } catch (Exception e) {
+            context.getLogger().log("Error during dailyFetch: " + e.getMessage());
+            return new Response(false, "Failed to complete daily fetch: " + e.getMessage(), null);
+        }
+    }
+
+    private Response handleCreate(Request request, Context context) {
+        try {
+            if (!request.transaction.isPresent()) {
+                return new Response(false, "Transaction data is missing", null);
+            }
+
+            Transaction transaction = request.transaction.get();
+            context.getLogger().log("Creating transaction: " + transaction);
+
+            transactionService.createTransaction(transaction);
+            return new Response(true, "Transaction created successfully", transaction);
+        } catch (Exception e) {
+            context.getLogger().log("Error creating transaction: " + e.getMessage());
+            return new Response(false, "Failed to create transaction: " + e.getMessage(), null);
+        }
+    }
+
+    private Response handleRead(Request request, Context context) {
+        try {
+            if (request.transactionId == null) {
+                return new Response(false, "Transaction ID is missing", null);
+            }
+
+            Transaction transaction = transactionService.getTransactionById(request.transactionId);
+            return new Response(true, "Transaction retrieved successfully", transaction);
+        } catch (Exception e) {
+            context.getLogger().log("Error reading transaction: " + e.getMessage());
+            return new Response(false, "Failed to read transaction: " + e.getMessage(), null);
+        }
+    }
+
+    private Response handleUpdate(Request request, Context context) {
+        try {
+            if (request.transactionId == null) {
+                return new Response(false, "Transaction ID is missing", null);
+            }
+
+            if (!request.transaction.isPresent()) {
+                return new Response(false, "Transaction data is missing", null);
+            }
+
+            Transaction updatedTransaction = transactionService.updateTransaction(request.transactionId, request.transaction.get());
+            return new Response(true, "Transaction updated successfully", updatedTransaction);
+        } catch (Exception e) {
+            context.getLogger().log("Error updating transaction: " + e.getMessage());
+            return new Response(false, "Failed to update transaction: " + e.getMessage(), null);
+        }
+    }
+
+    private Response handleDelete(Request request, Context context) {
+        try {
+            if (request.transactionId == null) {
+                return new Response(false, "Transaction ID is missing", null);
+            }
+
+            transactionService.deleteTransaction(request.transactionId);
+            return new Response(true, "Transaction deleted successfully", null);
+        } catch (Exception e) {
+            context.getLogger().log("Error deleting transaction: " + e.getMessage());
+            return new Response(false, "Failed to delete transaction: " + e.getMessage(), null);
         }
     }
 }
