@@ -39,19 +39,19 @@ module "network" {
 # RDS Module 
 # Manages PostgreSQL database instances for persistent data storage
 #--------------------------------------------------------------
-# module "rds" {
-#   source               = "./modules/rds"
-#   security_group_id    = module.network.db_sg_id
-#   db_subnet_group_name = module.network.db_subnet_group_name
+module "rds" {
+  source               = "./modules/rds"
+  security_group_id    = module.network.db_sg_id
+  db_subnet_group_name = module.network.db_subnet_group_name
 
-#   # Database Connection Credentials - Passed from variables for security
-#   database_name     = var.DATABASE_NAME
-#   database_username = var.DATABASE_USERNAME
-#   database_password = var.DATABASE_PASSWORD
+  # Database Connection Credentials - Passed from variables for security
+  database_name     = var.DATABASE_NAME
+  database_username = var.DATABASE_USERNAME
+  database_password = var.DATABASE_PASSWORD
 
-#   # Applications map defining database requirements for each app component
-#   applications = var.applications
-# }
+  # Applications map defining database requirements for each app component
+  applications = var.applications
+}
 
 #--------------------------------------------------------------
 # ACM and Route53 Module 
@@ -206,8 +206,8 @@ module "lambda" {
 
       # Add dynamic configurations based on service flags
       rds_config = config.rds_enabled ? {
-        # database_host = module.rds.db_endpoints[name]
-        database_host = ""
+        database_host = module.rds.db_endpoints[name]
+        # database_host = ""
         database_name = var.DATABASE_NAME
         database_user = var.DATABASE_USERNAME
         database_pass = var.DATABASE_PASSWORD

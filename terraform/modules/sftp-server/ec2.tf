@@ -62,7 +62,7 @@ resource "aws_instance" "sftp_server" {
   # Upload CSV file to the instance
   provisioner "file" {
     source      = var.csv_file_path
-    destination = "/sftp/target/"
+    destination = "/sftp/target/${basename(var.csv_file_path)}"
   }
 }
 
