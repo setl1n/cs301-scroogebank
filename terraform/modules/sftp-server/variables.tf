@@ -39,3 +39,14 @@ variable "csv_file_path" {
   description = "The path to the CSV file to upload to the SFTP server"
   type        = string
 }
+
+variable "sftp_username" {
+  description = "The username for SFTP access"
+  type        = string
+}
+
+variable "sftp_password" {
+  description = "The password for SFTP access"
+  type        = string
+  sensitive   = true
+}

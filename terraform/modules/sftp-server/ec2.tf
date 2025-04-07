@@ -28,8 +28,15 @@ resource "aws_instance" "sftp_server" {
               # Update package repositories and install vsftpd
               sudo apt-get update -y
               sudo apt-get install -y vsftpd
-              sudo systemctl start vsftpd
-              sudo systemctl enable vsftpd
+
+              # Enable password authentication in SSH
+              sudo sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+              sudo sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+              sudo systemctl restart sshd
+
+              # Create SFTP user and set password
+              sudo useradd -m -s /bin/bash ${var.sftp_username}
+              echo "${var.sftp_username}:${var.sftp_password}" | sudo chpasswd
 
               # Create required directories
               sudo mkdir -p /sftp/target
@@ -39,6 +46,8 @@ resource "aws_instance" "sftp_server" {
               # Set permissions for the directories
               sudo chmod -R 755 /sftp
               sudo chown -R ubuntu:ubuntu /sftp
+
+              sudo systemctl restart vsftpd
               EOF
 
   # Connection details for provisioners
@@ -62,7 +71,7 @@ resource "aws_instance" "sftp_server" {
   # Upload CSV file to the instance
   provisioner "file" {
     source      = var.csv_file_path
-    destination = "/sftp/target/"
+    destination = "/sftp/target/${basename(var.csv_file_path)}"
   }
 }
 
