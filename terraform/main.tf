@@ -242,6 +242,7 @@ module "lambda" {
           SFTP_USER = var.DATABASE_USERNAME,
           SFTP_PASS = var.DATABASE_PASSWORD,
           SFTP_HOST = module.sftp_server.sftp_server_public_ip,
+          SFTP_PRIVATE_KEY_SECRET_NAME = var.sftp_private_key_secret_name,
         } : {}
       ),
     })
@@ -262,8 +263,7 @@ module "sftp_server" {
   security_group_id = module.network.sftp_sg_id
   # private_key_path  = "~/.ssh/id_rsa"  # Update this to your actual key path
   csv_file_path     = "${path.root}/../mock_transactions.csv"  # Path to the CSV file
-  sftp_username = var.DATABASE_USERNAME
-sftp_password = var.DATABASE_PASSWORD
+  sftp_private_key_secret_name = var.sftp_private_key_secret_name
 }
 
 #--------------------------------------------------------------

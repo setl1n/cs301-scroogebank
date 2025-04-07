@@ -29,15 +29,6 @@ resource "aws_instance" "sftp_server" {
               sudo apt-get update -y
               sudo apt-get install -y vsftpd
 
-              # Enable password authentication in SSH
-              sudo sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-              sudo sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
-              sudo systemctl restart sshd
-
-              # Create SFTP user and set password
-              sudo useradd -m -s /bin/bash ${var.sftp_username}
-              echo "${var.sftp_username}:${var.sftp_password}" | sudo chpasswd
-
               # Create required directories
               sudo mkdir -p /sftp/target
               sudo mkdir -p /sftp/.done
@@ -53,12 +44,12 @@ resource "aws_instance" "sftp_server" {
   # Connection details for provisioners
   connection {
     type        = "ssh"
-    user        = "ubuntu"  # Ubuntu uses 'ubuntu' as default user
+    user        = "ubuntu" # Ubuntu uses 'ubuntu' as default user
     private_key = tls_private_key.sftp_key.private_key_pem
     host        = self.public_ip
   }
 
-    provisioner "remote-exec" {
+  provisioner "remote-exec" {
     inline = [
       "sudo mkdir -p /sftp/target",
       "sudo mkdir -p /sftp/.done",
@@ -73,11 +64,4 @@ resource "aws_instance" "sftp_server" {
     source      = var.csv_file_path
     destination = "/sftp/target/${basename(var.csv_file_path)}"
   }
-}
-
-# Save the private key to a local file for future SSH access
-resource "local_file" "private_key" {
-  content         = tls_private_key.sftp_key.private_key_pem
-  filename        = "${path.module}/sftp_private_key.pem"
-  file_permission = "0600"
 }

@@ -40,13 +40,8 @@ variable "csv_file_path" {
   type        = string
 }
 
-variable "sftp_username" {
-  description = "The username for SFTP access"
+variable "sftp_private_key_secret_name" {
+  description = "Name for the AWS Secrets Manager secret that will store the SFTP private key"
   type        = string
-}
-
-variable "sftp_password" {
-  description = "The password for SFTP access"
-  type        = string
-  sensitive   = true
+  default     = "sftp-server-private-key"
 }

@@ -196,3 +196,13 @@ variable "COGNITO_DOMAIN" {
   description = "Custom domain name for the Cognito User Pool"
   type        = string
 }
+
+#--------------------------------------------------------------
+# SFTP Server Configuration
+# Used for securely transferring files
+#--------------------------------------------------------------
+variable "sftp_private_key_secret_name" {
+  description = "Name for the AWS Secrets Manager secret that will store the SFTP private key"
+  type        = string
+  default     = "sftp-server-private-key"
+}

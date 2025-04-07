@@ -31,6 +31,9 @@ public class TransactionHandler implements RequestHandler<TransactionHandler.Req
     public Response handleRequest(Request request, Context context) {
         try {
             switch (request.operation) {
+                case "testSftpConnection":
+                    return testSftpConnection(request, context);
+
                 case "dailyFetch":
                     return handleDailyFetch(request, context);
 
@@ -157,6 +160,38 @@ public class TransactionHandler implements RequestHandler<TransactionHandler.Req
         } catch (Exception e) {
             context.getLogger().log("Error deleting transaction: " + e.getMessage());
             return new Response(false, "Failed to delete transaction: " + e.getMessage(), null);
+        }
+    }
+
+    private Response testSftpConnection(Request request, Context context) {
+        context.getLogger().log("Testing SFTP connection...");
+        
+        try (SFTPFacade sftpFacade = new SFTPFacadeImpl()) {
+            // Print environment variables for debugging
+            String host = System.getenv("SFTP_HOST");
+            String username = System.getenv("SFTP_USER");
+            String hasPassword = System.getenv("SFTP_PASS") != null ? "yes" : "no";
+            String privateKeySecretName = System.getenv("SFTP_PRIVATE_KEY_SECRET_NAME");
+            
+            context.getLogger().log("SFTP_HOST: " + host);
+            context.getLogger().log("SFTP_USER: " + username);
+            context.getLogger().log("SFTP_PASS available: " + hasPassword);
+            context.getLogger().log("SFTP_PRIVATE_KEY_SECRET_NAME: " + privateKeySecretName);
+            
+            // Attempt connection
+            sftpFacade.connect();
+            context.getLogger().log("SFTP connection successful!");
+            
+            // List a directory to verify full access
+            String sftpTarget = System.getenv("SFTP_TARGET");
+            List<String> files = sftpFacade.listFiles(sftpTarget, "*");
+            context.getLogger().log("Found " + files.size() + " files in " + sftpTarget);
+            
+            return new Response(true, "SFTP connection successful", null);
+        } catch (Exception e) {
+            context.getLogger().log("SFTP connection failed: " + e.getMessage());
+            e.printStackTrace();
+            return new Response(false, "SFTP connection failed: " + e.getMessage(), null);
         }
     }
 }

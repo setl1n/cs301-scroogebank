@@ -103,6 +103,27 @@
             <version>2.15.0</version>
         </dependency>
 
+        <!-- AWS Secrets Manager -->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-secretsmanager</artifactId>
+            <version>1.12.529</version>
+        </dependency>
+
+        <!-- JSch -->
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.55</version>
+        </dependency>
+
+        <!-- SSHJ -->
+        <dependency>
+            <groupId>com.hierynomus</groupId>
+            <artifactId>sshj</artifactId>
+            <version>0.35.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>

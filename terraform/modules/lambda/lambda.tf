@@ -19,7 +19,7 @@ resource "aws_lambda_function" "lambda_functions" {
   runtime          = each.value.runtime
   filename         = each.value.filename
   source_code_hash = each.value.source_code_hash
-  timeout          = each.value.timeout
+  timeout          = each.value.timeout + 15
   memory_size      = each.value.memory_size
   role             = aws_iam_role.lambda_role[each.key].arn
 
@@ -81,6 +81,12 @@ locals {
   })
   lambda_with_cognito = nonsensitive({
     for k, v in var.lambda_functions : k => true if try(v.cognito_config != null, false)
+  })
+  lambda_with_sftp = nonsensitive({
+    for k, v in var.lambda_functions : k => true if try(v.environment_variables.SFTP_HOST != null, false)
+  })
+  lambda_with_secrets = nonsensitive({
+    for k, v in var.lambda_functions : k => true if try(v.environment_variables.SFTP_PRIVATE_KEY_SECRET_NAME != null, false)
   })
 }
 
@@ -215,4 +221,61 @@ resource "aws_iam_role_policy_attachment" "cognito_access" {
 
   role       = aws_iam_role.lambda_role[each.key].name
   policy_arn = aws_iam_policy.cognito_access[each.key].arn
+}
+
+# Secrets Manager access for Lambda functions
+resource "aws_iam_policy" "secrets_manager_access" {
+  for_each = local.lambda_with_secrets
+
+  name = "${var.lambda_functions[each.key].name}-secrets-policy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Effect   = "Allow"
+        Resource = "*" # Consider restricting to specific secrets if possible
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "secrets_manager_access" {
+  for_each = local.lambda_with_secrets
+
+  role       = aws_iam_role.lambda_role[each.key].name
+  policy_arn = aws_iam_policy.secrets_manager_access[each.key].arn
+}
+
+# Add EC2 permissions for Lambda functions that need to connect to SFTP servers
+resource "aws_iam_policy" "ec2_network_access" {
+  for_each = local.lambda_with_sftp
+
+  name = "${var.lambda_functions[each.key].name}-ec2-network-policy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ec2:CreateNetworkInterface",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:DeleteNetworkInterface",
+          "ec2:AssignPrivateIpAddresses",
+          "ec2:UnassignPrivateIpAddresses"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_network_access" {
+  for_each = local.lambda_with_sftp
+
+  role       = aws_iam_role.lambda_role[each.key].name
+  policy_arn = aws_iam_policy.ec2_network_access[each.key].arn
 }
