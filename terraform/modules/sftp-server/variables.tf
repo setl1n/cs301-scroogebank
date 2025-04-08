@@ -1,3 +1,7 @@
+#--------------------------------------------------------------
+# EC2 Instance Configuration Variables
+# Core settings for the SFTP server instance
+#--------------------------------------------------------------
 variable "ami_id" {
   description = "The AMI ID to use for the SFTP server"
   type        = string
@@ -14,6 +18,10 @@ variable "key_name" {
   type        = string
 }
 
+#--------------------------------------------------------------
+# Network Configuration Variables
+# Settings related to VPC, subnet, and security groups
+#--------------------------------------------------------------
 variable "public_subnet_id" {
   description = "The public subnet ID where the SFTP server will be deployed"
   type        = string
@@ -29,6 +37,10 @@ variable "vpc_id" {
   type        = string
 }
 
+#--------------------------------------------------------------
+# File and Security Configuration
+# Settings for file upload and secure access
+#--------------------------------------------------------------
 # variable "private_key_path" {
 #   description = "The path to the private key for SSH connections"
 #   type        = string

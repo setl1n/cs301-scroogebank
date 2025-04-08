@@ -1,9 +1,19 @@
+#--------------------------------------------------------------
+# EventBridge Rule
+# Schedule-based rule that triggers the SFTP fetch operation
+#--------------------------------------------------------------
+
 resource "aws_cloudwatch_event_rule" "SFTP_fetch" {
   name                = var.rule_name
   description         = var.rule_description
   schedule_expression = "cron(0 0 * * ? *)" # Fires every day at midnight UTC
   # schedule_expression = "cron(* * * * ? *)" # Fires every minute
 }
+
+#--------------------------------------------------------------
+# EventBridge Target
+# Defines which resource will be triggered by the EventBridge rule
+#--------------------------------------------------------------
 
 resource "aws_cloudwatch_event_target" "transaction_lambda_target" {
   rule     = aws_cloudwatch_event_rule.SFTP_fetch.name
@@ -15,6 +25,11 @@ resource "aws_cloudwatch_event_target" "transaction_lambda_target" {
     transaction   = {}
   })
 }
+
+#--------------------------------------------------------------
+# IAM Role for EventBridge
+# Permissions that allow EventBridge to invoke the Lambda function
+#--------------------------------------------------------------
 
 resource "aws_iam_role" "eventbridge_role" {
   name = var.role_name

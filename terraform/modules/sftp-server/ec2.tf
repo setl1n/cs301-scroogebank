@@ -1,15 +1,21 @@
-# Generate a key pair for SSH access
+#--------------------------------------------------------------
+# SSH Key Management
+# Generate RSA key pair for secure SSH access to the SFTP server
+#--------------------------------------------------------------
 resource "tls_private_key" "sftp_key" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
-# Create an AWS key pair using the generated public key
 resource "aws_key_pair" "sftp_key_pair" {
   key_name   = "sftp-key-pair"
   public_key = tls_private_key.sftp_key.public_key_openssh
 }
 
+#--------------------------------------------------------------
+# SFTP Server Instance
+# Creates and configures an EC2 instance with SFTP capabilities
+#--------------------------------------------------------------
 resource "aws_instance" "sftp_server" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
@@ -21,8 +27,10 @@ resource "aws_instance" "sftp_server" {
     Name = "sftp-server"
   }
 
-  # User data to configure the SFTP server and create directories
-  # Updated for Ubuntu system
+  #--------------------------------------------------------------
+  # Server Configuration
+  # Bootstrap script to install SFTP and set up required directories
+  #--------------------------------------------------------------
   user_data = <<-EOF
               #!/bin/bash
               # Update package repositories and install vsftpd
@@ -49,6 +57,10 @@ resource "aws_instance" "sftp_server" {
     host        = self.public_ip
   }
 
+  #--------------------------------------------------------------
+  # Directory Setup
+  # Creates and sets permissions for SFTP directories
+  #--------------------------------------------------------------
   provisioner "remote-exec" {
     inline = [
       "sudo mkdir -p /sftp/target",
@@ -59,7 +71,10 @@ resource "aws_instance" "sftp_server" {
     ]
   }
 
-  # Upload CSV file to the instance
+  #--------------------------------------------------------------
+  # File Transfer
+  # Uploads initial CSV file to the SFTP target directory
+  #--------------------------------------------------------------
   provisioner "file" {
     source      = var.csv_file_path
     destination = "/sftp/target/${basename(var.csv_file_path)}"
