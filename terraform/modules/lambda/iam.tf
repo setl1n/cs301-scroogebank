@@ -175,8 +175,7 @@ resource "aws_iam_policy" "lambda_sqs_policy" {
   # Create only for functions that have sqs_enabled flag set to true and sqs_config defined
   for_each = {
     for name, config in var.lambda_functions : name => config
-    if lookup(config, "sqs_enabled", false) == true &&
-    lookup(config, "sqs_config", null) != null
+    if lookup(config, "sqs_enabled", false) == true
   }
 
   name        = "lambda-sqs-policy-${each.key}"
@@ -202,8 +201,7 @@ resource "aws_iam_policy" "lambda_sqs_policy" {
 resource "aws_iam_role_policy_attachment" "lambda_sqs" {
   for_each = {
     for name, config in var.lambda_functions : name => config
-    if lookup(config, "sqs_enabled", false) == true &&
-    lookup(config, "sqs_config", null) != null
+    if lookup(config, "sqs_enabled", false) == true
   }
 
   role       = aws_iam_role.lambda_role[each.key].name
@@ -214,8 +212,7 @@ resource "aws_iam_role_policy_attachment" "lambda_sqs" {
 resource "aws_iam_policy" "cognito_access" {
   for_each = {
     for name, config in var.lambda_functions : name => config
-    if lookup(config, "cognito_enabled", false) == true &&
-    lookup(config, "cognito_config", null) != null
+    if lookup(config, "cognito_enabled", false) == true
   }
 
   name        = "${var.lambda_functions[each.key].name}-cognito-policy"
@@ -256,9 +253,8 @@ resource "aws_iam_role_policy_attachment" "cognito_access" {
 # Secrets Manager access for Lambda functions
 resource "aws_iam_policy" "secrets_manager_access" {
   for_each = {
-    for name, config in var.lambda_functions : name => config
-    if lookup(config, "sftp_enabled", false) == true &&
-    lookup(config, "sftp_config", null) != null
+    for name, config in var.lambda_functions : name => name
+    if lookup(config, "sftp_enabled", false) == true
   }
 
   name = "${var.lambda_functions[each.key].name}-secrets-policy"
@@ -280,8 +276,7 @@ resource "aws_iam_policy" "secrets_manager_access" {
 resource "aws_iam_role_policy_attachment" "secrets_manager_access" {
   for_each = {
     for name, config in var.lambda_functions : name => config
-    if lookup(config, "sftp_enabled", false) == true &&
-    lookup(config, "sftp_config", null) != null
+    if lookup(config, "sftp_enabled", false) == true
   }
 
   role       = aws_iam_role.lambda_role[each.key].name
@@ -292,8 +287,7 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_access" {
 resource "aws_iam_policy" "ec2_network_access" {
   for_each = {
     for name, config in var.lambda_functions : name => config
-    if lookup(config, "sftp_enabled", false) == true &&
-    lookup(config, "sftp_config", null) != null
+    if lookup(config, "sftp_enabled", false) == true
   }
 
   name = "${var.lambda_functions[each.key].name}-ec2-network-policy"
@@ -318,8 +312,7 @@ resource "aws_iam_policy" "ec2_network_access" {
 resource "aws_iam_role_policy_attachment" "ec2_network_access" {
   for_each = {
     for name, config in var.lambda_functions : name => config
-    if lookup(config, "sftp_enabled", false) == true &&
-    lookup(config, "sftp_config", null) != null
+    if lookup(config, "sftp_enabled", false) == true
   }
 
   role       = aws_iam_role.lambda_role[each.key].name

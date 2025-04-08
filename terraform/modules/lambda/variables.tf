@@ -33,51 +33,6 @@ variable "aws_region" {
 # Main configuration map that defines all Lambda functions to be created
 #------------------------------------------------------------------------------
 variable "lambda_functions" {
-<<<<<<< HEAD
-  description = "Configuration for Lambda functions"
-  type = map(object({
-    name             = string
-    handler          = string
-    runtime          = string
-    filename         = string
-    source_code_hash = string
-    timeout          = number
-    memory_size      = number
-
-    environment_variables = map(string)
-
-    # Service-specific configurations
-    rds_config = optional(object({
-      database_host = string
-      database_name = string
-      database_user = string
-      database_pass = string
-    }))
-
-    dynamodb_config = optional(object({
-      table_name = string
-      region     = string
-    }))
-
-    ses_config = optional(object({
-      region     = string
-      from_email = string
-    }))
-
-    cognito_config = optional(object({
-      user_pool_id  = string
-      app_client_id = string
-      region        = string
-    }))
-
-    sftp_config = optional(object({
-      sftp_user                    = string
-      sftp_pass                    = string
-      sftp_host                    = string
-      sftp_private_key_secret_name = string
-    }))
-  }))
-=======
   description = "Map of Lambda functions with their configurations including service connections and permissions"
   type        = map(any)
   # Example structure:
@@ -97,5 +52,4 @@ variable "lambda_functions" {
   #     sftp_enabled = true
   #   }
   # }
->>>>>>> master
 }
