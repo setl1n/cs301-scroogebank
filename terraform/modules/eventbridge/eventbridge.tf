@@ -8,7 +8,7 @@ resource "aws_cloudwatch_event_rule" "SFTP_fetch" {
 resource "aws_cloudwatch_event_target" "transaction_lambda_target" {
   rule     = aws_cloudwatch_event_rule.SFTP_fetch.name
   arn      = var.target_arn
-  role_arn = aws_iam_role.eventbridge_role.arn # Add this line
+  role_arn = aws_iam_role.eventbridge_role.arn
   input = jsonencode({
     operation     = "dailyFetch"
     transactionId = ""
