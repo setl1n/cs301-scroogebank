@@ -90,7 +90,7 @@ locals {
     for k, v in var.lambda_functions : k => true if try(v.cognito_config != null, false)
   })
   lambda_with_sftp = nonsensitive({
-    for k, v in var.lambda_functions : k => true if try(v.sftp_config == true, false)
+    for k, v in var.lambda_functions : k => true if try(v.sftp_config != null, false)
   })
 }
 

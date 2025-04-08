@@ -235,7 +235,7 @@ module "lambda" {
         region        = var.aws_region
       } : null,
 
-      sftp_config_config = config.sftp_enabled ? {
+      sftp_config = config.sftp_enabled ? {
         sftp_user                    = var.DATABASE_USERNAME,
         sftp_pass                    = var.DATABASE_PASSWORD,
         sftp_host                    = module.sftp_server.sftp_server_public_ip,

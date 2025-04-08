@@ -100,9 +100,10 @@ variable "lambda_functions" {
       timeout     = 15
       memory_size = 256
       rds_enabled = true
+      sftp_enabled = true
       environment_variables = {
         SFTP_PORT   = "22"
-        SFTP_TARGET = "./sftp/target"
+        SFTP_TARGET = "/sftp/target"
       }
     },
     # user = {
