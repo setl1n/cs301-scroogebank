@@ -16,7 +16,7 @@ resource "aws_iam_policy" "lambda_sftp_policy" {
         Resource = "*"
       },
       {
-        Action   = [
+        Action = [
           "secretsmanager:GetSecretValue",
           "secretsmanager:DescribeSecret"
         ],
@@ -33,7 +33,7 @@ resource "aws_iam_role_policy_attachment" "lambda_sftp_access" {
     for k, v in var.lambda_functions : k => v
     if contains(keys(v.environment_variables), "SFTP_PRIVATE_KEY_SECRET_NAME")
   }
-  
+
   role       = aws_iam_role.lambda_role[each.key].name
   policy_arn = aws_iam_policy.lambda_sftp_policy.arn
 }

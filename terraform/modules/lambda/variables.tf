@@ -65,5 +65,12 @@ variable "lambda_functions" {
       app_client_id = string
       region        = string
     }))
+
+    sftp_config = optional(object({
+      sftp_user                    = string
+      sftp_pass                    = string
+      sftp_host                    = string
+      sftp_private_key_secret_name = string
+    }))
   }))
 }

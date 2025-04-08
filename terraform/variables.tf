@@ -85,6 +85,7 @@ variable "lambda_functions" {
     ses_enabled      = optional(bool, false)
     dynamodb_enabled = optional(bool, false)
     cognito_enabled  = optional(bool, false)
+    sftp_enabled     = optional(bool, false)
 
     # Environment variables (optional)
     environment_variables = optional(map(string), {})

@@ -59,6 +59,13 @@ resource "aws_lambda_function" "lambda_functions" {
         COGNITO_USER_POOL_ID  = each.value.cognito_config.user_pool_id
         COGNITO_APP_CLIENT_ID = each.value.cognito_config.app_client_id
         COGNITO_REGION        = each.value.cognito_config.region
+      } : {},
+
+      each.value.sftp_config != null ? {
+        SFTP_USER                    = each.value.sftp_config.sftp_user,
+        SFTP_PASS                    = each.value.sftp_config.sftp_pass,
+        SFTP_HOST                    = each.value.sftp_config.sftp_host,
+        SFTP_PRIVATE_KEY_SECRET_NAME = each.value.sftp_config.sftp_private_key_secret_name,
       } : {}
     )
   }
@@ -83,10 +90,7 @@ locals {
     for k, v in var.lambda_functions : k => true if try(v.cognito_config != null, false)
   })
   lambda_with_sftp = nonsensitive({
-    for k, v in var.lambda_functions : k => true if try(v.environment_variables.SFTP_HOST != null, false)
-  })
-  lambda_with_secrets = nonsensitive({
-    for k, v in var.lambda_functions : k => true if try(v.environment_variables.SFTP_PRIVATE_KEY_SECRET_NAME != null, false)
+    for k, v in var.lambda_functions : k => true if try(v.sftp_config == true, false)
   })
 }
 
@@ -225,7 +229,7 @@ resource "aws_iam_role_policy_attachment" "cognito_access" {
 
 # Secrets Manager access for Lambda functions
 resource "aws_iam_policy" "secrets_manager_access" {
-  for_each = local.lambda_with_secrets
+  for_each = local.lambda_with_sftp
 
   name = "${var.lambda_functions[each.key].name}-secrets-policy"
   policy = jsonencode({
@@ -244,7 +248,7 @@ resource "aws_iam_policy" "secrets_manager_access" {
 }
 
 resource "aws_iam_role_policy_attachment" "secrets_manager_access" {
-  for_each = local.lambda_with_secrets
+  for_each = local.lambda_with_sftp
 
   role       = aws_iam_role.lambda_role[each.key].name
   policy_arn = aws_iam_policy.secrets_manager_access[each.key].arn

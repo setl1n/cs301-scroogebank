@@ -235,16 +235,12 @@ module "lambda" {
         region        = var.aws_region
       } : null,
 
-      # Add the SFTP_HOST dynamically from the SFTP server's public IP for transaction Lambda
-      environment_variables = merge(
-        config.environment_variables,
-        name == "transaction" ? {
-          SFTP_USER = var.DATABASE_USERNAME,
-          SFTP_PASS = var.DATABASE_PASSWORD,
-          SFTP_HOST = module.sftp_server.sftp_server_public_ip,
-          SFTP_PRIVATE_KEY_SECRET_NAME = var.sftp_private_key_secret_name,
-        } : {}
-      ),
+      sftp_config_config = config.sftp_enabled ? {
+        sftp_user                    = var.DATABASE_USERNAME,
+        sftp_pass                    = var.DATABASE_PASSWORD,
+        sftp_host                    = module.sftp_server.sftp_server_public_ip,
+        sftp_private_key_secret_name = var.sftp_private_key_secret_name,
+      } : null,
     })
   }
 }
@@ -262,7 +258,7 @@ module "sftp_server" {
   vpc_id            = module.network.vpc_id
   security_group_id = module.network.sftp_sg_id
   # private_key_path  = "~/.ssh/id_rsa"  # Update this to your actual key path
-  csv_file_path     = "${path.root}/../mock_transactions.csv"  # Path to the CSV file
+  csv_file_path                = "${path.root}/../mock_transactions.csv" # Path to the CSV file
   sftp_private_key_secret_name = var.sftp_private_key_secret_name
 }
 
