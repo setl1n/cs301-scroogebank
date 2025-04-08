@@ -1,6 +1,12 @@
 # Application Load Balancer configuration for ECS services
 # This file defines the ALB, listeners, target groups, and routing rules
 
+#--------------------------------------------------------------
+# Public Subnets
+# These subnets have direct internet access and are used for
+# internet-facing resources like load balancers
+#--------------------------------------------------------------
+
 # Main application load balancer that will distribute traffic to our services
 resource "aws_alb" "main" {
   name                 = "alb"
@@ -8,6 +14,11 @@ resource "aws_alb" "main" {
   security_groups      = var.lb_sg_ids
   preserve_host_header = true
 }
+
+#--------------------------------------------------------------
+# Listeners
+# These handle incoming traffic and define default routing behaviors
+#--------------------------------------------------------------
 
 # HTTP listener that redirects all traffic to HTTPS for security
 resource "aws_alb_listener" "alb_http_listener" {
@@ -44,6 +55,12 @@ resource "aws_alb_listener" "alb_https_listener" {
   }
 }
 
+#--------------------------------------------------------------
+# Target Groups
+# These define where traffic is routed to and how health checks
+# are performed for the services
+#--------------------------------------------------------------
+
 # Target groups for each service - these are the destinations for traffic from the load balancer
 # Each target group contains health check configuration to ensure traffic is only sent to healthy instances
 resource "aws_alb_target_group" "app" {
@@ -65,6 +82,12 @@ resource "aws_alb_target_group" "app" {
     unhealthy_threshold = "4"
   }
 }
+
+#--------------------------------------------------------------
+# Routing Rules
+# These determine which requests go to which target groups based
+# on path patterns and other conditions
+#--------------------------------------------------------------
 
 # Listener rules that determine which requests go to which target groups
 # Based on path patterns defined in the services variable

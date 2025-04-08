@@ -1,6 +1,8 @@
-#########################
-# Cognito User Pool
-#########################
+#--------------------------------------------------------------
+# AWS COGNITO USER POOL
+# The main user directory that stores user accounts and handles
+# authentication, account confirmation, and password recovery
+#--------------------------------------------------------------
 resource "aws_cognito_user_pool" "user_pool" {
   name = var.user_pool_name
 
@@ -17,9 +19,11 @@ resource "aws_cognito_user_pool" "user_pool" {
   mfa_configuration = var.mfa_configuration
 }
 
-#########################
-# Cognito User Pool Client
-#########################
+#--------------------------------------------------------------
+# AWS COGNITO USER POOL CLIENT
+# Defines the app that will use this Cognito User Pool for
+# authentication, including OAuth settings and callback URLs
+#--------------------------------------------------------------
 resource "aws_cognito_user_pool_client" "user_pool_client" {
   name         = var.user_pool_client_name
   user_pool_id = aws_cognito_user_pool.user_pool.id
@@ -41,17 +45,21 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
   ]
 }
 
-#########################
-# Cognito User Pool Domain
-#########################
+#--------------------------------------------------------------
+# AWS COGNITO USER POOL DOMAIN
+# Creates a domain for the Cognito hosted UI where users will
+# sign in through the default authentication screens
+#--------------------------------------------------------------
 resource "aws_cognito_user_pool_domain" "user_pool_domain" {
   domain       = var.cognito_domain
   user_pool_id = aws_cognito_user_pool.user_pool.id
 }
 
-#########################
-# Cognito User Groups
-#########################
+#--------------------------------------------------------------
+# AWS COGNITO USER GROUPS
+# Define permission groups for different user roles with
+# different levels of access to the application
+#--------------------------------------------------------------
 resource "aws_cognito_user_group" "admin_group" {
   user_pool_id = aws_cognito_user_pool.user_pool.id
   name         = "ADMIN"

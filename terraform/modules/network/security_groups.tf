@@ -30,7 +30,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_db_ecs" {
 }
 
 # Allow PostgreSQL access from Lambda functions
-resource "aws_vpc_security_group_ingress_rule" "allow_mysql_lambda" {
+resource "aws_vpc_security_group_ingress_rule" "allow_postgresql_lambda" {
   security_group_id            = aws_security_group.db_sg.id
   referenced_security_group_id = aws_security_group.lambda_sg.id
   from_port                    = 5432
@@ -38,6 +38,15 @@ resource "aws_vpc_security_group_ingress_rule" "allow_mysql_lambda" {
   to_port                      = 5432
   description                  = "Allow PostgreSQL access from Lambda functions"
 }
+
+# resource "aws_vpc_security_group_ingress_rule" "allow_postgresql_all" {
+#   security_group_id            = aws_security_group.db_sg.id
+#   cidr_ipv4         = "0.0.0.0/0"
+#   from_port                    = 5432
+#   ip_protocol                  = "tcp"
+#   to_port                      = 5432
+#   description                  = "Allow PostgreSQL access from Lambda functions"
+# }
 
 #--------------------------------------------------------------
 # Load Balancer Security Group
@@ -151,10 +160,11 @@ resource "aws_security_group" "sftp_sg" {
   vpc_id      = aws_vpc.vpc.id
 
   ingress {
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
-    security_groups = [aws_security_group.lambda_sg.id] # Allow access from Lambda SG
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    # security_groups = [aws_security_group.lambda_sg.id] # Allow access from Lambda SG
   }
 
   egress {

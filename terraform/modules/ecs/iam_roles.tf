@@ -4,6 +4,12 @@
 # 2. Task role - allows containers to access AWS services
 # 3. Autoscaling role - allows the autoscaling service to modify ECS services
 
+#--------------------------------------------------------------
+# ECS Execution Role
+# Allows ECS to pull container images from ECR and write logs
+# to CloudWatch on behalf of the task
+#--------------------------------------------------------------
+
 # Trust policy document for ECS execution role
 data "aws_iam_policy_document" "assume_role_ecs" {
   statement {
@@ -23,6 +29,12 @@ resource "aws_iam_role" "ecs_execution_role" {
   name               = "ecs-execution-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role_ecs.json
 }
+
+#--------------------------------------------------------------
+# ECS Task Role
+# Allows containers themselves to access AWS services via
+# the AWS SDK or CLI
+#--------------------------------------------------------------
 
 # Trust policy document for ECS task role
 data "aws_iam_policy_document" "assume_role_tasks" {
@@ -49,6 +61,12 @@ resource "aws_iam_role_policy_attachment" "task_execution_role_policy_attachment
   role       = aws_iam_role.ecs_tasks_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
+
+#--------------------------------------------------------------
+# Auto Scaling Role
+# Allows Application Auto Scaling service to modify ECS service
+# desired count to scale the application
+#--------------------------------------------------------------
 
 # Trust policy document for autoscaling role
 data "aws_iam_policy_document" "assume_role_autoscaling" {

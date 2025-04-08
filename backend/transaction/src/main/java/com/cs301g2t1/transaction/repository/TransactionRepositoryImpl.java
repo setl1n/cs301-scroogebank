@@ -96,7 +96,11 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         if (transaction.getId() == null) {
             return insertTransaction(transaction);
         } else {
-            return updateTransaction(transaction);
+            if (existsById(transaction.getId())) {
+                return updateTransaction(transaction);
+            } else {
+                return insertTransaction(transaction);
+            }
         }
     }
 
