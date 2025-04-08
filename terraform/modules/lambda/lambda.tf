@@ -83,7 +83,6 @@ resource "aws_lambda_function" "lambda_functions" {
       # Provides connection details for SFTP operations
       each.value.sftp_config != null ? {
         SFTP_USER                    = each.value.sftp_config.sftp_user,
-        SFTP_PASS                    = each.value.sftp_config.sftp_pass,
         SFTP_HOST                    = each.value.sftp_config.sftp_host,
         SFTP_PRIVATE_KEY_SECRET_NAME = each.value.sftp_config.sftp_private_key_secret_name,
       } : {}

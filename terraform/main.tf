@@ -253,8 +253,7 @@ module "lambda" {
       } : null,
 
       sftp_config = config.sftp_enabled ? {
-        sftp_user                    = var.DATABASE_USERNAME,
-        sftp_pass                    = var.DATABASE_PASSWORD,
+        sftp_user                    = "ubuntu",
         sftp_host                    = module.sftp_server.sftp_server_public_ip,
         sftp_private_key_secret_name = var.sftp_private_key_secret_name,
       } : null,

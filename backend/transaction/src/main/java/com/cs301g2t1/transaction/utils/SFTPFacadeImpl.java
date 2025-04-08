@@ -24,8 +24,7 @@ public class SFTPFacadeImpl implements SFTPFacade {
     @Override
     public void connect() throws Exception {
         String host = System.getenv("SFTP_HOST");
-        String username = "ubuntu";
-        String password = System.getenv("SFTP_PASS");
+        String username = System.getenv("SFTP_USER");
         String privateKeySecretName = System.getenv("SFTP_PRIVATE_KEY_SECRET_NAME");
         String keyPassphrase = System.getenv("SFTP_KEY_PASSPHRASE");
     
@@ -116,19 +115,6 @@ public class SFTPFacadeImpl implements SFTPFacade {
                     }
                 } catch (Exception e) {
                     System.out.println("SSHJ: Error retrieving private key: " + e.getMessage());
-                    e.printStackTrace();
-                }
-            }
-            
-            // Try password authentication if private key failed
-            if (!authenticated && password != null && !password.isEmpty()) {
-                try {
-                    System.out.println("SSHJ: Authenticating with password...");
-                    ssh.authPassword(username, password);
-                    System.out.println("SSHJ: Authentication with password successful");
-                    authenticated = true;
-                } catch (Exception e) {
-                    System.out.println("SSHJ: Failed to authenticate with password: " + e.getMessage());
                     e.printStackTrace();
                 }
             }
