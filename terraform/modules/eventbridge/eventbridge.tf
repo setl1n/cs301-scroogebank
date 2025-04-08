@@ -2,11 +2,13 @@ resource "aws_cloudwatch_event_rule" "SFTP_fetch" {
   name                = var.rule_name
   description         = var.rule_description
   schedule_expression = "cron(0 0 * * ? *)" # Fires every day at midnight UTC
+  # schedule_expression = "cron(* * * * ? *)" # Fires every minute
 }
 
 resource "aws_cloudwatch_event_target" "transaction_lambda_target" {
-  rule = aws_cloudwatch_event_rule.SFTP_fetch.name
-  arn  = var.target_arn
+  rule     = aws_cloudwatch_event_rule.SFTP_fetch.name
+  arn      = var.target_arn
+  role_arn = aws_iam_role.eventbridge_role.arn # Add this line
   input = jsonencode({
     operation     = "dailyFetch"
     transactionId = ""

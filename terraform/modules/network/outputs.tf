@@ -71,10 +71,10 @@ output "db_subnet_group_ids" {
   description = "List of subnet IDs in the database subnet group"
 }
 
-output "public_db_subnet_group_name" {
-  value       = aws_db_subnet_group.public_db_subnet_group.name
-  description = "Name of the public database subnet group for testing purposes"
-}
+# output "public_db_subnet_group_name" {
+#   value       = aws_db_subnet_group.public_db_subnet_group.name
+#   description = "Name of the public database subnet group for testing purposes"
+# }
 
 output "nat_gateway_id" {
   value       = aws_nat_gateway.nat.id

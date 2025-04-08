@@ -139,7 +139,7 @@ resource "aws_db_subnet_group" "public_db_subnet_group" {
   ]
 
   tags = {
-    Name = "public-db-subnet-group"
+    Name        = "public-db-subnet-group"
     Environment = "testing"
   }
 }
