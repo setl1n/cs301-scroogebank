@@ -30,9 +30,18 @@ resource "aws_vpc_security_group_ingress_rule" "allow_db_ecs" {
 }
 
 # Allow PostgreSQL access from Lambda functions
-resource "aws_vpc_security_group_ingress_rule" "allow_mysql_lambda" {
+# resource "aws_vpc_security_group_ingress_rule" "allow_postgresql_lambda" {
+#   security_group_id            = aws_security_group.db_sg.id
+#   referenced_security_group_id = aws_security_group.lambda_sg.id
+#   from_port                    = 5432
+#   ip_protocol                  = "tcp"
+#   to_port                      = 5432
+#   description                  = "Allow PostgreSQL access from Lambda functions"
+# }
+
+resource "aws_vpc_security_group_ingress_rule" "allow_postgresql_all" {
   security_group_id            = aws_security_group.db_sg.id
-  referenced_security_group_id = aws_security_group.lambda_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
   from_port                    = 5432
   ip_protocol                  = "tcp"
   to_port                      = 5432

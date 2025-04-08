@@ -128,6 +128,23 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 }
 
 #--------------------------------------------------------------
+# Public Database Subnet Group
+# Groups public subnets for RDS testing (not for production use)
+#--------------------------------------------------------------
+resource "aws_db_subnet_group" "public_db_subnet_group" {
+  name = "public-db-subnet-group"
+  subnet_ids = [
+    aws_subnet.public_subnet_a.id,
+    aws_subnet.public_subnet_b.id
+  ]
+
+  tags = {
+    Name = "public-db-subnet-group"
+    Environment = "testing"
+  }
+}
+
+#--------------------------------------------------------------
 # Route Table Associations
 # Associates subnets with their respective route tables
 #--------------------------------------------------------------

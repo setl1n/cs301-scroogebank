@@ -30,7 +30,8 @@ resource "aws_rds_cluster_instance" "aurora_writer" {
   instance_class      = "db.t3.medium"
   engine              = aws_rds_cluster.aurora_cluster[each.key].engine
   engine_version      = aws_rds_cluster.aurora_cluster[each.key].engine_version
-  publicly_accessible = false
+  publicly_accessible = true  # Changed from false to true
+  # publicly_accessible = false
   availability_zone   = "ap-southeast-1a"
   promotion_tier      = 0 # Primary instance with highest priority for promotion
 }
