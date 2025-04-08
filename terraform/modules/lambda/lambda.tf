@@ -19,7 +19,7 @@ resource "aws_lambda_function" "lambda_functions" {
   runtime          = each.value.runtime
   filename         = each.value.filename
   source_code_hash = each.value.source_code_hash
-  timeout          = each.value.timeout + 15
+  timeout          = each.value.timeout
   memory_size      = each.value.memory_size
   role             = aws_iam_role.lambda_role[each.key].arn
 

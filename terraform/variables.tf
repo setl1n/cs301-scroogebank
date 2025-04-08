@@ -97,7 +97,7 @@ variable "lambda_functions" {
       handler     = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
       runtime     = "java21"
       filename    = "../backend/transaction/target/transaction-1.0-SNAPSHOT.jar"
-      timeout     = 60
+      timeout     = 90
       memory_size = 256
       rds_enabled = true
       sftp_enabled = true
