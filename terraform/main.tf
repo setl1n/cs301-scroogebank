@@ -57,16 +57,16 @@ module "rds" {
 # ACM and Route53 Module 
 # Manages SSL certificates and DNS records for secure connections
 #--------------------------------------------------------------
-# module "acm" {
-#   source             = "./modules/acm"
-#   certificate_domain = var.DOMAIN_NAME
-#   route53_zone_id    = var.ROUTE53_ZONE_ID
+module "acm" {
+  source             = "./modules/acm"
+  certificate_domain = var.DOMAIN_NAME
+  route53_zone_id    = var.ROUTE53_ZONE_ID
 
-#   providers = {
-#     aws.us-east-1      = aws.us-east-1
-#     aws.ap-southeast-1 = aws.ap-southeast-1
-#   }
-# }
+  providers = {
+    aws.us-east-1      = aws.us-east-1
+    aws.ap-southeast-1 = aws.ap-southeast-1
+  }
+}
 
 #--------------------------------------------------------------
 # S3 Module 
