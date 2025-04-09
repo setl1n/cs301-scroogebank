@@ -133,22 +133,15 @@ module "ecs" {
   database_username = var.DATABASE_USERNAME
   database_password = var.DATABASE_PASSWORD
 
-  # certificate_arn    = module.acm.ap_certificate_arn
-  # certificate_domain = var.DOMAIN_NAME
+  certificate_arn    = module.acm.ap_certificate_arn
+  certificate_domain = var.DOMAIN_NAME
 
-  # route53_zone_id = var.ROUTE53_ZONE_ID
+  route53_zone_id = var.ROUTE53_ZONE_ID
 
-  # depends_on = [module.acm.ap_certificate_validation_id]
+  depends_on = [module.acm.ap_certificate_validation_id]
 
   # Services map defining ECS service requirements for each app component
   services = {
-    # account = {
-    #   cluster_name = "account-cluster"
-    #   db_endpoint  = module.rds.db_endpoints["account"]
-    #   app_image    = "vincetyy/kickoff-users:latest"
-    #   app_port     = 8081
-    #   path_pattern = ["/api/v1/users*", "/api/v1/playerProfiles*"]
-    # }
     # client = {
     #   cluster_name   = "client-cluster"
     #   db_endpoint    = module.rds.db_endpoints["client"]
@@ -167,7 +160,7 @@ module "ecs" {
       redis_port     = module.elasticache.valkey_port
       app_image      = "339712857918.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-account:latest" # change when using actual app
       app_port       = 8080
-      path_pattern   = ["/api/v1/*"] # change back
+      path_pattern   = ["/api/v1/accounts"]
     }
   }
   
