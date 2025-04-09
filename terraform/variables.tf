@@ -55,12 +55,12 @@ variable "applications" {
     client = {
       identifier = "client-db"
     },
-    #   account = {
-    #     identifier = "account-db"
-    #   },
-    #   transaction = {
-    #     identifier = "transaction-db"
-    #   },
+    account = {
+      identifier = "account-db"
+    },
+    transaction = {
+      identifier = "transaction-db"
+    },
   }
 }
 
@@ -98,42 +98,42 @@ variable "lambda_functions" {
   }))
 
   default = {
-    # transaction = {
-    #   name         = "transaction_lambda_function"
-    #   handler      = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
-    #   runtime      = "java21"
-    #   filename     = "../backend/transaction/target/transaction-1.0-SNAPSHOT.jar"
-    #   timeout      = 90
-    #   memory_size  = 256
-    #   rds_enabled  = true
-    #   sftp_enabled = true
-    #   environment_variables = {
-    #     SFTP_PORT   = "22"
-    #     SFTP_TARGET = "/sftp/target"
-    #   }
-    # },
-    # user = {
-    #   name                  = "user_lambda_function"
-    #   handler               = "com.cs301g2t1.user.UserHandler::handleRequest"
-    #   runtime               = "java21"
-    #   filename              = "../backend/user/target/user-0.0.1-SNAPSHOT.jar" // seems to be this .jar
-    #   timeout               = 15
-    #   memory_size           = 256
-    #   cognito_enabled       = true
-    #   environment_variables = {}
-    # },
-    # log = {
-    #   name                = "log_lambda_function"
-    #   handler             = "com.cs301g2t1.log.LogHandler::handleRequest"
-    #   runtime             = "java21"
-    #   filename            = "../backend/log/target/log-1.0-SNAPSHOT.jar"
-    #   timeout             = 15
-    #   memory_size         = 256
-    #   dynamodb_enabled    = true
-    #   sqs_enabled         = true
-    #   sqs_trigger_enabled = true # Enable SQS triggering
-    #   sqs_batch_size      = 10   # Process 10 messages at a time
-    # }
+    transaction = {
+      name         = "transaction_lambda_function"
+      handler      = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
+      runtime      = "java21"
+      filename     = "../backend/transaction/target/transaction-1.0-SNAPSHOT.jar"
+      timeout      = 90
+      memory_size  = 256
+      rds_enabled  = true
+      sftp_enabled = true
+      environment_variables = {
+        SFTP_PORT   = "22"
+        SFTP_TARGET = "/sftp/target"
+      }
+    },
+    user = {
+      name                  = "user_lambda_function"
+      handler               = "com.cs301g2t1.user.UserHandler::handleRequest"
+      runtime               = "java21"
+      filename              = "../backend/user/target/user-0.0.1-SNAPSHOT.jar" // seems to be this .jar
+      timeout               = 15
+      memory_size           = 256
+      cognito_enabled       = true
+      environment_variables = {}
+    },
+    log = {
+      name                = "log_lambda_function"
+      handler             = "com.cs301g2t1.log.LogHandler::handleRequest"
+      runtime             = "java21"
+      filename            = "../backend/log/target/log-1.0-SNAPSHOT.jar"
+      timeout             = 15
+      memory_size         = 256
+      dynamodb_enabled    = true
+      sqs_enabled         = true
+      sqs_trigger_enabled = true # Enable SQS triggering
+      sqs_batch_size      = 10   # Process 10 messages at a time
+    }
     # Example with other services
     # notification_sender = {
     #   name             = "notification-sender"

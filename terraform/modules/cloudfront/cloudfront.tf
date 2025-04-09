@@ -52,7 +52,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   # Uses ACM certificate to enable HTTPS for the CloudFront distribution
   # SNI allows multiple SSL certificates to be used on a single IP address
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate.cert.arn
+    acm_certificate_arn      = var.certificate_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
@@ -68,10 +68,4 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   tags = {
     Name = "cloudfront-${replace(each.key, "_", "-")}"
   }
-
-  # Ensure that certificate validation is complete before creating the distribution
-  # This prevents deployment failures due to invalid certificates
-  depends_on = [
-    aws_acm_certificate_validation.cert_validation
-  ]
 }
