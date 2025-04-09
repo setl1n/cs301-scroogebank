@@ -17,7 +17,7 @@ resource "aws_backup_plan" "backup_plan" {
     target_vault_name = aws_backup_vault.backup_vault.name
     schedule          = "cron(0 0 1 * ? *)" # Run at midnight on the 1st of every month
     lifecycle {
-      delete_after = var.backup_retention_days
+      delete_after       = var.backup_retention_days
       cold_storage_after = 30 # Move to cold storage after 30 days
     }
 

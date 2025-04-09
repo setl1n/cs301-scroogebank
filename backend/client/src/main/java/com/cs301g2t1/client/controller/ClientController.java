@@ -2,16 +2,15 @@ package com.cs301g2t1.client.controller;
 
 import com.cs301g2t1.client.model.Client;
 import com.cs301g2t1.client.service.ClientService;
-
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import jakarta.validation.Valid;
+import org.springframework.core.env.Environment;
 
 @RestController
 @RequestMapping("/clients")
@@ -20,6 +19,14 @@ public class ClientController {
 
     @Autowired
     private ClientService clientService;
+
+    @Autowired
+    private Environment env;
+
+    
+    // Inject the Redis template to interact with ElastiCache (Redis)
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     @GetMapping
     public ResponseEntity<List<Client>> getAllClients() {
@@ -71,6 +78,30 @@ public class ClientController {
             return ResponseEntity.noContent().build(); // 204 No Content
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.notFound().build();
+        }
+    }
+    
+    // New endpoint to test Redis caching (ElastiCache)
+    @GetMapping("/cache-test")
+    public ResponseEntity<String> testCache() {
+        // Print the Redis host and port from application properties
+        String redisHost = env.getProperty("spring.data.redis.host");
+        String redisPort = env.getProperty("spring.data.redis.port");
+        System.out.println("Attempting to connect to Redis at host: " + redisHost + " on port: " + redisPort);
+
+        try {
+            // Write a test value to Redis
+            redisTemplate.opsForValue().set("testKey", "testValue");
+            System.out.println("Successfully set key 'testKey' to 'testValue'");
+            // Read the test value from Redis
+            String value = redisTemplate.opsForValue().get("testKey");
+            System.out.println("Retrieved value from Redis: " + value);
+            return ResponseEntity.ok("Value from Redis: " + value);
+        } catch (Exception e) {
+            // Print full stack trace if there's an error connecting to Redis
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error connecting to Redis: " + e.getMessage());
         }
     }
 }
