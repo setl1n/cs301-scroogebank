@@ -159,7 +159,7 @@ module "ecs" {
       db_port        = 5432
       redis_endpoint = module.elasticache.valkey_endpoints["account"]
       redis_port     = module.elasticache.valkey_port
-      app_image      = "339712857918.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-account:latest" # change when using actual app
+      app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-account:latest" # change back when using actual app
       app_port       = 8080
       path_pattern   = ["/api/v1/accounts"]
     }
@@ -320,7 +320,7 @@ module "sftp_server" {
 module "backup" {
   source                = "./modules/backup"
   environment           = "development"
-  backup_retention_days = 90
+  backup_retention_days = 1825 # 5 years
   # Get Aurora cluster ARNs from your RDS module
   aurora_cluster_arns = [
     for app_key, arn in module.rds.db_arns : arn
