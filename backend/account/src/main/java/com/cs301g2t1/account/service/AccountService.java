@@ -1,8 +1,10 @@
 package com.cs301g2t1.account.service;
 
 import java.util.Base64;
-import java.time.LocalDateTime; 
+import java.util.List;
+import java.time.LocalDateTime;
 
+import org.hibernate.annotations.Cache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -13,8 +15,14 @@ import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
 import com.cs301g2t1.account.model.Account;
 import com.cs301g2t1.account.repository.AccountRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.servlet.http.HttpServletRequest;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 
 @Service
 public class AccountService {
@@ -28,12 +36,25 @@ public class AccountService {
 
     private final SqsClient sqsClient;
 
+    private static final String ACCOUNTS_CACHE = "accounts";         // Caches individual accounts by ID
+    private static final String ACCOUNTS_CLIENT_CACHE = "accountsClient"; // Caches accounts by client ID
+    private static final String ACCOUNTS_ALL_CACHE = "accountsAll";  // Caches the whole list of accounts
+
+
     @Autowired
     public AccountService(AccountRepository accountRepository, SqsClient sqsClient) {
         this.accountRepository = accountRepository;
         this.sqsClient = sqsClient;
     }
 
+    @Transactional
+    @Caching(
+        put = { @CachePut(value = ACCOUNTS_CACHE, key = "#result.accountId") },
+        evict = {
+            @CacheEvict(value = ACCOUNTS_CLIENT_CACHE, key = "#result.clientId"),
+            @CacheEvict(value = ACCOUNTS_ALL_CACHE, allEntries = true)
+        }
+    )
     public Account createAccount(Account account, Long agentId) {
         // Check if account with the same clientId already exists
         Account createdAccount = accountRepository.save(account);
@@ -57,13 +78,55 @@ public class AccountService {
         return createdAccount;
     }
 
-    public Account deleteAccount(Long id) {
-        Account account = accountRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found with ID: " + id));
+    @Caching(evict = {
+        @CacheEvict(value = "accounts", key = "#accountId"),
+        @CacheEvict(value = "accountsClient", key = "#result.clientId"), // remove all accounts for this client
+        @CacheEvict(value = "accountsAll", allEntries = true)
+    })
+    public Account deleteAccount(Long accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found with ID: " + accountId));
         accountRepository.delete(account);
         String log = String.format("delete", null);
         pushLogToSQS(log);
         return account;
+    }
+
+    @Cacheable(value = ACCOUNTS_CACHE, key = "#accountId")
+    public Account getAccountById(Long accountId) {
+        return accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found with ID: " + accountId));
+    }
+
+    @Cacheable(value = ACCOUNTS_ALL_CACHE)
+    public List<Account> getAllAccounts() {
+        return accountRepository.findAll();
+    }
+
+    @Cacheable(value = ACCOUNTS_CLIENT_CACHE, key = "#clientId")
+    public List<Account> getAccountsByClientId(Long clientId) {
+        return accountRepository.findByClientId(clientId);
+    }
+
+    @Caching(
+        put = { @CachePut(value = ACCOUNTS_CACHE, key = "#result.accountId") },
+        evict = {
+            @CacheEvict(value = ACCOUNTS_CLIENT_CACHE, key = "#result.clientId"),
+            @CacheEvict(value = ACCOUNTS_ALL_CACHE, allEntries = true)
+        }
+    )
+    public Account updateAccount(Account newAccount) {
+        System.out.println("Updating account with ID: " + newAccount.getAccountId());
+        Account account = accountRepository.findById(newAccount.getAccountId())
+                .orElseThrow(() -> new IllegalArgumentException("Account not found with ID: " + newAccount.getAccountId()));
+        
+        // account.setAccountType(newAccount.getAccountType()); # account type shouldnt change
+        account.setAccountStatus(newAccount.getAccountStatus());
+        account.setOpeningDate(newAccount.getOpeningDate());
+        account.setInitialDeposit(newAccount.getInitialDeposit()); 
+        account.setCurrency(newAccount.getCurrency());
+        account.setBranchId(newAccount.getBranchId());
+        return accountRepository.save(account);
     }
 
     public Long getAgentId(HttpServletRequest request) {
@@ -80,7 +143,7 @@ public class AccountService {
         // String payload = new String(Base64.getDecoder().decode(parts[1]));
         // // Parse JSON and get agentId claim
         // // This is just a simplified example
-        // String agentId = payload.split("\"agentId\":\"")[1].split("\"")[0];
+        // String agentId = payload.split("\"userId\":\"")[1].split("\"")[0]; # called userId in the token
         // System.out.println("Agent ID: " + agentId);
         
         // // Convert the extracted email (or ID) to a Long
@@ -90,7 +153,6 @@ public class AccountService {
         //     throw new IllegalArgumentException("Invalid agent ID format in token: " + agentId, e);
         // }
         return 1L;
-        
     }
 
     public void pushLogToSQS(String log) {
