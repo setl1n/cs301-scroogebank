@@ -1,0 +1,72 @@
+name: Docker Build and Push for Microservices
+
+on:
+  push:
+    branches:
+      - main  # Trigger this action on pushes to the "main" branch
+    paths:
+        - 'backend/**'
+  workflow_dispatch:
+
+permissions:
+  id-token: write  # This is required for AWS OIDC connection
+  contents: read   # This is required for actions/checkout
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ["account", "client"]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+      
+    - name: Build and Push Docker Images
+      run: |
+        # Get ECR repository URI
+        ECR_REPOSITORY="${{ steps.login-ecr.outputs.registry }}/cs301g2t1-${{ matrix.service }}"
+        
+        # Build image
+        docker build --platform linux/amd64 -t $ECR_REPOSITORY:latest ./backend/${{ matrix.service }}
+        
+        # Tag with commit SHA
+        docker tag $ECR_REPOSITORY:latest $ECR_REPOSITORY:${{ github.sha }}
+        
+        # Push images to ECR
+        docker push $ECR_REPOSITORY:latest
+        docker push $ECR_REPOSITORY:${{ github.sha }}
+    
+    # - name: Check if ECS Service Exists
+    #   id: check_service
+    #   run: |
+    #     service_status=$(aws ecs describe-services --cluster ${{ matrix.service }}-cluster --services ${{ matrix.service }}-service --query "services[0].status" --output text)
+    #     if [[ "$service_status" != "ACTIVE" ]]; then
+    #       echo "Service ${{ matrix.service }}-service does not exist in the cluster. Skipping ECS deployment."
+    #       echo "service_exists=false" >> $GITHUB_ENV
+    #       exit 0  # Gracefully exit
+    #     else
+    #       echo "service_exists=true" >> $GITHUB_ENV
+    #     fi
+
+    # - name: Force ECS redeployment for ${{ matrix.service }}
+    #   if: env.service_exists == 'true'  # Only run if both cluster and service exist
+    #   run: |
+    #     aws ecs update-service \
+    #       --cluster ${{ matrix.service }}-cluster \
+    #       --service ${{ matrix.service }}-service \
+    #       --force-new-deployment

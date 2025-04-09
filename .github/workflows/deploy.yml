@@ -1,0 +1,260 @@
+name: "Terraform Plan and Apply"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'terraform/**'
+  pull_request:
+    paths:
+      - 'terraform/**'
+  workflow_dispatch:
+
+permissions:
+  id-token: write  # This is required for AWS OIDC connection
+  contents: read   # This is required for actions/checkout
+  pull-requests: write  # This is required for GH bot to comment PR
+
+env:
+  TF_LOG: INFO
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./terraform
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Format Error Handling
+        id: fmt_error
+        if: steps.fmt.outcome == 'failure'
+        run: |
+          echo "::error::Terraform formatting check failed. Code formatting does not comply with Terraform standards."
+          echo "::error::Action required: Run 'terraform fmt -recursive' locally to automatically format your code."
+          echo "::error::Then commit and push the changes."
+          echo "message=⚠️ **Terraform Formatting Error**: Code formatting does not comply with Terraform standards. Run \`terraform fmt\` locally to fix formatting issues." >> $GITHUB_OUTPUT
+
+      - name: Terraform Init
+        id: init
+        env:
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+          AWS_BUCKET_KEY_NAME: ${{ secrets.AWS_BUCKET_KEY_NAME }}
+          AWS_DYNAMODB_TABLE: ${{ secrets.AWS_DYNAMODB_TABLE }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${AWS_BUCKET_NAME}" \
+            -backend-config="key=${AWS_BUCKET_KEY_NAME}" \
+            -backend-config="region=${AWS_REGION}" \
+            -backend-config="dynamodb_table=${AWS_DYNAMODB_TABLE}"
+
+      - name: Init Error Handling
+        id: init_error
+        if: steps.init.outcome == 'failure'
+        run: |
+          echo "::error::Terraform initialization failed. Possible issues:"
+          echo "::error::- AWS credentials may be incorrect or missing permissions"
+          echo "::error::- S3 bucket may not exist or is inaccessible"
+          echo "::error::- DynamoDB table may not exist or is inaccessible"
+          echo "::error::- Check that all required backend configuration secrets are properly set in GitHub"
+          echo "::error::Action required: Verify backend configuration and AWS permissions."
+          echo "message=⚠️ **Terraform Init Error**: Initialization failed. Check AWS credentials, S3 bucket access, and DynamoDB table configuration. Verify all backend secrets are properly set in GitHub." >> $GITHUB_OUTPUT
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Validate Error Handling
+        id: validate_error
+        if: steps.validate.outcome == 'failure'
+        run: |
+          echo "::error::Terraform validation failed. Your configuration contains syntax errors."
+          echo "::error::Check the error messages above for specific issues in your Terraform files."
+          echo "::error::Action required: Fix the syntax errors in your Terraform configuration."
+          echo "message=⚠️ **Terraform Validation Error**: Configuration contains syntax errors. Review error messages above for specific details." >> $GITHUB_OUTPUT
+
+      - name: Terraform Plan
+        id: plan
+        env:
+          DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+          ROUTE53_ZONE_ID: ${{ secrets.ROUTE53_ZONE_ID }}
+          COGNITO_CALLBACK_URL: ${{ secrets.COGNITO_CALLBACK_URL }}
+          COGNITO_LOGOUT_URL: ${{ secrets.COGNITO_LOGOUT_URL }}
+          COGNITO_DOMAIN: ${{ secrets.COGNITO_DOMAIN }}
+        run: |
+          terraform plan \
+            -input=false \
+            -no-color \
+            -var "DATABASE_USERNAME=${DATABASE_USERNAME}" \
+            -var "DATABASE_PASSWORD=${DATABASE_PASSWORD}" \
+            -var "DATABASE_NAME=${DATABASE_NAME}" \
+            -var "DOMAIN_NAME=${DOMAIN_NAME}" \
+            -var "ROUTE53_ZONE_ID=${ROUTE53_ZONE_ID}" \
+            -var "COGNITO_CALLBACK_URL=${COGNITO_CALLBACK_URL}" \
+            -var "COGNITO_LOGOUT_URL=${COGNITO_LOGOUT_URL}" \
+            -var "COGNITO_DOMAIN=${COGNITO_DOMAIN}"
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+
+      - name: Plan Error Handling
+        id: plan_error
+        if: steps.plan.outcome == 'failure' && github.event_name == 'pull_request'
+        run: |
+          echo "::error::Terraform plan failed. Possible issues:"
+          echo "::error::- Required variables might be missing or have invalid values"
+          echo "::error::- AWS provider might not have required permissions"
+          echo "::error::- Resources might have configuration errors"
+          echo "::error::Action required: Check that all required secrets are set in GitHub."
+          echo "::error::Review the error message above for specific details on what's causing the issue."
+          echo "message=⚠️ **Terraform Plan Error**: Plan generation failed. Check for missing variables, insufficient permissions, or resource configuration errors. Ensure all required secrets are set in GitHub." >> $GITHUB_OUTPUT
+          # Don't exit with error code here since the plan step already has continue-on-error set
+
+      - uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+          FMT_ERROR: ${{ steps.fmt_error.outputs.message || '' }}
+          INIT_ERROR: ${{ steps.init_error.outputs.message || '' }}
+          VALIDATE_ERROR: ${{ steps.validate_error.outputs.message || '' }}
+          PLAN_ERROR: ${{ steps.plan_error.outputs.message || '' }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // First, fetch all comments on the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            // Filter and delete comments made by the GitHub Actions bot
+            const botComments = comments.filter(comment => {
+              return comment.user.type === 'Bot' && 
+                     comment.body.includes('Terraform Infrastructure Deployment');
+            });
+            
+            // Delete each previous bot comment
+            for (const comment of botComments) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: comment.id
+              });
+              console.log(`Deleted comment ${comment.id}`);
+            }
+            
+            // Create the new comment
+            let errorSection = '';
+            if (process.env.FMT_ERROR || process.env.INIT_ERROR || 
+                process.env.VALIDATE_ERROR || process.env.PLAN_ERROR) {
+              errorSection = `
+              ### ❌ Errors Detected
+
+              ${process.env.FMT_ERROR ? '- ' + process.env.FMT_ERROR + '\n' : ''}
+              ${process.env.INIT_ERROR ? '- ' + process.env.INIT_ERROR + '\n' : ''}
+              ${process.env.VALIDATE_ERROR ? '- ' + process.env.VALIDATE_ERROR + '\n' : ''}
+              ${process.env.PLAN_ERROR ? '- ' + process.env.PLAN_ERROR + '\n' : ''}
+
+              **Please fix the errors above before proceeding.**
+
+              ---`;
+                          }
+                          
+                          const output = `## Terraform Infrastructure Deployment 🚀
+
+              ${errorSection}
+
+              ### Status Summary
+              | Step | Status |
+              |------|--------|
+              | Format and Style 🖌 | \`${{ steps.fmt.outcome }}\` |
+              | Initialization ⚙️ | \`${{ steps.init.outcome }}\` |
+              | Validation 🤖 | \`${{ steps.validate.outcome }}\` |
+              | Plan 📖 | \`${{ steps.plan.outcome }}\` |
+
+              ### Detailed Results
+
+              <details>
+                <summary><b>Validation Output</b></summary>
+
+              \`\`\`
+              ${{ steps.validate.outputs.stdout }}
+              \`\`\`
+              </details>
+
+              <details>
+                <summary><b>Terraform Plan</b></summary>
+
+              \`\`\`
+              ${process.env.PLAN}
+              \`\`\`
+              </details>
+
+              ---
+              *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Check for Terraform Errors
+        if: github.event_name == 'pull_request'
+        run: |
+          if [[ "${{ steps.fmt.outcome }}" == "failure" || "${{ steps.init.outcome }}" == "failure" || "${{ steps.validate.outcome }}" == "failure" || "${{ steps.plan.outcome }}" == "failure" ]]; then
+            echo "::error::Errors were found during Terraform execution. Please fix the errors before proceeding."
+            exit 1
+          fi
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+          ROUTE53_ZONE_ID: ${{ secrets.ROUTE53_ZONE_ID }}
+          COGNITO_CALLBACK_URL: ${{ secrets.COGNITO_CALLBACK_URL }}
+          COGNITO_LOGOUT_URL: ${{ secrets.COGNITO_LOGOUT_URL }}
+          COGNITO_DOMAIN: ${{ secrets.COGNITO_DOMAIN }}
+
+        run: |
+          terraform apply \
+            -auto-approve \
+            -var "DATABASE_USERNAME=${DATABASE_USERNAME}" \
+            -var "DATABASE_PASSWORD=${DATABASE_PASSWORD}" \
+            -var "DATABASE_NAME=${DATABASE_NAME}" \
+            -var "DOMAIN_NAME=${DOMAIN_NAME}" \
+            -var "ROUTE53_ZONE_ID=${ROUTE53_ZONE_ID}" \
+            -var "COGNITO_CALLBACK_URL=${COGNITO_CALLBACK_URL}" \
+            -var "COGNITO_LOGOUT_URL=${COGNITO_LOGOUT_URL}" \
+            -var "COGNITO_DOMAIN=${COGNITO_DOMAIN}" \
+            -input=false
