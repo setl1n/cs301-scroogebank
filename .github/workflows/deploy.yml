@@ -235,7 +235,7 @@ jobs:
         run: exit 1
 
       - name: Terraform Apply
-        if: github.event_name == 'workflow_dispatch'
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:
           DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
