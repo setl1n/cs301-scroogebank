@@ -14,10 +14,12 @@ public class SecurityConfig {
         // (1) Permit all requests to the H2 console and /accounts endpoints
         http.authorizeHttpRequests(auth -> {
             auth.requestMatchers("/h2-console/**").permitAll();
+            auth.requestMatchers("/accounts").permitAll(); 
             auth.requestMatchers("/accounts/**").permitAll();
+            auth.requestMatchers("/health").permitAll();
             auth.anyRequest()
-            .permitAll(); 
-            // .authenticated();
+            // .permitAll(); 
+            .authenticated();
         });
 
         // (2) Disable CSRF protection for the H2 console paths (not recommended for production)

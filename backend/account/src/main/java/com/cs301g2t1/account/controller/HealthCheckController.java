@@ -18,14 +18,14 @@ import java.util.Map;
  */
 @RestController
 @CrossOrigin
-@RequestMapping("/api/v1/health")
+@RequestMapping("/health")
 public class HealthCheckController {
     /**
      * Simple health check endpoint to verify the application is running. (For ALB health check)
      * 
      * @return ResponseEntity with "OK" message and HttpStatus.OK.
      */
-    @GetMapping("/simple")
+    @GetMapping
     public ResponseEntity<String> simpleHealthCheck() {
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }

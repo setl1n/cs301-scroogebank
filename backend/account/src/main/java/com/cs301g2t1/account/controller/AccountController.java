@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
-@RequestMapping("/api/accounts")
+@RequestMapping("/accounts")
 public class AccountController {
     private final AccountService accountService;
 
@@ -31,7 +31,7 @@ public class AccountController {
     private String redisHost;
 
     @Value("${spring.data.redis.port}")
-    private String redisPort;
+    private int redisPort;
 
     // Inject the Redis template to interact with ElastiCache (Redis)
     @Autowired
