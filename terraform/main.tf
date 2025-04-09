@@ -40,8 +40,9 @@ module "network" {
 # Manages PostgreSQL database instances for persistent data storage
 #--------------------------------------------------------------
 module "rds" {
-  source               = "./modules/rds"
-  security_group_id    = module.network.db_sg_id
+  source            = "./modules/rds"
+  security_group_id = module.network.db_sg_id
+  # db_subnet_group_name = module.network.public_db_subnet_group_name
   db_subnet_group_name = module.network.db_subnet_group_name
 
   # Database Connection Credentials - Passed from variables for security
@@ -216,69 +217,77 @@ module "sqs" {
 # Lambda Module
 # Serverless compute service for running backend functions
 #--------------------------------------------------------------
-# module "lambda" {
-#   source = "./modules/lambda"
+module "lambda" {
+  source = "./modules/lambda"
 
-#   private_lambda_subnet_ids = module.network.private_lambda_subnet_ids
-#   lambda_sg_id              = module.network.lambda_sg_id
-#   aws_region                = var.aws_region
+  private_lambda_subnet_ids = module.network.private_lambda_subnet_ids
+  lambda_sg_id              = module.network.lambda_sg_id
+  aws_region                = var.aws_region
 
-#   # Define multiple Lambda functions with different use cases
-#   lambda_functions = {
-#     for name, config in var.lambda_functions : name => merge(config, {
-#       source_code_hash = filebase64sha256(config.filename)
+  # Define multiple Lambda functions with different use cases
+  lambda_functions = {
+    for name, config in var.lambda_functions : name => merge(config, {
+      source_code_hash = filebase64sha256(config.filename)
 
-#       # Add dynamic configurations based on service flags
-#       rds_config = config.rds_enabled ? {
-#         # database_host = module.rds.db_endpoints[name]
-#         database_host = ""
-#         database_name = var.DATABASE_NAME
-#         database_user = var.DATABASE_USERNAME
-#         database_pass = var.DATABASE_PASSWORD
-#       } : null,
+      # Add dynamic configurations based on service flags
+      rds_config = config.rds_enabled ? {
+        database_host = module.rds.db_endpoints[name]
+        # database_host = ""
+        database_name = var.DATABASE_NAME
+        database_user = var.DATABASE_USERNAME
+        database_pass = var.DATABASE_PASSWORD
+      } : null,
 
-#       # Add SES configuration if enabled
-#       ses_config = config.ses_enabled ? {
-#         region     = var.aws_region
-#         from_email = "notifications@yourdomain.com"
-#       } : null,
+      # Add SES configuration if enabled
+      ses_config = config.ses_enabled ? {
+        region     = var.aws_region
+        from_email = "notifications@yourdomain.com"
+      } : null,
 
-#       # Add DynamoDB configuration if enabled  
-#       dynamodb_config = config.dynamodb_enabled ? {
-#         region     = var.aws_region
-#         table_name = module.dynamodb.table_name
-#       } : null,
+      # Add DynamoDB configuration if enabled  
+      dynamodb_config = config.dynamodb_enabled ? {
+        region     = var.aws_region
+        table_name = module.dynamodb.table_name
+      } : null,
 
-#       # Add Cognito configuration if enabled
-#       cognito_config = config.cognito_enabled ? {
-#         user_pool_id  = ""
-#         app_client_id = ""
-#         region        = var.aws_region
-#       } : null,
+      # Add Cognito configuration if enabled
+      cognito_config = config.cognito_enabled ? {
+        user_pool_id  = ""
+        app_client_id = ""
+        region        = var.aws_region
+      } : null,
 
-#       # Add SQS configuration if enabled
-#       sqs_config = config.sqs_enabled ? {
-#         queue_url = module.sqs.queue_urls["logs_queue"]
-#         queue_arn = module.sqs.queue_arns["logs_queue"]
-#         region    = var.aws_region
-#       } : null,
-#     })
-#   }
-# }
+      sftp_config = config.sftp_enabled ? {
+        sftp_user                    = "ubuntu",
+        sftp_host                    = module.sftp_server.sftp_server_public_ip,
+        sftp_private_key_secret_name = var.sftp_private_key_secret_name,
+      } : null,
+      # Add SQS configuration if enabled
+      sqs_config = config.sqs_enabled ? {
+        queue_url = module.sqs.queue_urls["logs_queue"]
+        queue_arn = module.sqs.queue_arns["logs_queue"]
+        region    = var.aws_region
+      } : null,
+    })
+  }
+}
 
 #--------------------------------------------------------------
 # SFTP Module 
 # EC2 instance for file retrieval via SFTP
 #--------------------------------------------------------------
-# module "sftp_server" {
-#   source           = "./modules/sftp-server"
-#   ami_id           = "ami-0aebd6a41cf6ab2eb" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
-#   instance_type    = "t2.micro"
-#   key_name         = "my-key-pair"
-#   public_subnet_id = module.network.public_subnet_ids[0]
-#   vpc_id           = module.network.vpc_id
-#   lambda_sg_id     = module.network.lambda_sg_id
-# }
+module "sftp_server" {
+  source            = "./modules/sftp-server"
+  ami_id            = "ami-0aebd6a41cf6ab2eb" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
+  instance_type     = "t2.micro"
+  key_name          = "my-key-pair"
+  public_subnet_id  = module.network.public_subnet_ids[0]
+  vpc_id            = module.network.vpc_id
+  security_group_id = module.network.sftp_sg_id
+  # private_key_path  = "~/.ssh/id_rsa"  # Update this to your actual key path
+  csv_file_path                = "${path.root}/../mock_transactions.csv" # Path to the CSV file
+  sftp_private_key_secret_name = var.sftp_private_key_secret_name
+}
 
 #--------------------------------------------------------------
 # EventBridge Module

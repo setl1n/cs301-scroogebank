@@ -1,6 +1,12 @@
 # Auto Scaling configuration for ECS services
 # This enables automatic scaling of tasks based on CPU utilization
 
+#--------------------------------------------------------------
+# Auto Scaling Targets
+# These resources define what can be scaled and the min/max capacity
+# for each scalable target (ECS service)
+#--------------------------------------------------------------
+
 # Defines the scalable target (the ECS service) with min/max capacity
 resource "aws_appautoscaling_target" "app" {
   for_each           = var.services
@@ -13,6 +19,12 @@ resource "aws_appautoscaling_target" "app" {
 
   depends_on = [aws_iam_role_policy_attachment.ecs_autoscaling_policy_attachment]
 }
+
+#--------------------------------------------------------------
+# Auto Scaling Policies
+# These policies define the rules for scaling up and down
+# based on resource utilization
+#--------------------------------------------------------------
 
 # Policy to scale up (add tasks) when CPU utilization increases
 resource "aws_appautoscaling_policy" "scale_up" {
@@ -59,6 +71,12 @@ resource "aws_appautoscaling_policy" "scale_down" {
 
   depends_on = [aws_appautoscaling_target.app]
 }
+
+#--------------------------------------------------------------
+# CloudWatch Alarms
+# These alarms monitor metrics and trigger the scaling policies
+# when thresholds are crossed
+#--------------------------------------------------------------
 
 # CloudWatch alarm that triggers the scale-up policy when CPU is high
 resource "aws_cloudwatch_metric_alarm" "cpu_high" {

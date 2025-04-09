@@ -1,6 +1,14 @@
-# ACM Certificate for CloudFront distributions
-# AWS Certificate Manager (ACM) provides SSL/TLS certificates for use with AWS services
-# CloudFront requires certificates to be created in the us-east-1 region regardless of your application's region
+#--------------------------------------------------------------
+# AWS Certificate Manager (ACM) Module
+# This module creates and manages SSL/TLS certificates for various AWS services
+# including CloudFront distributions and application load balancers
+#--------------------------------------------------------------
+
+#--------------------------------------------------------------
+# CloudFront Certificate (US East 1)
+# CloudFront requires certificates in the us-east-1 region
+# regardless of where your application is deployed
+#--------------------------------------------------------------
 resource "aws_acm_certificate" "us_cert" {
   provider          = aws.us-east-1
   domain_name       = "*.${var.certificate_domain}"
@@ -15,7 +23,11 @@ resource "aws_acm_certificate" "us_cert" {
   }
 }
 
-# ACM Certificate for resources in ap-southeast-1 region
+#--------------------------------------------------------------
+# Application Certificate (AP Southeast 1)
+# Certificate for resources in the Singapore region
+# Used for ALBs and other regional services
+#--------------------------------------------------------------
 resource "aws_acm_certificate" "ap_cert" {
   provider                  = aws.ap-southeast-1
   domain_name               = var.certificate_domain
@@ -31,9 +43,11 @@ resource "aws_acm_certificate" "ap_cert" {
   }
 }
 
-# Certificate validation to ensure ACM certificate is validated before use
-# DNS validation creates DNS records in Route53 to prove domain ownership
-# This validation must complete successfully before the certificate can be used with CloudFront
+#--------------------------------------------------------------
+# Certificate Validation
+# DNS validation creates Route53 records to prove domain ownership
+# Certificates must be validated before they can be used
+#--------------------------------------------------------------
 resource "aws_acm_certificate_validation" "us_cert_validation" {
   provider                = aws.us-east-1
   certificate_arn         = aws_acm_certificate.us_cert.arn
