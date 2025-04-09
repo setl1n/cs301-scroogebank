@@ -15,34 +15,42 @@ resource "aws_alb_listener" "alb_http_listener" {
   port              = 80
   protocol          = "HTTP"
 
+  # default_action {
+  #   type = "redirect"
+  #   redirect {
+  #     port        = "443"
+  #     protocol    = "HTTPS"
+  #     status_code = "HTTP_301"
+  #   }
+  # }
   default_action {
-    type = "redirect"
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Invalid request"
+      status_code  = "403"
     }
   }
 }
 
 # HTTPS listener that handles encrypted traffic and forwards to appropriate target groups
 # Default action returns 404 if no matching rule is found
-resource "aws_alb_listener" "alb_https_listener" {
-  load_balancer_arn = aws_alb.main.arn
-  port              = 443
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = var.certificate_arn # Added certificate ARN parameter
+# resource "aws_alb_listener" "alb_https_listener" {
+#   load_balancer_arn = aws_alb.main.arn
+#   port              = 443
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-2016-08"
+#   certificate_arn   = var.certificate_arn # Added certificate ARN parameter
 
-  default_action {
-    type = "fixed-response"
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "404: Not Found"
-      status_code  = "404"
-    }
-  }
-}
+#   default_action {
+#     type = "fixed-response"
+#     fixed_response {
+#       content_type = "text/plain"
+#       message_body = "404: Not Found"
+#       status_code  = "404"
+#     }
+#   }
+# }
 
 # Target groups for each service - these are the destinations for traffic from the load balancer
 # Each target group contains health check configuration to ensure traffic is only sent to healthy instances
@@ -70,7 +78,8 @@ resource "aws_alb_target_group" "app" {
 # Based on path patterns defined in the services variable
 resource "aws_lb_listener_rule" "app" {
   for_each     = var.services
-  listener_arn = aws_alb_listener.alb_https_listener.arn
+  # listener_arn = aws_alb_listener.alb_https_listener.arn # change back on actual acct
+  listener_arn = aws_alb_listener.alb_http_listener.arn
   priority     = 10 + index(keys(var.services), each.key) # Generate unique priority
 
   action {

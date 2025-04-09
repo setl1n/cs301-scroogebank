@@ -17,41 +17,41 @@ module "network" {
 # DynamoDB Module 
 # Provides NoSQL database for application logging
 #--------------------------------------------------------------
-module "dynamodb" {
-  source = "./modules/dynamodb"
+# module "dynamodb" {
+#   source = "./modules/dynamodb"
 
-  table_name = "application-logs"
+#   table_name = "application-logs"
 
-  # Optional: Configure other DynamoDB settings
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "id"
-  range_key    = "dateTimeStr"
+#   # Optional: Configure other DynamoDB settings
+#   billing_mode = "PAY_PER_REQUEST"
+#   hash_key     = "id"
+#   range_key    = "dateTimeStr"
 
-  # Add tags for better resource management
-  tags = {
-    Environment = "development"
-    Service     = "logging"
-    ManagedBy   = "terraform"
-  }
-}
+#   # Add tags for better resource management
+#   tags = {
+#     Environment = "development"
+#     Service     = "logging"
+#     ManagedBy   = "terraform"
+#   }
+# }
 
 #--------------------------------------------------------------
 # RDS Module 
 # Manages PostgreSQL database instances for persistent data storage
 #--------------------------------------------------------------
-# module "rds" {
-#   source               = "./modules/rds"
-#   security_group_id    = module.network.db_sg_id
-#   db_subnet_group_name = module.network.db_subnet_group_name
+module "rds" {
+  source               = "./modules/rds"
+  security_group_id    = module.network.db_sg_id
+  db_subnet_group_name = module.network.db_subnet_group_name
 
-#   # Database Connection Credentials - Passed from variables for security
-#   database_name     = var.DATABASE_NAME
-#   database_username = var.DATABASE_USERNAME
-#   database_password = var.DATABASE_PASSWORD
+  # Database Connection Credentials - Passed from variables for security
+  database_name     = var.DATABASE_NAME
+  database_username = var.DATABASE_USERNAME
+  database_password = var.DATABASE_PASSWORD
 
-#   # Applications map defining database requirements for each app component
-#   applications = var.applications
-# }
+  # Applications map defining database requirements for each app component
+  applications = var.applications
+}
 
 #--------------------------------------------------------------
 # ACM and Route53 Module 
@@ -108,59 +108,71 @@ module "dynamodb" {
 # ElastiCache Module 
 # In-memory data store for caching and session management
 #--------------------------------------------------------------
-# module "elasticache" {
-#   source              = "./modules/elasticache"
-#   security_group_id   = module.network.db_sg_id
-#   db_subnet_group_ids = module.network.db_subnet_group_ids
+module "elasticache" {
+  source              = "./modules/elasticache"
+  security_group_id   = module.network.elasticache_sg_id
+  db_subnet_group_ids = module.network.db_subnet_group_ids
 
-#   # Applications map defining cache requirements for each app component
-#   applications = var.applications
-# }
+  # Applications map defining cache requirements for each app component
+  applications = var.applications
+}
 
 #--------------------------------------------------------------
 # ECS Module 
 # Container orchestration service for running microservices
 #--------------------------------------------------------------
-# module "ecs" {
-#   source            = "./modules/ecs"
-#   lb_sg_ids         = [module.network.lb_sg_id]
-#   vpc_id            = module.network.vpc_id
-#   ecs_tasks_sg_ids  = [module.network.ecs_tasks_sg_id]
-#   public_subnet_ids = module.network.public_subnet_ids
+module "ecs" {
+  source            = "./modules/ecs"
+  lb_sg_ids         = [module.network.lb_sg_id]
+  vpc_id            = module.network.vpc_id
+  ecs_tasks_sg_ids  = [module.network.ecs_tasks_sg_id]
+  public_subnet_ids = module.network.public_subnet_ids
 
-#   # Database Connection Credentials - Passed from variables for security
-#   database_name     = var.DATABASE_NAME
-#   database_username = var.DATABASE_USERNAME
-#   database_password = var.DATABASE_PASSWORD
+  # Database Connection Credentials - Passed from variables for security
+  database_name     = var.DATABASE_NAME
+  database_username = var.DATABASE_USERNAME
+  database_password = var.DATABASE_PASSWORD
 
-#   certificate_arn    = module.acm.ap_certificate_arn
-#   certificate_domain = var.DOMAIN_NAME
+  # certificate_arn    = module.acm.ap_certificate_arn
+  # certificate_domain = var.DOMAIN_NAME
 
-#   route53_zone_id = var.ROUTE53_ZONE_ID
+  # route53_zone_id = var.ROUTE53_ZONE_ID
 
-#   depends_on = [module.acm.ap_certificate_validation_id]
+  # depends_on = [module.acm.ap_certificate_validation_id]
 
-#   # Services map defining ECS service requirements for each app component
-#   services = {
-#     # account = {
-#     #   cluster_name = "account-cluster"
-#     #   db_endpoint  = module.rds.db_endpoints["account"]
-#     #   app_image    = "vincetyy/kickoff-users:latest"
-#     #   app_port     = 8081
-#     #   path_pattern = ["/api/v1/users*", "/api/v1/playerProfiles*"]
-#     # }
-#     client = {
-#       cluster_name   = "client-cluster"
-#       db_endpoint    = module.rds.db_endpoints["client"]
-#       db_port        = 5432
-#       redis_endpoint = module.elasticache.valkey_endpoints["client"]
-#       redis_port     = module.elasticache.valkey_port
-#       app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-client:latest"
-#       app_port       = 8080
-#       path_pattern   = ["/clients"]
-#     }
-#   }
-# }
+  # Services map defining ECS service requirements for each app component
+  services = {
+    # account = {
+    #   cluster_name = "account-cluster"
+    #   db_endpoint  = module.rds.db_endpoints["account"]
+    #   app_image    = "vincetyy/kickoff-users:latest"
+    #   app_port     = 8081
+    #   path_pattern = ["/api/v1/users*", "/api/v1/playerProfiles*"]
+    # }
+    # client = {
+    #   cluster_name   = "client-cluster"
+    #   db_endpoint    = module.rds.db_endpoints["client"]
+    #   db_port        = 5432
+    #   redis_endpoint = module.elasticache.valkey_endpoints["client"]
+    #   redis_port     = module.elasticache.valkey_port
+    #   app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-client:latest"
+    #   app_port       = 8080
+    #   path_pattern   = ["/clients"]
+    # }
+    account = {
+      cluster_name   = "account-cluster"
+      db_endpoint    = module.rds.db_endpoints["account"]
+      db_port        = 5432
+      redis_endpoint = module.elasticache.valkey_endpoints["account"]
+      redis_port     = module.elasticache.valkey_port
+      app_image      = "339712857918.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-account:latest" # change when using actual app
+      app_port       = 8080
+      path_pattern   = ["/api/v1/*"] # change back
+    }
+  }
+  
+  sqs_log_queue_arn = module.sqs.queue_arns["logs_queue"]
+}
 
 #--------------------------------------------------------------
 # Cognito Module
@@ -211,55 +223,55 @@ module "sqs" {
 # Lambda Module
 # Serverless compute service for running backend functions
 #--------------------------------------------------------------
-module "lambda" {
-  source = "./modules/lambda"
+# module "lambda" {
+#   source = "./modules/lambda"
 
-  private_lambda_subnet_ids = module.network.private_lambda_subnet_ids
-  lambda_sg_id              = module.network.lambda_sg_id
-  aws_region                = var.aws_region
+#   private_lambda_subnet_ids = module.network.private_lambda_subnet_ids
+#   lambda_sg_id              = module.network.lambda_sg_id
+#   aws_region                = var.aws_region
 
-  # Define multiple Lambda functions with different use cases
-  lambda_functions = {
-    for name, config in var.lambda_functions : name => merge(config, {
-      source_code_hash = filebase64sha256(config.filename)
+#   # Define multiple Lambda functions with different use cases
+#   lambda_functions = {
+#     for name, config in var.lambda_functions : name => merge(config, {
+#       source_code_hash = filebase64sha256(config.filename)
 
-      # Add dynamic configurations based on service flags
-      rds_config = config.rds_enabled ? {
-        # database_host = module.rds.db_endpoints[name]
-        database_host = ""
-        database_name = var.DATABASE_NAME
-        database_user = var.DATABASE_USERNAME
-        database_pass = var.DATABASE_PASSWORD
-      } : null,
+#       # Add dynamic configurations based on service flags
+#       rds_config = config.rds_enabled ? {
+#         # database_host = module.rds.db_endpoints[name]
+#         database_host = ""
+#         database_name = var.DATABASE_NAME
+#         database_user = var.DATABASE_USERNAME
+#         database_pass = var.DATABASE_PASSWORD
+#       } : null,
 
-      # Add SES configuration if enabled
-      ses_config = config.ses_enabled ? {
-        region     = var.aws_region
-        from_email = "notifications@yourdomain.com"
-      } : null,
+#       # Add SES configuration if enabled
+#       ses_config = config.ses_enabled ? {
+#         region     = var.aws_region
+#         from_email = "notifications@yourdomain.com"
+#       } : null,
 
-      # Add DynamoDB configuration if enabled  
-      dynamodb_config = config.dynamodb_enabled ? {
-        region     = var.aws_region
-        table_name = module.dynamodb.table_name
-      } : null,
+#       # Add DynamoDB configuration if enabled  
+#       dynamodb_config = config.dynamodb_enabled ? {
+#         region     = var.aws_region
+#         table_name = module.dynamodb.table_name
+#       } : null,
 
-      # Add Cognito configuration if enabled
-      cognito_config = config.cognito_enabled ? {
-        user_pool_id  = ""
-        app_client_id = ""
-        region        = var.aws_region
-      } : null,
+#       # Add Cognito configuration if enabled
+#       cognito_config = config.cognito_enabled ? {
+#         user_pool_id  = ""
+#         app_client_id = ""
+#         region        = var.aws_region
+#       } : null,
 
-      # Add SQS configuration if enabled
-      sqs_config = config.sqs_enabled ? {
-        queue_url = module.sqs.queue_urls["logs_queue"]
-        queue_arn = module.sqs.queue_arns["logs_queue"]
-        region    = var.aws_region
-      } : null,
-    })
-  }
-}
+#       # Add SQS configuration if enabled
+#       sqs_config = config.sqs_enabled ? {
+#         queue_url = module.sqs.queue_urls["logs_queue"]
+#         queue_arn = module.sqs.queue_arns["logs_queue"]
+#         region    = var.aws_region
+#       } : null,
+#     })
+#   }
+# }
 
 #--------------------------------------------------------------
 # SFTP Module 
@@ -297,4 +309,25 @@ module "lambda" {
 #       }
 #     ]
 #   })
+# }
+
+#--------------------------------------------------------------
+# AWS Backup Module
+# Manages AWS Backup for RDS and DynamoDB
+#--------------------------------------------------------------
+# module "backup" {
+#   source = "./modules/backup"
+#   environment = "development"
+#   backup_retention_days = 90
+#   # Get Aurora cluster ARNs from your RDS module
+#   aurora_cluster_arns = [
+#     for app_key, cluster in module.rds.aurora_clusters : cluster.arn
+#   ]
+#   # Get DynamoDB table ARNs from your DynamoDB module
+#   dynamodb_table_arns = [module.dynamodb.table_arn]
+#   tags = {
+#     Environment = "development"
+#     Service     = "backup"
+#     ManagedBy   = "terraform"
+#   }
 # }

@@ -168,3 +168,25 @@ resource "aws_security_group" "sftp_sg" {
     Name = "sftp-security-group"
   }
 }
+
+
+# elasticache sg
+resource "aws_security_group" "elasticache_sg" {
+  name        = "elasticache-sg"
+  description = "Security group for elasticache instances"
+  vpc_id      = aws_vpc.vpc.id
+
+  tags = {
+    Name = "elasticache-security-group"
+  }
+}
+
+# Allow elasticache access from ECS application containers
+resource "aws_vpc_security_group_ingress_rule" "allow_elasticache_ecs" {
+  security_group_id            = aws_security_group.elasticache_sg.id
+  referenced_security_group_id = aws_security_group.ecs_tasks_sg.id
+  from_port                    = 6379
+  ip_protocol                  = "tcp"
+  to_port                      = 6379
+  description                  = "Allow Elasticache access from ECS tasks"
+}
