@@ -1,12 +1,20 @@
-# Get Route53 hosted zone data for DNS record management
-# This data source retrieves information about an existing hosted zone
+#--------------------------------------------------------------
+# Route53 DNS Configuration for ACM Certificate Validation
+# This file manages DNS records needed to validate ACM certificates
+#--------------------------------------------------------------
+
+#--------------------------------------------------------------
+# Route53 Hosted Zone
+# Reference to existing DNS zone where validation records will be created
+#--------------------------------------------------------------
 data "aws_route53_zone" "zone" {
   zone_id = var.route53_zone_id
 }
 
-# Certificate validation DNS records
-# These CNAME records are created automatically based on the ACM certificate validation options
-# They prove domain ownership to AWS Certificate Manager
+#--------------------------------------------------------------
+# US East Region Certificate Validation Records
+# Creates DNS records required to validate the CloudFront certificate
+#--------------------------------------------------------------
 resource "aws_route53_record" "us_cert_validation" {
   for_each = {
     for dvo in aws_acm_certificate.us_cert.domain_validation_options : dvo.domain_name => {
@@ -24,7 +32,10 @@ resource "aws_route53_record" "us_cert_validation" {
   zone_id         = var.route53_zone_id
 }
 
-# Create validation records for AP certificate
+#--------------------------------------------------------------
+# AP Southeast Region Certificate Validation Records
+# Creates DNS records required to validate the ALB certificate
+#--------------------------------------------------------------
 resource "aws_route53_record" "ap_cert_validation" {
   for_each = {
     for dvo in aws_acm_certificate.ap_cert.domain_validation_options : dvo.domain_name => {
