@@ -58,7 +58,7 @@ resource "aws_iam_role" "ecs_tasks_role" {
 
 # Attach the ECS task execution policy to the task role
 resource "aws_iam_role_policy_attachment" "task_execution_role_policy_attachment" {
-  role       = aws_iam_role.ecs_tasks_role.name
+  role       = aws_iam_role.ecs_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
@@ -93,3 +93,38 @@ resource "aws_iam_role_policy_attachment" "ecs_autoscaling_policy_attachment" {
   role       = aws_iam_role.ecs_autoscaling_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole"
 }
+
+# SQS policy document allowing sending messages to SQS queues
+# First, create the IAM policy for SQS send message
+resource "aws_iam_policy" "sqs_send_message_policy" {
+  name        = "sqs-send-message-policy"
+  description = "Policy to allow sending messages to SQS queue"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:SendMessage",
+          "sqs:GetQueueUrl"
+        ]
+        Resource = [
+          var.sqs_log_queue_arn # access logs queue
+        ]
+      }
+    ]
+  })
+}
+
+# attach the sqs policy to the ECS task role
+resource "aws_iam_role_policy_attachment" "ecs_tasks_sqs_send_message_policy_attachment" {
+  role       = aws_iam_role.ecs_tasks_role.name
+  policy_arn = aws_iam_policy.sqs_send_message_policy.arn
+}
+
+# # Attach AmazonEC2ContainerRegistryReadOnly policy to the ECS execution role
+# resource "aws_iam_role_policy_attachment" "ecs_execution_role_ecr_policy_attachment" {
+#   role       = aws_iam_role.ecs_execution_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+# }

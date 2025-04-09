@@ -58,16 +58,16 @@ module "rds" {
 # ACM and Route53 Module 
 # Manages SSL certificates and DNS records for secure connections
 #--------------------------------------------------------------
-# module "acm" {
-#   source             = "./modules/acm"
-#   certificate_domain = var.DOMAIN_NAME
-#   route53_zone_id    = var.ROUTE53_ZONE_ID
+module "acm" {
+  source             = "./modules/acm"
+  certificate_domain = var.DOMAIN_NAME
+  route53_zone_id    = var.ROUTE53_ZONE_ID
 
-#   providers = {
-#     aws.us-east-1      = aws.us-east-1
-#     aws.ap-southeast-1 = aws.ap-southeast-1
-#   }
-# }
+  providers = {
+    aws.us-east-1      = aws.us-east-1
+    aws.ap-southeast-1 = aws.ap-southeast-1
+  }
+}
 
 #--------------------------------------------------------------
 # S3 Module 
@@ -109,59 +109,64 @@ module "rds" {
 # ElastiCache Module 
 # In-memory data store for caching and session management
 #--------------------------------------------------------------
-# module "elasticache" {
-#   source              = "./modules/elasticache"
-#   security_group_id   = module.network.db_sg_id
-#   db_subnet_group_ids = module.network.db_subnet_group_ids
+module "elasticache" {
+  source              = "./modules/elasticache"
+  security_group_id   = module.network.elasticache_sg_id
+  db_subnet_group_ids = module.network.db_subnet_group_ids
 
-#   # Applications map defining cache requirements for each app component
-#   applications = var.applications
-# }
+  # Applications map defining cache requirements for each app component
+  applications = var.applications
+}
 
 #--------------------------------------------------------------
 # ECS Module 
 # Container orchestration service for running microservices
 #--------------------------------------------------------------
-# module "ecs" {
-#   source            = "./modules/ecs"
-#   lb_sg_ids         = [module.network.lb_sg_id]
-#   vpc_id            = module.network.vpc_id
-#   ecs_tasks_sg_ids  = [module.network.ecs_tasks_sg_id]
-#   public_subnet_ids = module.network.public_subnet_ids
+module "ecs" {
+  source            = "./modules/ecs"
+  lb_sg_ids         = [module.network.lb_sg_id]
+  vpc_id            = module.network.vpc_id
+  ecs_tasks_sg_ids  = [module.network.ecs_tasks_sg_id]
+  public_subnet_ids = module.network.public_subnet_ids
 
-#   # Database Connection Credentials - Passed from variables for security
-#   database_name     = var.DATABASE_NAME
-#   database_username = var.DATABASE_USERNAME
-#   database_password = var.DATABASE_PASSWORD
+  # Database Connection Credentials - Passed from variables for security
+  database_name     = var.DATABASE_NAME
+  database_username = var.DATABASE_USERNAME
+  database_password = var.DATABASE_PASSWORD
 
-#   certificate_arn    = module.acm.ap_certificate_arn
-#   certificate_domain = var.DOMAIN_NAME
+  certificate_arn    = module.acm.ap_certificate_arn
+  certificate_domain = var.DOMAIN_NAME
 
-#   route53_zone_id = var.ROUTE53_ZONE_ID
+  route53_zone_id = var.ROUTE53_ZONE_ID
 
-#   depends_on = [module.acm.ap_certificate_validation_id]
+  depends_on = [module.acm.ap_certificate_validation_id]
 
-#   # Services map defining ECS service requirements for each app component
-#   services = {
-#     # account = {
-#     #   cluster_name = "account-cluster"
-#     #   db_endpoint  = module.rds.db_endpoints["account"]
-#     #   app_image    = "vincetyy/kickoff-users:latest"
-#     #   app_port     = 8081
-#     #   path_pattern = ["/api/v1/users*", "/api/v1/playerProfiles*"]
-#     # }
-#     client = {
-#       cluster_name   = "client-cluster"
-#       db_endpoint    = module.rds.db_endpoints["client"]
-#       db_port        = 5432
-#       redis_endpoint = module.elasticache.valkey_endpoints["client"]
-#       redis_port     = module.elasticache.valkey_port
-#       app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-client:latest"
-#       app_port       = 8080
-#       path_pattern   = ["/clients"]
-#     }
-#   }
-# }
+  # Services map defining ECS service requirements for each app component
+  services = {
+    # client = {
+    #   cluster_name   = "client-cluster"
+    #   db_endpoint    = module.rds.db_endpoints["client"]
+    #   db_port        = 5432
+    #   redis_endpoint = module.elasticache.valkey_endpoints["client"]
+    #   redis_port     = module.elasticache.valkey_port
+    #   app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-client:latest"
+    #   app_port       = 8080
+    #   path_pattern   = ["/clients"]
+    # }
+    account = {
+      cluster_name   = "account-cluster"
+      db_endpoint    = module.rds.db_endpoints["account"]
+      db_port        = 5432
+      redis_endpoint = module.elasticache.valkey_endpoints["account"]
+      redis_port     = module.elasticache.valkey_port
+      app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-account:latest" # change back when using actual app
+      app_port       = 8080
+      path_pattern   = ["/api/v1/accounts"]
+    }
+  }
+
+  sqs_log_queue_arn = module.sqs.queue_arns["logs_queue"]
+}
 
 #--------------------------------------------------------------
 # Cognito Module
@@ -307,3 +312,25 @@ module "sftp_server" {
 #     ]
 #   })
 # }
+
+#--------------------------------------------------------------
+# AWS Backup Module
+# Manages AWS Backup for RDS and DynamoDB
+#--------------------------------------------------------------
+module "backup" {
+  source                = "./modules/backup"
+  environment           = "development"
+  backup_retention_days = 1825 # 5 years
+  # Get Aurora cluster ARNs from your RDS module
+  aurora_cluster_arns = [
+    for app_key, arn in module.rds.db_arns : arn
+  ]
+  # Get DynamoDB table ARNs from your DynamoDB module
+  # dynamodb_table_arns = [module.dynamodb.table_arn] 
+  dynamodb_table_arns = []
+  tags = {
+    Environment = "development"
+    Service     = "backup"
+    ManagedBy   = "terraform"
+  }
+}

@@ -115,3 +115,8 @@ variable "route53_zone_id" {
   description = "The Route53 hosted zone ID to create DNS records in"
   type        = string
 }
+
+variable "sqs_log_queue_arn" {
+  description = "ARN of the SQS log queue for the service"
+  type        = string
+}

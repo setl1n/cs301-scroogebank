@@ -26,12 +26,20 @@ resource "aws_alb_listener" "alb_http_listener" {
   port              = 80
   protocol          = "HTTP"
 
+  # default_action {
+  #   type = "redirect"
+  #   redirect {
+  #     port        = "443"
+  #     protocol    = "HTTPS"
+  #     status_code = "HTTP_301"
+  #   }
+  # }
   default_action {
-    type = "redirect"
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Invalid request"
+      status_code  = "403"
     }
   }
 }
@@ -94,7 +102,8 @@ resource "aws_alb_target_group" "app" {
 resource "aws_lb_listener_rule" "app" {
   for_each     = var.services
   listener_arn = aws_alb_listener.alb_https_listener.arn
-  priority     = 10 + index(keys(var.services), each.key) # Generate unique priority
+  # listener_arn = aws_alb_listener.alb_http_listener.arn # change back on actual acct
+  priority = 10 + index(keys(var.services), each.key) # Generate unique priority
 
   action {
     type             = "forward"
