@@ -24,12 +24,13 @@ resource "aws_rds_cluster" "aurora_cluster" {
 # These instances handle write operations and serve as the primary endpoint
 #----------------------------------------
 resource "aws_rds_cluster_instance" "aurora_writer" {
-  for_each            = var.applications
-  identifier          = "${each.value.identifier}-writer"
-  cluster_identifier  = aws_rds_cluster.aurora_cluster[each.key].id
-  instance_class      = "db.t3.medium"
-  engine              = aws_rds_cluster.aurora_cluster[each.key].engine
-  engine_version      = aws_rds_cluster.aurora_cluster[each.key].engine_version
+  for_each           = var.applications
+  identifier         = "${each.value.identifier}-writer"
+  cluster_identifier = aws_rds_cluster.aurora_cluster[each.key].id
+  instance_class     = "db.t3.medium"
+  engine             = aws_rds_cluster.aurora_cluster[each.key].engine
+  engine_version     = aws_rds_cluster.aurora_cluster[each.key].engine_version
+  # publicly_accessible = true  # For testing
   publicly_accessible = false
   availability_zone   = "ap-southeast-1a"
   promotion_tier      = 0 # Primary instance with highest priority for promotion

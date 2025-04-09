@@ -30,7 +30,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_db_ecs" {
 }
 
 # Allow PostgreSQL access from Lambda functions
-resource "aws_vpc_security_group_ingress_rule" "allow_mysql_lambda" {
+resource "aws_vpc_security_group_ingress_rule" "allow_postgresql_lambda" {
   security_group_id            = aws_security_group.db_sg.id
   referenced_security_group_id = aws_security_group.lambda_sg.id
   from_port                    = 5432
@@ -38,6 +38,15 @@ resource "aws_vpc_security_group_ingress_rule" "allow_mysql_lambda" {
   to_port                      = 5432
   description                  = "Allow PostgreSQL access from Lambda functions"
 }
+
+# resource "aws_vpc_security_group_ingress_rule" "allow_postgresql_all" {
+#   security_group_id            = aws_security_group.db_sg.id
+#   cidr_ipv4         = "0.0.0.0/0"
+#   from_port                    = 5432
+#   ip_protocol                  = "tcp"
+#   to_port                      = 5432
+#   description                  = "Allow PostgreSQL access from Lambda functions"
+# }
 
 #--------------------------------------------------------------
 # Load Balancer Security Group
@@ -174,7 +183,8 @@ resource "aws_security_group" "sftp_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    security_groups = [aws_security_group.lambda_sg.id] # Allow access from Lambda SG
+    cidr_blocks = ["0.0.0.0/0"]
+    # security_groups = [aws_security_group.lambda_sg.id] # Allow access from Lambda SG
   }
 
   egress {
@@ -187,4 +197,26 @@ resource "aws_security_group" "sftp_sg" {
   tags = {
     Name = "sftp-security-group"
   }
+}
+
+
+# elasticache sg
+resource "aws_security_group" "elasticache_sg" {
+  name        = "elasticache-sg"
+  description = "Security group for elasticache instances"
+  vpc_id      = aws_vpc.vpc.id
+
+  tags = {
+    Name = "elasticache-security-group"
+  }
+}
+
+# Allow elasticache access from ECS application containers
+resource "aws_vpc_security_group_ingress_rule" "allow_elasticache_ecs" {
+  security_group_id            = aws_security_group.elasticache_sg.id
+  referenced_security_group_id = aws_security_group.ecs_tasks_sg.id
+  from_port                    = 6379
+  ip_protocol                  = "tcp"
+  to_port                      = 6379
+  description                  = "Allow Elasticache access from ECS tasks"
 }

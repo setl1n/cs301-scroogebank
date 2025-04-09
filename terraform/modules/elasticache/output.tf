@@ -1,5 +1,12 @@
-# Output values from the ElastiCache module
-# These values can be referenced by other modules that depend on ElastiCache
+#--------------------------------------------------------------
+# ElastiCache Module Outputs
+# Values that can be referenced by other modules
+#--------------------------------------------------------------
+
+#--------------------------------------------------------------
+# Endpoint Information
+# Connection information for ElastiCache instances
+#--------------------------------------------------------------
 
 # Map of primary endpoints for each Valkey replication group
 output "valkey_endpoints" {
@@ -16,6 +23,11 @@ output "valkey_configuration_endpoints" {
     for app_key, app in var.applications : app_key => aws_elasticache_replication_group.valkey[app_key].configuration_endpoint_address
   }
 }
+
+#--------------------------------------------------------------
+# Connection Configuration
+# Port and other connection details
+#--------------------------------------------------------------
 
 # Port on which Valkey is accessible
 output "valkey_port" {

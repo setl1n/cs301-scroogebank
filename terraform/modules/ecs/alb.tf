@@ -1,6 +1,12 @@
 # Application Load Balancer configuration for ECS services
 # This file defines the ALB, listeners, target groups, and routing rules
 
+#--------------------------------------------------------------
+# Public Subnets
+# These subnets have direct internet access and are used for
+# internet-facing resources like load balancers
+#--------------------------------------------------------------
+
 # Main application load balancer that will distribute traffic to our services
 resource "aws_alb" "main" {
   name                 = "alb"
@@ -9,18 +15,31 @@ resource "aws_alb" "main" {
   preserve_host_header = true
 }
 
+#--------------------------------------------------------------
+# Listeners
+# These handle incoming traffic and define default routing behaviors
+#--------------------------------------------------------------
+
 # HTTP listener that redirects all traffic to HTTPS for security
 resource "aws_alb_listener" "alb_http_listener" {
   load_balancer_arn = aws_alb.main.arn
   port              = 80
   protocol          = "HTTP"
 
+  # default_action {
+  #   type = "redirect"
+  #   redirect {
+  #     port        = "443"
+  #     protocol    = "HTTPS"
+  #     status_code = "HTTP_301"
+  #   }
+  # }
   default_action {
-    type = "redirect"
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Invalid request"
+      status_code  = "403"
     }
   }
 }
@@ -44,6 +63,12 @@ resource "aws_alb_listener" "alb_https_listener" {
   }
 }
 
+#--------------------------------------------------------------
+# Target Groups
+# These define where traffic is routed to and how health checks
+# are performed for the services
+#--------------------------------------------------------------
+
 # Target groups for each service - these are the destinations for traffic from the load balancer
 # Each target group contains health check configuration to ensure traffic is only sent to healthy instances
 resource "aws_alb_target_group" "app" {
@@ -66,12 +91,19 @@ resource "aws_alb_target_group" "app" {
   }
 }
 
+#--------------------------------------------------------------
+# Routing Rules
+# These determine which requests go to which target groups based
+# on path patterns and other conditions
+#--------------------------------------------------------------
+
 # Listener rules that determine which requests go to which target groups
 # Based on path patterns defined in the services variable
 resource "aws_lb_listener_rule" "app" {
   for_each     = var.services
   listener_arn = aws_alb_listener.alb_https_listener.arn
-  priority     = 10 + index(keys(var.services), each.key) # Generate unique priority
+  # listener_arn = aws_alb_listener.alb_http_listener.arn # change back on actual acct
+  priority = 10 + index(keys(var.services), each.key) # Generate unique priority
 
   action {
     type             = "forward"

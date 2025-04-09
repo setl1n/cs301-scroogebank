@@ -52,6 +52,11 @@ output "lambda_sg_id" {
   description = "Security group ID for Lambda functions"
 }
 
+output "sftp_sg_id" {
+  value       = aws_security_group.sftp_sg.id
+  description = "Security group ID for SFTP server"
+}
+
 #--------------------------------------------------------------
 # Database Subnet Resources
 # These outputs expose database subnet configuration for RDS instances
@@ -66,7 +71,17 @@ output "db_subnet_group_ids" {
   description = "List of subnet IDs in the database subnet group"
 }
 
+# output "public_db_subnet_group_name" {
+#   value       = aws_db_subnet_group.public_db_subnet_group.name
+#   description = "Name of the public database subnet group for testing purposes"
+# }
+
 output "nat_gateway_id" {
   value       = aws_nat_gateway.nat.id
   description = "The ID of the NAT Gateway"
+}
+
+output "elasticache_sg_id" {
+  value       = aws_security_group.elasticache_sg.id
+  description = "Security group ID for ElastiCache"
 }
