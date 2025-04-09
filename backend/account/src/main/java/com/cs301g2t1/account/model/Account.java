@@ -9,10 +9,14 @@ import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
 
 import lombok.Data;
+import java.io.Serializable;
 
 @Entity
 @Data
-public class Account {
+public class Account implements Serializable {
+    // Add a serialVersionUID
+    private static final long serialVersionUID = 1L;
+    
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "Account ID")

@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.ContainerCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -21,8 +22,25 @@ public class SqsConfig {
 
     @Bean
     public SqsClient sqsClient() {
-        return SqsClient.builder()
-                .region(Region.of(region))
-                .build();
+        try {
+            // Create a specific container credentials provider for debugging
+            ContainerCredentialsProvider containerProvider = ContainerCredentialsProvider.builder().build();
+            
+            // Log whether credentials can be loaded
+            try {
+                AwsCredentials credentials = containerProvider.resolveCredentials();
+                System.out.println("Successfully loaded container credentials");
+            } catch (Exception e) {
+                System.out.println("Failed to load container credentials: " + e.getMessage());
+            }
+            
+            // Create with default chain for production use
+            return SqsClient.builder()
+                    .region(Region.of(region))
+                    .build();
+        } catch (Exception e) {
+            System.out.println("Error creating SQS client: " + e.getMessage());
+            throw e;
+        }
     }
 }

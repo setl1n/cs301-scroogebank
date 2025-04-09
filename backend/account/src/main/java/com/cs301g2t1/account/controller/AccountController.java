@@ -1,7 +1,10 @@
 package com.cs301g2t1.account.controller;
 
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,9 +20,6 @@ import com.cs301g2t1.account.service.AccountService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
@@ -110,5 +110,10 @@ public class AccountController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error connecting to Redis: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/cache-keys")
+    public Set<String> getAllKeys() {
+        return redisTemplate.keys("*");
     }
 }

@@ -58,16 +58,6 @@ public class AccountService {
     public Account createAccount(Account account, Long agentId) {
         // Check if account with the same clientId already exists
         Account createdAccount = accountRepository.save(account);
-        // log the creation of the account to sqs
-        /*
-         * {\"operation\": \"CREATE\", 
-         * \"attributeName\": \"exampleAttr\", 
-         * \"beforeValue\": \"\", 
-         * \"afterValue\": \"newValue\", 
-         * \"agentId\": 123, 
-         * \"clientId\": 456, 
-         * \"dateTime\": \"2025-03-28T21:46:20\"}"
-         */
         String log = String.format("'operation': 'CREATE', 'attributeName': 'Account ID|Client ID|Account Type|Account Status|Opening Date|Initial Deposit|Currency|Branch ID', 'beforeValue': '|||||||', 'afterValue': '%s|%s|%s|%s|%s|%s|%s|%s', 'agentId': %d, 'clientId': %d, 'dateTime': '%s'",
                 createdAccount.getAccountId(), createdAccount.getClientId(), createdAccount.getAccountType(),
                 createdAccount.getAccountStatus(), createdAccount.getOpeningDate(), createdAccount.getInitialDeposit(),
