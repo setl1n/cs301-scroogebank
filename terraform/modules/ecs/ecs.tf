@@ -13,7 +13,8 @@ resource "aws_ecs_task_definition" "app" {
   for_each = var.services
 
   family                   = "${each.key}-task"
-  execution_role_arn       = aws_iam_role.ecs_tasks_role.arn
+  execution_role_arn       = aws_iam_role.ecs_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_tasks_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.fargate_cpu

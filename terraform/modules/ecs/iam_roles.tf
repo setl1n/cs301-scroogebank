@@ -46,7 +46,7 @@ resource "aws_iam_role" "ecs_tasks_role" {
 
 # Attach the ECS task execution policy to the task role
 resource "aws_iam_role_policy_attachment" "task_execution_role_policy_attachment" {
-  role       = aws_iam_role.ecs_tasks_role.name
+  role       = aws_iam_role.ecs_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
@@ -105,8 +105,8 @@ resource "aws_iam_role_policy_attachment" "ecs_tasks_sqs_send_message_policy_att
   policy_arn = aws_iam_policy.sqs_send_message_policy.arn
 }
 
-# Attach AmazonEC2ContainerRegistryReadOnly policy to the ECS execution role
-resource "aws_iam_role_policy_attachment" "ecs_execution_role_ecr_policy_attachment" {
-  role       = aws_iam_role.ecs_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-}
+# # Attach AmazonEC2ContainerRegistryReadOnly policy to the ECS execution role
+# resource "aws_iam_role_policy_attachment" "ecs_execution_role_ecr_policy_attachment" {
+#   role       = aws_iam_role.ecs_execution_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+# }
