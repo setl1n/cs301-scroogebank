@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,7 +46,7 @@ public class AccountController {
     @PostMapping
     public ResponseEntity<?> createAccount(HttpServletRequest request, @Valid @RequestBody Account account) {
         Long agentId = accountService.getAgentId(request);
-        System.out.println("Agent ID: " + agentId);
+        // System.out.println("Agent ID: " + agentId);
         if (agentId == null) {
             return ResponseEntity.status(401).body("Unauthorized");
         }
@@ -54,10 +55,30 @@ public class AccountController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteAccount(@PathVariable Long id) {
+    public ResponseEntity<?> deleteAccount(HttpServletRequest request, @PathVariable Long id) {
+        Long agentId = accountService.getAgentId(request);
+        // System.out.println("Agent ID: " + agentId);
+        if (agentId == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
         try {
-            Account deletedAccount = accountService.deleteAccount(id);
+            Account deletedAccount = accountService.deleteAccount(id, agentId);
             return new ResponseEntity<>(deletedAccount, HttpStatus.OK);
+        } catch (IllegalArgumentException ex) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateAccount(HttpServletRequest request, @PathVariable Long id, @Valid @RequestBody Account account) {
+        Long agentId = accountService.getAgentId(request);
+        // System.out.println("Agent ID: " + agentId);
+        if (agentId == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+        try {
+            Account updatedAccount = accountService.updateAccount(id, account, agentId);
+            return new ResponseEntity<>(updatedAccount, HttpStatus.OK);
         } catch (IllegalArgumentException ex) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }

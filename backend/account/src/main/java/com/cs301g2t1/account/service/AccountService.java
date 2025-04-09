@@ -73,11 +73,15 @@ public class AccountService {
         @CacheEvict(value = "accountsClient", key = "#result.clientId"), // remove all accounts for this client
         @CacheEvict(value = "accountsAll", allEntries = true)
     })
-    public Account deleteAccount(Long accountId) {
+    public Account deleteAccount(Long accountId, Long agentId) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new IllegalArgumentException("Account not found with ID: " + accountId));
         accountRepository.delete(account);
-        String log = String.format("delete", null);
+        String log = String.format("'operation': 'DELETE', 'attributeName': 'Account ID|Client ID|Account Type|Account Status|Opening Date|Initial Deposit|Currency|Branch ID', 'beforeValue': '%s|%s|%s|%s|%s|%s|%s|%s', 'afterValue': '|||||||', 'agentId': %d, 'clientId': %d, 'dateTime': '%s'",
+                account.getAccountId(), account.getClientId(), account.getAccountType(),
+                account.getAccountStatus(), account.getOpeningDate(), account.getInitialDeposit(),
+                account.getCurrency(), account.getBranchId(), agentId, account.getClientId(), 
+                LocalDateTime.now());
         pushLogToSQS(log);
         return account;
     }
@@ -105,18 +109,29 @@ public class AccountService {
             @CacheEvict(value = ACCOUNTS_ALL_CACHE, allEntries = true)
         }
     )
-    public Account updateAccount(Account newAccount) {
-        System.out.println("Updating account with ID: " + newAccount.getAccountId());
-        Account account = accountRepository.findById(newAccount.getAccountId())
-                .orElseThrow(() -> new IllegalArgumentException("Account not found with ID: " + newAccount.getAccountId()));
+    public Account updateAccount(Long accountId, Account newAccount, Long agentId) {
+        // System.out.println("Updating account with ID: " + newAccount.getAccountId());
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found with ID: " + accountId));
         
         // account.setAccountType(newAccount.getAccountType()); # account type shouldnt change
+        String oldValues = String.format("%s|%s|%s|%s|%s|%s|%s|%s",
+                account.getAccountId(), account.getClientId(), account.getAccountType(),
+                account.getAccountStatus(), account.getOpeningDate(), account.getInitialDeposit(),
+                account.getCurrency(), account.getBranchId());
         account.setAccountStatus(newAccount.getAccountStatus());
         account.setOpeningDate(newAccount.getOpeningDate());
         account.setInitialDeposit(newAccount.getInitialDeposit()); 
         account.setCurrency(newAccount.getCurrency());
         account.setBranchId(newAccount.getBranchId());
-        return accountRepository.save(account);
+        Account updatedAccount = accountRepository.save(account);
+        String log = String.format("'operation': 'UPDATE', 'attributeName': 'Account ID|Client ID|Account Type|Account Status|Opening Date|Initial Deposit|Currency|Branch ID', 'beforeValue': '%s', 'afterValue': '%s|%s|%s|%s|%s|%s|%s|%s', 'agentId': %d, 'clientId': %d, 'dateTime': '%s'",
+                oldValues, updatedAccount.getAccountId(), updatedAccount.getClientId(), updatedAccount.getAccountType(),
+                updatedAccount.getAccountStatus(), updatedAccount.getOpeningDate(), updatedAccount.getInitialDeposit(),
+                updatedAccount.getCurrency(), updatedAccount.getBranchId(), agentId, updatedAccount.getClientId(), 
+                LocalDateTime.now());
+        pushLogToSQS(log);
+        return updatedAccount;
     }
 
     public Long getAgentId(HttpServletRequest request) {
