@@ -17,23 +17,23 @@ module "network" {
 # DynamoDB Module 
 # Provides NoSQL database for application logging
 #--------------------------------------------------------------
-# module "dynamodb" {
-#   source = "./modules/dynamodb"
+module "dynamodb" {
+  source = "./modules/dynamodb"
 
-#   table_name = "application-logs"
+  table_name = "application-logs"
 
-#   # Optional: Configure other DynamoDB settings
-#   billing_mode = "PAY_PER_REQUEST"
-#   hash_key     = "id"
-#   range_key    = "dateTimeStr"
+  # Optional: Configure other DynamoDB settings
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
+  range_key    = "dateTimeStr"
 
-#   # Add tags for better resource management
-#   tags = {
-#     Environment = "development"
-#     Service     = "logging"
-#     ManagedBy   = "terraform"
-#   }
-# }
+  # Add tags for better resource management
+  tags = {
+    Environment = "development"
+    Service     = "logging"
+    ManagedBy   = "terraform"
+  }
+}
 
 #--------------------------------------------------------------
 # RDS Module 
