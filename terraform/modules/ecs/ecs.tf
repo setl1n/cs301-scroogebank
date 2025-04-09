@@ -37,7 +37,7 @@ resource "aws_ecs_task_definition" "app" {
     REDIS_HOST        = each.value.redis_endpoint
     REDIS_PORT        = each.value.redis_port
     SQS_QUEUE_NAME    = "application-logs-queue"
-    SQS_REGION       = var.aws_region
+    SQS_REGION        = var.aws_region
   })
 }
 
@@ -66,6 +66,6 @@ resource "aws_ecs_service" "app" {
     container_port   = each.value.app_port
   }
 
-  depends_on = [aws_alb_listener.alb_https_listener, aws_iam_role_policy_attachment.task_execution_role_policy_attachment] 
+  depends_on = [aws_alb_listener.alb_https_listener, aws_iam_role_policy_attachment.task_execution_role_policy_attachment]
   # depends_on = [aws_alb_listener.alb_http_listener, aws_iam_role_policy_attachment.task_execution_role_policy_attachment] # change back on actual acct
 }

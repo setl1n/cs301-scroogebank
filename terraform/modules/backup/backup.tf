@@ -15,7 +15,7 @@ resource "aws_backup_plan" "backup_plan" {
   rule {
     rule_name         = "monthly_backup_rule"
     target_vault_name = aws_backup_vault.backup_vault.name
-    schedule          = "cron(0 0 1 * ? *)"  # Run at midnight on the 1st of every month
+    schedule          = "cron(0 0 1 * ? *)" # Run at midnight on the 1st of every month
     lifecycle {
       delete_after = var.backup_retention_days
     }

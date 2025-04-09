@@ -101,9 +101,9 @@ resource "aws_alb_target_group" "app" {
 # Based on path patterns defined in the services variable
 resource "aws_lb_listener_rule" "app" {
   for_each     = var.services
-  listener_arn = aws_alb_listener.alb_https_listener.arn 
+  listener_arn = aws_alb_listener.alb_https_listener.arn
   # listener_arn = aws_alb_listener.alb_http_listener.arn # change back on actual acct
-  priority     = 10 + index(keys(var.services), each.key) # Generate unique priority
+  priority = 10 + index(keys(var.services), each.key) # Generate unique priority
 
   action {
     type             = "forward"

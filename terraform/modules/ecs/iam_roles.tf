@@ -110,7 +110,7 @@ resource "aws_iam_policy" "sqs_send_message_policy" {
           "sqs:GetQueueUrl"
         ]
         Resource = [
-          var.sqs_log_queue_arn  # access logs queue
+          var.sqs_log_queue_arn # access logs queue
         ]
       }
     ]

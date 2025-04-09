@@ -164,7 +164,7 @@ module "ecs" {
       path_pattern   = ["/api/v1/accounts"]
     }
   }
-  
+
   sqs_log_queue_arn = module.sqs.queue_arns["logs_queue"]
 }
 
@@ -318,8 +318,8 @@ module "sftp_server" {
 # Manages AWS Backup for RDS and DynamoDB
 #--------------------------------------------------------------
 module "backup" {
-  source = "./modules/backup"
-  environment = "development"
+  source                = "./modules/backup"
+  environment           = "development"
   backup_retention_days = 90
   # Get Aurora cluster ARNs from your RDS module
   aurora_cluster_arns = [
