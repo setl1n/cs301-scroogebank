@@ -31,6 +31,34 @@ public class ClientController {
     @GetMapping
     public ResponseEntity<List<Client>> getAllClients() {
         List<Client> clients = clientService.getAllClients();
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
+        System.out.println("OK");
         return ResponseEntity.ok(clients);
     }
 

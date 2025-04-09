@@ -107,6 +107,26 @@ resource "aws_vpc_security_group_ingress_rule" "allow_traffic_from_lb" {
   description                  = "Allow all traffic from load balancer"
 }
 
+# Allow HTTP access from any IP to ECS tasks
+resource "aws_vpc_security_group_ingress_rule" "allow_http_from_anywhere" {
+  security_group_id = aws_security_group.ecs_tasks_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 80
+  ip_protocol       = "tcp"
+  to_port           = 80
+  description       = "Allow HTTP traffic from anywhere"
+}
+
+# Allow HTTP access from any IP to ECS tasks
+resource "aws_vpc_security_group_ingress_rule" "allow_http_8080" {
+  security_group_id = aws_security_group.ecs_tasks_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 8080
+  ip_protocol       = "tcp"
+  to_port           = 8080
+  description       = "Allow HTTP traffic from anywhere"
+}
+
 # Allow all outbound traffic from ECS tasks (for updates, API calls, etc.)
 resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4_ecs" {
   security_group_id = aws_security_group.ecs_tasks_sg.id

@@ -15,7 +15,9 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> {
             auth.requestMatchers("/h2-console/**").permitAll();
             auth.requestMatchers("/clients/**").permitAll();
+            auth.requestMatchers("/clients").permitAll();
             auth.requestMatchers("/api/v1/health").permitAll();
+            auth.requestMatchers("/health").permitAll();
             auth.anyRequest().authenticated();
         });
 
