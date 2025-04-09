@@ -151,7 +151,7 @@ module "ecs" {
       redis_port     = module.elasticache.valkey_port
       app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-client:latest"
       app_port       = 8080
-      path_pattern   = ["/api/v1/clients"]
+      path_pattern   = ["/api/v1/clients*"]
     }
     account = {
       cluster_name   = "account-cluster"
@@ -161,7 +161,7 @@ module "ecs" {
       redis_port     = module.elasticache.valkey_port
       app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-account:latest" # change back when using actual app
       app_port       = 8080
-      path_pattern   = ["/api/v1/accounts"]
+      path_pattern   = ["/api/v1/accounts*"]
     }
   }
 
