@@ -315,19 +315,20 @@ module "sqs" {
 # AWS Backup Module
 # Manages AWS Backup for RDS and DynamoDB
 #--------------------------------------------------------------
-# module "backup" {
-#   source = "./modules/backup"
-#   environment = "development"
-#   backup_retention_days = 90
-#   # Get Aurora cluster ARNs from your RDS module
-#   aurora_cluster_arns = [
-#     for app_key, cluster in module.rds.aurora_clusters : cluster.arn
-#   ]
-#   # Get DynamoDB table ARNs from your DynamoDB module
-#   dynamodb_table_arns = [module.dynamodb.table_arn]
-#   tags = {
-#     Environment = "development"
-#     Service     = "backup"
-#     ManagedBy   = "terraform"
-#   }
-# }
+module "backup" {
+  source = "./modules/backup"
+  environment = "development"
+  backup_retention_days = 90
+  # Get Aurora cluster ARNs from your RDS module
+  aurora_cluster_arns = [
+    for app_key, arn in module.rds.db_arns : arn
+  ]
+  # Get DynamoDB table ARNs from your DynamoDB module
+  # dynamodb_table_arns = [module.dynamodb.table_arn] 
+  dynamodb_table_arns = []
+  tags = {
+    Environment = "development"
+    Service     = "backup"
+    ManagedBy   = "terraform"
+  }
+}
