@@ -220,23 +220,23 @@ module "sqs" {
 # module "lambda" {
 #   source = "./modules/lambda"
 
-  # private_lambda_subnet_ids = module.network.private_lambda_subnet_ids
-  # lambda_sg_id              = module.network.lambda_sg_id
-  # aws_region                = var.aws_region
+# private_lambda_subnet_ids = module.network.private_lambda_subnet_ids
+# lambda_sg_id              = module.network.lambda_sg_id
+# aws_region                = var.aws_region
 
 #   # Define multiple Lambda functions with different use cases
 #   lambda_functions = {
 #     for name, config in var.lambda_functions : name => merge(config, {
 #       source_code_hash = filebase64sha256(config.filename)
 
-      # Add dynamic configurations based on service flags
-      # rds_config = config.rds_enabled ? {
-      #   database_host = module.rds.db_endpoints[name]
-      #   # database_host = ""
-      #   database_name = var.DATABASE_NAME
-      #   database_user = var.DATABASE_USERNAME
-      #   database_pass = var.DATABASE_PASSWORD
-      # } : null,
+# Add dynamic configurations based on service flags
+# rds_config = config.rds_enabled ? {
+#   database_host = module.rds.db_endpoints[name]
+#   # database_host = ""
+#   database_name = var.DATABASE_NAME
+#   database_user = var.DATABASE_USERNAME
+#   database_pass = var.DATABASE_PASSWORD
+# } : null,
 
 #       # Add SES configuration if enabled
 #       ses_config = config.ses_enabled ? {

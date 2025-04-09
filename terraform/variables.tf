@@ -55,12 +55,12 @@ variable "applications" {
     client = {
       identifier = "client-db"
     },
-  #   account = {
-  #     identifier = "account-db"
-  #   },
-  #   transaction = {
-  #     identifier = "transaction-db"
-  #   },
+    #   account = {
+    #     identifier = "account-db"
+    #   },
+    #   transaction = {
+    #     identifier = "transaction-db"
+    #   },
   }
 }
 
