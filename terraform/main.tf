@@ -72,38 +72,37 @@ module "acm" {
 # S3 Module 
 # Object storage for static assets, backups, and website hosting
 #--------------------------------------------------------------
-module "s3" {
-  source = "./modules/s3"
+# module "s3" {
+#   source = "./modules/s3"
 
-  # Configuration for various S3 buckets
-  buckets = var.s3_buckets
-}
+#   # Configuration for various S3 buckets
+#   buckets = var.s3_buckets
+# }
 
 #--------------------------------------------------------------
 # CloudFront Module 
 # Content delivery network for static website hosting
 #--------------------------------------------------------------
-module "cloudfront" {
-  source = "./modules/cloudfront"
+# module "cloudfront" {
+#   source = "./modules/cloudfront"
 
-  # Dynamic configuration for CloudFront distributions connected to S3 website buckets
-  # Creates a CloudFront distribution for each website bucket
-  certificate_arn    = module.acm.us_certificate_arn
+#   # Dynamic configuration for CloudFront distributions connected to S3 website buckets
+#   # Creates a CloudFront distribution for each website bucket
+#   s3_website_buckets = {
+#     for name, endpoint in module.s3.website_endpoints : name => {
+#       bucket_id        = module.s3.bucket_ids[name]
+#       website_endpoint = endpoint
 
-  s3_website_buckets = {
-    for name, endpoint in module.s3.website_endpoints : name => {
-      bucket_id        = module.s3.bucket_ids[name]
-      website_endpoint = endpoint
+#       domain_name         = "${replace(name, "_", "-")}.${var.DOMAIN_NAME}"
+#       default_root_object = module.s3.index_documents[name]
+#       price_class         = "PriceClass_100"
+#     }
+#   }
 
-      domain_name         = "${replace(name, "_", "-")}.${var.DOMAIN_NAME}"
-      default_root_object = module.s3.index_documents[name]
-      price_class         = "PriceClass_100"
-    }
-  }
-
-  certificate_domain = var.DOMAIN_NAME
-  route53_zone_id    = var.ROUTE53_ZONE_ID
-}
+#   certificate_domain = var.DOMAIN_NAME
+#   route53_zone_id    = var.ROUTE53_ZONE_ID
+#   certificate_arn    = module.acm_route53.us_certificate_arn
+# }
 
 #--------------------------------------------------------------
 # ElastiCache Module 
@@ -191,7 +190,7 @@ module "ecs" {
 #--------------------------------------------------------------
 # Lambda Module
 # Serverless compute service for running backend functions
-#--------------------------------------------------------------
+# #--------------------------------------------------------------
 # module "lambda" {
 #   source = "./modules/lambda"
 

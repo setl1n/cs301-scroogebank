@@ -21,7 +21,7 @@ output "distribution_domains" {
 # Certificate ARN may be needed for other resources that require SSL certificates
 output "certificate_arn" {
   description = "ARN of the ACM certificate used by CloudFront distributions"
-  value       = module.acm.us_certificate_arn
+  value       = aws_acm_certificate.cert.arn
 }
 
 # WAF ACL ARN may be needed for monitoring or to attach to other resources
