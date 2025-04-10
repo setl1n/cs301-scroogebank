@@ -45,7 +45,7 @@ public class AccountController {
     
     @PostMapping
     public ResponseEntity<?> createAccount(HttpServletRequest request, @Valid @RequestBody Account account) {
-        Long agentId = accountService.getAgentId(request);
+        String agentId = accountService.getAgentId(request);
         // System.out.println("Agent ID: " + agentId);
         if (agentId == null) {
             return ResponseEntity.status(401).body("Unauthorized");
@@ -56,7 +56,7 @@ public class AccountController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteAccount(HttpServletRequest request, @PathVariable Long id) {
-        Long agentId = accountService.getAgentId(request);
+        String agentId = accountService.getAgentId(request);
         // System.out.println("Agent ID: " + agentId);
         if (agentId == null) {
             return ResponseEntity.status(401).body("Unauthorized");
@@ -71,7 +71,7 @@ public class AccountController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateAccount(HttpServletRequest request, @PathVariable Long id, @Valid @RequestBody Account account) {
-        Long agentId = accountService.getAgentId(request);
+        String agentId = accountService.getAgentId(request);
         // System.out.println("Agent ID: " + agentId);
         if (agentId == null) {
             return ResponseEntity.status(401).body("Unauthorized");
@@ -104,7 +104,7 @@ public class AccountController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllAccounts() {
+    public ResponseEntity<?> getAllAccounts(HttpServletRequest request) {
         return new ResponseEntity<>(accountService.getAllAccounts(), HttpStatus.OK);
     }
     

@@ -55,10 +55,10 @@ public class AccountService {
             @CacheEvict(value = ACCOUNTS_ALL_CACHE, allEntries = true)
         }
     )
-    public Account createAccount(Account account, Long agentId) {
+    public Account createAccount(Account account, String agentId) {
         // Check if account with the same clientId already exists
         Account createdAccount = accountRepository.save(account);
-        String log = String.format("'operation': 'CREATE', 'attributeName': 'Account ID|Client ID|Account Type|Account Status|Opening Date|Initial Deposit|Currency|Branch ID', 'beforeValue': '|||||||', 'afterValue': '%s|%s|%s|%s|%s|%s|%s|%s', 'agentId': %d, 'clientId': %d, 'dateTime': '%s'",
+        String log = String.format("'operation': 'CREATE', 'attributeName': 'Account ID|Client ID|Account Type|Account Status|Opening Date|Initial Deposit|Currency|Branch ID', 'beforeValue': '|||||||', 'afterValue': '%s|%s|%s|%s|%s|%s|%s|%s', 'agentId': %s, 'clientId': %d, 'dateTime': '%s'",
                 createdAccount.getAccountId(), createdAccount.getClientId(), createdAccount.getAccountType(),
                 createdAccount.getAccountStatus(), createdAccount.getOpeningDate(), createdAccount.getInitialDeposit(),
                 createdAccount.getCurrency(), createdAccount.getBranchId(), agentId, account.getClientId(), 
@@ -73,11 +73,11 @@ public class AccountService {
         @CacheEvict(value = "accountsClient", key = "#result.clientId"), // remove all accounts for this client
         @CacheEvict(value = "accountsAll", allEntries = true)
     })
-    public Account deleteAccount(Long accountId, Long agentId) {
+    public Account deleteAccount(Long accountId, String agentId) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new IllegalArgumentException("Account not found with ID: " + accountId));
         accountRepository.delete(account);
-        String log = String.format("'operation': 'DELETE', 'attributeName': 'Account ID|Client ID|Account Type|Account Status|Opening Date|Initial Deposit|Currency|Branch ID', 'beforeValue': '%s|%s|%s|%s|%s|%s|%s|%s', 'afterValue': '|||||||', 'agentId': %d, 'clientId': %d, 'dateTime': '%s'",
+        String log = String.format("'operation': 'DELETE', 'attributeName': 'Account ID|Client ID|Account Type|Account Status|Opening Date|Initial Deposit|Currency|Branch ID', 'beforeValue': '%s|%s|%s|%s|%s|%s|%s|%s', 'afterValue': '|||||||', 'agentId': %s, 'clientId': %d, 'dateTime': '%s'",
                 account.getAccountId(), account.getClientId(), account.getAccountType(),
                 account.getAccountStatus(), account.getOpeningDate(), account.getInitialDeposit(),
                 account.getCurrency(), account.getBranchId(), agentId, account.getClientId(), 
@@ -109,7 +109,7 @@ public class AccountService {
             @CacheEvict(value = ACCOUNTS_ALL_CACHE, allEntries = true)
         }
     )
-    public Account updateAccount(Long accountId, Account newAccount, Long agentId) {
+    public Account updateAccount(Long accountId, Account newAccount, String agentId) {
         // System.out.println("Updating account with ID: " + newAccount.getAccountId());
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new IllegalArgumentException("Account not found with ID: " + accountId));
@@ -125,7 +125,7 @@ public class AccountService {
         account.setCurrency(newAccount.getCurrency());
         account.setBranchId(newAccount.getBranchId());
         Account updatedAccount = accountRepository.save(account);
-        String log = String.format("'operation': 'UPDATE', 'attributeName': 'Account ID|Client ID|Account Type|Account Status|Opening Date|Initial Deposit|Currency|Branch ID', 'beforeValue': '%s', 'afterValue': '%s|%s|%s|%s|%s|%s|%s|%s', 'agentId': %d, 'clientId': %d, 'dateTime': '%s'",
+        String log = String.format("'operation': 'UPDATE', 'attributeName': 'Account ID|Client ID|Account Type|Account Status|Opening Date|Initial Deposit|Currency|Branch ID', 'beforeValue': '%s', 'afterValue': '%s|%s|%s|%s|%s|%s|%s|%s', 'agentId': %s, 'clientId': %d, 'dateTime': '%s'",
                 oldValues, updatedAccount.getAccountId(), updatedAccount.getClientId(), updatedAccount.getAccountType(),
                 updatedAccount.getAccountStatus(), updatedAccount.getOpeningDate(), updatedAccount.getInitialDeposit(),
                 updatedAccount.getCurrency(), updatedAccount.getBranchId(), agentId, updatedAccount.getClientId(), 
@@ -134,30 +134,24 @@ public class AccountService {
         return updatedAccount;
     }
 
-    public Long getAgentId(HttpServletRequest request) {
+    public String getAgentId(HttpServletRequest request) {
         // Get the JWT token from ALB header
         // String userId = request.getHeader("x-amzn-oidc-identity");
         // System.out.println("User ID: " + userId);
-        // String token = request.getHeader("x-amzn-oidc-data");
+        String token = request.getHeader("x-amzn-oidc-data");
         
-        // if (token == null) {
-        //     throw new RuntimeException("No authentication token found");
-        // }
+        if (token == null) {
+            throw new RuntimeException("No authentication token found");
+        }
 
-        // String[] parts = token.split("\\.");
-        // String payload = new String(Base64.getDecoder().decode(parts[1]));
-        // // Parse JSON and get agentId claim
-        // // This is just a simplified example
-        // String agentId = payload.split("\"userId\":\"")[1].split("\"")[0]; # called userId in the token
+        String[] parts = token.split("\\.");
+        String payload = new String(Base64.getDecoder().decode(parts[1]));
+        // Parse JSON and get agentId claim
+        // This is just a simplified example
+        String agentId = payload.split("\"sub\":\"")[1].split("\"")[0]; // called sub in the token
         // System.out.println("Agent ID: " + agentId);
-        
-        // // Convert the extracted email (or ID) to a Long
-        // try {
-        //     return Long.parseLong(agentId);
-        // } catch (NumberFormatException e) {
-        //     throw new IllegalArgumentException("Invalid agent ID format in token: " + agentId, e);
-        // }
-        return 1L;
+        // System.out.println("Payload: " + payload);
+        return agentId;
     }
 
     public void pushLogToSQS(String log) {
