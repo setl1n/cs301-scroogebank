@@ -3,3 +3,19 @@
 output "users_alb_hostname" {
   value = "${aws_alb.main.dns_name}:3000"
 }
+
+# For cognito to dynamically set the callback and signout url with the alb host name
+output "alb_dns_name" {
+  description = "The DNS name of the application load balancer"
+  value       = aws_alb.main.dns_name
+}
+
+output "alb_callback_url" {
+  description = "The callback URL for Cognito authentication"
+  value       = "https://${aws_route53_record.alb.fqdn}/login/oauth2/code/cognito"
+}
+
+output "alb_logout_url" {
+  description = "The logout URL for Cognito authentication"
+  value       = "https://${aws_route53_record.alb.fqdn}/logout"
+}

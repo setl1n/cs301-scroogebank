@@ -50,6 +50,43 @@ data "aws_iam_policy_document" "assume_role_tasks" {
   }
 }
 
+# Below 2 roles are for cognito - alb integration
+resource "aws_iam_role" "alb_cognito_role" {
+  name = "alb-cognito-authentication-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "elasticloadbalancing.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "alb_cognito_policy" {
+  name = "alb-cognito-authentication-policy"
+  role = aws_iam_role.alb_cognito_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "cognito-idp:DescribeUserPoolClient",
+          "cognito-idp:InitiateAuth"
+        ],
+        Resource = var.cognito_user_pool_arn
+      }
+    ]
+  })
+}
+
 # Task role used by containers themselves to access AWS services
 resource "aws_iam_role" "ecs_tasks_role" {
   name               = "ecs-tasks-role"

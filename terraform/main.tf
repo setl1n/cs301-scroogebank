@@ -141,6 +141,10 @@ module "ecs" {
 
   depends_on = [module.acm.ap_certificate_validation_id]
 
+  cognito_user_pool_arn       = module.cognito.user_pool_arn
+  cognito_user_pool_client_id = module.cognito.user_pool_client_id
+  cognito_domain              = var.COGNITO_DOMAIN
+
   # Services map defining ECS service requirements for each app component
   services = {
     client = {
@@ -152,6 +156,7 @@ module "ecs" {
       app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-client:latest"
       app_port       = 8080
       path_pattern   = ["/api/v1/clients*"]
+      auth_enabled   = true # for cognito stuffs
     }
     account = {
       cluster_name   = "account-cluster"
@@ -162,6 +167,7 @@ module "ecs" {
       app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-account:latest" # change back when using actual app
       app_port       = 8080
       path_pattern   = ["/api/v1/accounts*"]
+      auth_enabled   = true # for cognito stuffs
     }
   }
 
@@ -187,8 +193,8 @@ module "cognito" {
   mfa_configuration = "OFF"
 
   cognito_domain = var.COGNITO_DOMAIN
-  callback_urls  = [var.COGNITO_CALLBACK_URL]
-  logout_urls    = [var.COGNITO_LOGOUT_URL]
+  callback_urls  = [module.ecs.alb_callback_url]
+  logout_urls    = [module.ecs.alb_logout_url]
 
   aws_region = var.aws_region
 }
