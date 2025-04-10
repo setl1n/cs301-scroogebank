@@ -84,6 +84,21 @@ variable "database_password" {
   sensitive   = true
 }
 
+variable "cognito_user_pool_arn" {
+  description = "ARN of the Cognito user pool for authentication"
+  type        = string
+}
+
+variable "cognito_user_pool_client_id" {
+  description = "ID of the Cognito user pool client for authentication"
+  type        = string
+}
+
+variable "cognito_domain" {
+  description = "Domain name configured for Cognito"
+  type        = string
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # SERVICE CONFIGURATION
 # This map defines the services to be deployed, their configurations and routing rules
@@ -98,6 +113,7 @@ variable "services" {
     app_image      = string
     app_port       = number
     path_pattern   = list(string)
+    auth_enabled   = optional(bool, false)
   }))
 }
 

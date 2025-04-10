@@ -19,6 +19,11 @@ output "user_pool_domain" {
   value       = aws_cognito_user_pool_domain.user_pool_domain.domain
 }
 
+output "user_pool_arn" {
+  description = "The ARN of the Cognito User Pool"
+  value       = aws_cognito_user_pool.user_pool.arn
+}
+
 output "jwks_url" {
   description = "The JWKS URL for verifying JWT tokens"
   value       = "https://cognito-idp.${var.aws_region}.amazonaws.com/${aws_cognito_user_pool.user_pool.id}/.well-known/jwks.json"
