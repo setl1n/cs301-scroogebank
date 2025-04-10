@@ -73,3 +73,14 @@ variable "aws_region" {
   description = "AWS region for the Cognito User Pool"
   type        = string
 }
+
+variable "alb_dns_name" {
+  description = "The DNS name of the application load balancer"
+  type        = string
+}
+
+variable "custom_domain" {
+  description = "Custom domain for the application (if configured)"
+  type        = string
+  default     = ""  # Make it optional with a default value
+}

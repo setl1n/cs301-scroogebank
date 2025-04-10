@@ -192,8 +192,14 @@ module "cognito" {
 
   mfa_configuration = "OFF"
 
+  alb_dns_name = module.ecs.alb_dns_name
+  custom_domain = var.CUSTOM_DOMAIN # to use if have one configured
+
   cognito_domain = var.COGNITO_DOMAIN
-  callback_urls  = [module.ecs.alb_callback_url]
+  callback_urls  = [
+    module.ecs.alb_callback_url,
+    module.ecs.alb_callback_url_custom
+  ]
   logout_urls    = [module.ecs.alb_logout_url]
 
   aws_region = var.aws_region

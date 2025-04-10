@@ -198,6 +198,12 @@ variable "COGNITO_DOMAIN" {
   type        = string
 }
 
+variable "CUSTOM_DOMAIN" {
+  description = "Custom domain for the application"
+  type        = string
+  default     = ""  # Optional
+}
+
 #--------------------------------------------------------------
 # SFTP Server Configuration
 # Used for securely transferring files
