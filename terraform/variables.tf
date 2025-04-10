@@ -201,7 +201,7 @@ variable "COGNITO_DOMAIN" {
 variable "CUSTOM_DOMAIN" {
   description = "Custom domain for the application"
   type        = string
-  default     = "" # Optional
+  default     = "alb.itsag2t1.com"
 }
 
 #--------------------------------------------------------------
