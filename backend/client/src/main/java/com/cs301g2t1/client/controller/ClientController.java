@@ -2,6 +2,8 @@ package com.cs301g2t1.client.controller;
 
 import com.cs301g2t1.client.model.Client;
 import com.cs301g2t1.client.service.ClientService;
+import com.cs301g2t1.client.service.ImageUploadTokenService;
+
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -104,4 +106,30 @@ public class ClientController {
                     .body("Error connecting to Redis: " + e.getMessage());
         }
     }
+
+     @Autowired
+    private ImageUploadTokenService tokenService;
+    
+    @PostMapping("/{id}/request-image-upload")
+    public ResponseEntity<String> requestImageUpload(@PathVariable Long id) {
+        System.out.println("Fetching client with ID: " + id);
+        Client client = clientService.getClientById(id);
+        System.out.println("Client fetched: " + client);
+
+        String token = tokenService.generateAndSendToken(client);
+        System.out.println("Generated token: " + token);
+
+        return ResponseEntity.ok("Upload link sent to email");
+    }
+
+
+    @GetMapping("/validate-upload-token")
+    public ResponseEntity<Boolean> validateToken(
+            @RequestParam String token,
+            @RequestParam String email) {
+        boolean isValid = tokenService.validateToken(token, email);
+        return ResponseEntity.ok(isValid);
+    }
+
+
 }
