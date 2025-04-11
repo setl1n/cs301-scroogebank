@@ -36,7 +36,7 @@ resource "aws_lambda_function" "lambda_functions" {
   # This avoids unnecessary ENI creation for functions that don't need VPC access
   # ENIs count against your VPC limits and can be a potential bottleneck
   vpc_config {
-    subnet_ids         = (each.value.rds_config != null) ? var.private_lambda_subnet_ids : []
+    subnet_ids         = (each.value.rds_config != null || each.value.name == "") ? var.private_lambda_subnet_ids : []
     security_group_ids = (each.value.rds_config != null) ? [var.lambda_sg_id] : []
   }
 

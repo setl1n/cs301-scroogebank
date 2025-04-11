@@ -85,3 +85,13 @@ output "elasticache_sg_id" {
   value       = aws_security_group.elasticache_sg.id
   description = "Security group ID for ElastiCache"
 }
+
+#--------------------------------------------------------------
+# Service Discovery Resources
+# These outputs expose service discovery configuration for ECS services
+#--------------------------------------------------------------
+
+output "ecs_service_discovery_service_arn" {
+  value       = aws_service_discovery_service.ecs_service.arn
+  description = "ARN of the ECS service discovery service"
+}
