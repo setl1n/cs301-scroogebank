@@ -5,6 +5,8 @@ import com.cs301g2t1.client.service.ClientService;
 import com.cs301g2t1.client.service.ImageUploadTokenService;
 
 import java.util.List;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -105,6 +107,11 @@ public class ClientController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error connecting to Redis: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/cache-keys")
+    public Set<String> getAllKeys() {
+        return redisTemplate.keys("*");
     }
 
      @Autowired

@@ -44,22 +44,21 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @Cacheable(value = CLIENTS_ALL_CACHE)
     public List<Client> getAllClients() {
-        // If not found in the cache, Spring will call this method,
-        // then store the result in the "clientsAll" cache.
         return clientRepository.findAll();
     }
 
     @Override
     @Cacheable(value = CLIENTS_CACHE, key = "#clientId")
     public Client getClientById(Long clientId) {
-        // If not found in cache, this method is called, and the result
-        // is automatically cached with key = clientId in "clients" cache.
         return clientRepository.findById(clientId)
                 .orElseThrow(() -> new IllegalArgumentException("Client not found with ID: " + clientId));
     }
 
     @Transactional
-    @CachePut(value = CLIENTS_CACHE, key = "#result.clientId")
+    @Caching(
+        put = { @CachePut(value = CLIENTS_CACHE, key = "#result.clientId") },
+        evict = { @CacheEvict(value = CLIENTS_ALL_CACHE, allEntries = true) }
+    )
     public Client createClient(Client client) {
         // Check if email or phone number already exists in RDS
         clientRepository.findByEmailAddress(client.getEmailAddress())
@@ -93,7 +92,11 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    @CachePut(value = CLIENTS_CACHE, key = "#clientId")
+    @Caching(
+        put = { @CachePut(value = CLIENTS_CACHE, key = "#clientId") },
+        evict = { @CacheEvict(value = CLIENTS_ALL_CACHE, allEntries = true) }
+    )
+
     public Client updateClient(Long clientId, Client updatedClient) {
         // Fetch the existing client from RDS
         Client existingClient = clientRepository.findById(clientId)
