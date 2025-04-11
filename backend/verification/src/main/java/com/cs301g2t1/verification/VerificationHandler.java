@@ -8,6 +8,11 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +45,8 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             return handleHealthCheck(response);
         } else if (path.equals("/api/v1/verification/upload")) {
             return handleUpload(request, response, context);
+        } else if (path.equals("/api/v1/verification/test")) {
+            return callExternalService(request, response, context);
         } else {
             return createErrorResponse(response, 404, "Path not found: " + path);
         }
@@ -117,5 +124,55 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
         response.put("statusCode", statusCode);
         response.put("body", "{\"error\":\"" + message + "\"}");
         return response;
+    }
+
+    private Map<String, Object> callExternalService(Map<String, Object> request, Map<String, Object> response, Context context) {
+        try {
+            // Extract the URL from request parameters
+            String serviceUrl = "";
+            if (request.containsKey("queryStringParameters") && 
+                ((Map)request.get("queryStringParameters")) != null &&
+                ((Map)request.get("queryStringParameters")).containsKey("url")) {
+                serviceUrl = (String) ((Map)request.get("queryStringParameters")).get("url");
+            } else {
+                return createErrorResponse(response, 400, "Missing 'url' parameter");
+            }
+            
+            context.getLogger().log("Making GET request to: " + serviceUrl);
+            
+            // Create and configure HttpClient
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build();
+                    
+            // Build the request
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(serviceUrl))
+                    .GET()
+                    .timeout(Duration.ofSeconds(10))
+                    .header("Accept", "application/json")
+                    .build();
+                    
+            // Send the request and get response
+            HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            
+            // Process the response
+            int statusCode = httpResponse.statusCode();
+            String body = httpResponse.body();
+            
+            if (statusCode >= 200 && statusCode < 300) {
+                // Success response
+                response.put("statusCode", 200);
+                response.put("body", body);
+            } else {
+                // Error response
+                return createErrorResponse(response, statusCode, "External service error: " + body);
+            }
+            
+            return response;
+        } catch (Exception e) {
+            context.getLogger().log("Error making GET request: " + e.getMessage());
+            return createErrorResponse(response, 500, "Error making GET request: " + e.getMessage());
+        }
     }
 }

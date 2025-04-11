@@ -119,7 +119,7 @@ variable "lambda_functions" {
       handler         = "com.cs301g2t1.user.UserHandler::handleRequest"
       runtime         = "java21"
       filename        = "../backend/user/target/user-0.0.1-SNAPSHOT.jar" // seems to be this .jar
-      timeout         = 15
+      timeout         = 45
       memory_size     = 256
       cognito_enabled = true
     },
@@ -128,7 +128,7 @@ variable "lambda_functions" {
       handler             = "com.cs301g2t1.log.LogHandler::handleRequest"
       runtime             = "java21"
       filename            = "../backend/log/target/log-1.0-SNAPSHOT.jar"
-      timeout             = 15
+      timeout             = 45
       memory_size         = 256
       dynamodb_enabled    = true
       sqs_enabled         = true
@@ -140,7 +140,7 @@ variable "lambda_functions" {
       handler       = "com.cs301g2t1.verification.VerificationHandler::handleRequest"
       runtime       = "java21"
       filename      = "../backend/verification/target/verification-0.0.1-SNAPSHOT.jar" // seems to be this .jar
-      timeout       = 15
+      timeout       = 45
       memory_size   = 256
       s3_enabled    = true
       public_facing = true
