@@ -36,7 +36,7 @@ resource "aws_lb_target_group" "lambda_target_group" {
     interval            = "60"
     matcher             = "200"
     timeout             = "3"
-    path                = "/api/health"
+    path                = "/api/v1/health"
     unhealthy_threshold = "4"
   }
 }
@@ -69,7 +69,7 @@ resource "aws_lb_listener_rule" "lambda_rule" {
 
   condition {
     path_pattern {
-      values = ["/${each.key}/*"]
+      values = ["/api/v1/${each.key}*"]
     }
   }
 }
