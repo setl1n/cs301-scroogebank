@@ -1,6 +1,8 @@
-#--------------------------------------------------------------
+#----------------------------------------
 # SQS Module Outputs
-#--------------------------------------------------------------
+# Exposes queue URLs and ARNs for integration
+# Provides organized access to resource identifiers
+#----------------------------------------
 
 output "queue_urls" {
   description = "Map of queue names to their URLs"

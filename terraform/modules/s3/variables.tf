@@ -1,6 +1,8 @@
-# Map of S3 buckets configuration
+#----------------------------------------
+# S3 Buckets Configuration
 # Each entry creates a separate S3 bucket with specified properties
 # is_website determines if the bucket should be configured as a static website
+#----------------------------------------
 variable "buckets" {
   description = "Map of S3 buckets to create"
   type = map(object({
@@ -17,7 +19,9 @@ variable "buckets" {
   }
 }
 
-# AWS region configuration
+#----------------------------------------
+# AWS Region Configuration
+#----------------------------------------
 variable "region" {
   description = "AWS region for the S3 buckets"
   type        = string

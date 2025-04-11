@@ -110,22 +110,22 @@ resource "aws_lb_listener_rule" "app" {
     for_each = each.value.auth_enabled ? [1] : []
     content {
       type = "authenticate-cognito"
-      
+
       authenticate_cognito {
         user_pool_arn       = var.cognito_user_pool_arn
         user_pool_client_id = var.cognito_user_pool_client_id
         user_pool_domain    = var.cognito_domain
-        
-        session_cookie_name       = "AWSELBAuthSessionCookie"
-        session_timeout           = 604800  # can change, i put 7 days instead of 1h
-        scope                     = "openid email"
+
+        session_cookie_name = "AWSELBAuthSessionCookie"
+        session_timeout     = 604800 # can change, i put 7 days instead of 1h
+        scope               = "openid email"
         authentication_request_extra_params = {
           "prompt" = "login"
         }
-        
+
         on_unauthenticated_request = "authenticate"
       }
-      
+
       order = 1
     }
   }
@@ -133,7 +133,7 @@ resource "aws_lb_listener_rule" "app" {
   action {
     type             = "forward"
     target_group_arn = aws_alb_target_group.app[each.key].arn
-    order            = each.value.auth_enabled ? 2 : 1  # second order if we auth with cognito
+    order            = each.value.auth_enabled ? 2 : 1 # second order if we auth with cognito
   }
 
   condition {

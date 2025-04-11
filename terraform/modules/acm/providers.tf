@@ -1,3 +1,7 @@
+#----------------------------------------
+# Terraform Provider Configuration
+# Configures the AWS provider with multiple regional aliases
+#----------------------------------------
 terraform {
   required_providers {
     aws = {

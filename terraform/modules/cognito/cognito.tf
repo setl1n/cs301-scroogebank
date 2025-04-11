@@ -35,18 +35,33 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
   allowed_oauth_scopes = ["email", "openid", "profile"]
 
   # Use compact() to remove any empty strings if custom_domain is not provided
-  callback_urls = compact([
-    "https://${var.alb_dns_name}/oauth2/idpresponse",
-    "https://${var.alb_dns_name}/login/oauth2/code/cognito",
-    var.custom_domain != "" ? "https://${var.custom_domain}/oauth2/idpresponse" : "",
-    var.custom_domain != "" ? "https://${var.custom_domain}/login/oauth2/code/cognito" : ""
-  ])
-  
-  logout_urls = compact([
-    "https://${var.alb_dns_name}/logout",
-    var.custom_domain != "" ? "https://${var.custom_domain}/logout" : ""
-  ])
-  
+  callback_urls = distinct(concat(
+    compact([
+      "https://${var.alb_dns_name}/oauth2/idpresponse",
+      "https://${var.alb_dns_name}/login/oauth2/code/cognito",
+      var.custom_domain != "" ? "https://${var.custom_domain}/oauth2/idpresponse" : "",
+      var.custom_domain != "" ? "https://${var.custom_domain}/login/oauth2/code/cognito" : ""
+    ]),
+    var.callback_urls,
+    var.enable_local_development ? flatten([
+      for port in var.local_development_ports : [
+        "http://localhost:${port}/oauth2/idpresponse",
+        "http://localhost:${port}/login/oauth2/code/cognito"
+      ]
+    ]) : []
+  ))
+
+  logout_urls = distinct(concat(
+    compact([
+      "https://${var.alb_dns_name}/logout",
+      var.custom_domain != "" ? "https://${var.custom_domain}/logout" : ""
+    ]),
+    var.logout_urls,
+    var.enable_local_development ? [
+      for port in var.local_development_ports : "http://localhost:${port}/logout"
+    ] : []
+  ))
+
   supported_identity_providers = ["COGNITO"]
 
   explicit_auth_flows = [
