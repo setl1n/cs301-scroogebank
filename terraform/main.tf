@@ -355,3 +355,18 @@ module "backup" {
     ManagedBy   = "terraform"
   }
 }
+
+#--------------------------------------------------------------
+# SES Module
+# Email sending capabilities for application notifications
+#--------------------------------------------------------------
+module "ses" {
+  source = "./modules/ses"
+
+  domain              = var.DOMAIN_NAME
+  zone_id             = var.ROUTE53_ZONE_ID
+  enable_verification = true
+
+  # Remove email verification
+  emails = []
+}
