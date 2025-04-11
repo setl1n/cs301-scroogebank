@@ -17,7 +17,7 @@ public class SecurityConfig {
             auth.requestMatchers("/clients/**").permitAll();
             auth.requestMatchers("/clients").permitAll();
             auth.requestMatchers("/health").permitAll();
-            auth.anyRequest().authenticated();
+            auth.anyRequest().permitAll();
         });
 
         // (2) Disable CSRF protection for the H2 console paths (not recommended for production)
