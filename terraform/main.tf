@@ -69,41 +69,41 @@ module "acm" {
   }
 }
 
-#--------------------------------------------------------------
+# --------------------------------------------------------------
 # S3 Module 
 # Object storage for static assets, backups, and website hosting
-#--------------------------------------------------------------
-# module "s3" {
-#   source = "./modules/s3"
+# --------------------------------------------------------------
+module "s3" {
+  source = "./modules/s3"
 
-#   # Configuration for various S3 buckets
-#   buckets = var.s3_buckets
-# }
+  # Configuration for various S3 buckets
+  buckets = var.s3_buckets
+}
 
-#--------------------------------------------------------------
+# --------------------------------------------------------------
 # CloudFront Module 
 # Content delivery network for static website hosting
-#--------------------------------------------------------------
-# module "cloudfront" {
-#   source = "./modules/cloudfront"
+# --------------------------------------------------------------
+module "cloudfront" {
+  source = "./modules/cloudfront"
 
-#   # Dynamic configuration for CloudFront distributions connected to S3 website buckets
-#   # Creates a CloudFront distribution for each website bucket
-#   s3_website_buckets = {
-#     for name, endpoint in module.s3.website_endpoints : name => {
-#       bucket_id        = module.s3.bucket_ids[name]
-#       website_endpoint = endpoint
+  # Dynamic configuration for CloudFront distributions connected to S3 website buckets
+  # Creates a CloudFront distribution for each website bucket
+  s3_website_buckets = {
+    for name, endpoint in module.s3.website_endpoints : name => {
+      bucket_id        = module.s3.bucket_ids[name]
+      website_endpoint = endpoint
 
-#       domain_name         = "${replace(name, "_", "-")}.${var.DOMAIN_NAME}"
-#       default_root_object = module.s3.index_documents[name]
-#       price_class         = "PriceClass_100"
-#     }
-#   }
+      domain_name         = "${replace(name, "_", "-")}.${var.DOMAIN_NAME}"
+      default_root_object = module.s3.index_documents[name]
+      price_class         = "PriceClass_100"
+    }
+  }
 
-#   certificate_domain = var.DOMAIN_NAME
-#   route53_zone_id    = var.ROUTE53_ZONE_ID
-#   certificate_arn    = module.acm_route53.us_certificate_arn
-# }
+  certificate_domain = var.DOMAIN_NAME
+  route53_zone_id    = var.ROUTE53_ZONE_ID
+  certificate_arn    = module.acm.us_certificate_arn
+}
 
 #--------------------------------------------------------------
 # ElastiCache Module 
@@ -141,18 +141,23 @@ module "ecs" {
 
   depends_on = [module.acm.ap_certificate_validation_id]
 
+  cognito_user_pool_arn       = module.cognito.user_pool_arn
+  cognito_user_pool_client_id = module.cognito.user_pool_client_id
+  cognito_domain              = var.COGNITO_DOMAIN
+
   # Services map defining ECS service requirements for each app component
   services = {
-    # client = {
-    #   cluster_name   = "client-cluster"
-    #   db_endpoint    = module.rds.db_endpoints["client"]
-    #   db_port        = 5432
-    #   redis_endpoint = module.elasticache.valkey_endpoints["client"]
-    #   redis_port     = module.elasticache.valkey_port
-    #   app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-client:latest"
-    #   app_port       = 8080
-    #   path_pattern   = ["/clients"]
-    # }
+    client = {
+      cluster_name   = "client-cluster"
+      db_endpoint    = module.rds.db_endpoints["client"]
+      db_port        = 5432
+      redis_endpoint = module.elasticache.valkey_endpoints["client"]
+      redis_port     = module.elasticache.valkey_port
+      app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-client:latest"
+      app_port       = 8080
+      path_pattern   = ["/api/v1/clients*"]
+      auth_enabled   = true # for cognito stuffs
+    }
     account = {
       cluster_name   = "account-cluster"
       db_endpoint    = module.rds.db_endpoints["account"]
@@ -161,7 +166,8 @@ module "ecs" {
       redis_port     = module.elasticache.valkey_port
       app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-account:latest" # change back when using actual app
       app_port       = 8080
-      path_pattern   = ["/api/v1/accounts"]
+      path_pattern   = ["/api/v1/accounts*"]
+      auth_enabled   = true # for cognito stuffs
     }
   }
 
@@ -172,26 +178,32 @@ module "ecs" {
 # Cognito Module
 # User authentication, authorization and user pool management
 #--------------------------------------------------------------
-# module "cognito" {
-#   source = "./modules/cognito"
+module "cognito" {
+  source = "./modules/cognito"
 
-#   user_pool_name        = "CS301-G2-T1"
-#   user_pool_client_name = "CS301-G2-T1-AppClient"
+  user_pool_name        = "CS301-G2-T1"
+  user_pool_client_name = "CS301-G2-T1-AppClient"
 
-#   password_min_length        = 8
-#   password_require_lowercase = true
-#   password_require_uppercase = true
-#   password_require_numbers   = true
-#   password_require_symbols   = false
+  password_min_length        = 8
+  password_require_lowercase = true
+  password_require_uppercase = true
+  password_require_numbers   = true
+  password_require_symbols   = false
 
-#   mfa_configuration = "OFF"
+  mfa_configuration = "OFF"
 
-#   cognito_domain = var.COGNITO_DOMAIN
-#   callback_urls  = [var.COGNITO_CALLBACK_URL]
-#   logout_urls    = [var.COGNITO_LOGOUT_URL]
+  alb_dns_name  = module.ecs.alb_dns_name
+  custom_domain = var.CUSTOM_DOMAIN # to use if have one configured
 
-#   aws_region = var.aws_region
-# }
+  cognito_domain = var.COGNITO_DOMAIN
+  callback_urls = [
+    module.ecs.alb_callback_url,
+    module.ecs.alb_callback_url_custom
+  ]
+  logout_urls = [module.ecs.alb_logout_url]
+
+  aws_region = var.aws_region
+}
 
 #--------------------------------------------------------------
 # SQS Module 
@@ -216,7 +228,7 @@ module "sqs" {
 #--------------------------------------------------------------
 # Lambda Module
 # Serverless compute service for running backend functions
-#--------------------------------------------------------------
+# #--------------------------------------------------------------
 module "lambda" {
   source = "./modules/lambda"
 
@@ -293,30 +305,30 @@ module "sftp_server" {
 # EventBridge Module
 # Manages EventBridge rules and targets for scheduling tasks
 #--------------------------------------------------------------
-# module "eventbridge" {
-#   source = "./modules/eventbridge"
+module "eventbridge" {
+  source = "./modules/eventbridge"
 
-#   # Pass required variables
-#   rule_name        = "daily-sftp-fetch-rule"
-#   rule_description = "Triggers the Lambda function to fetch SFTP data daily"
-#   target_arn       = module.lambda.lambda_function_arns["transaction_lambda_function"] # ARN of the Lambda function
-#   role_name        = "eventbridge-role"
-#   role_policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Action   = "lambda:InvokeFunction"
-#         Effect   = "Allow"
-#         Resource = module.lambda.lambda_function_arns["transaction_lambda_function"]
-#       }
-#     ]
-#   })
-# }
+  # Pass required variables
+  rule_name        = "daily-sftp-fetch-rule"
+  rule_description = "Triggers the Lambda function to fetch SFTP data daily"
+  target_arn       = module.lambda.lambda_function_arns["transaction"] # ARN of the Lambda function
+  role_name        = "eventbridge-role"
+  role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = "lambda:InvokeFunction"
+        Effect   = "Allow"
+        Resource = module.lambda.lambda_function_arns["transaction"]
+      }
+    ]
+  })
+}
 
 #--------------------------------------------------------------
 # AWS Backup Module
 # Manages AWS Backup for RDS and DynamoDB
-#--------------------------------------------------------------
+# #--------------------------------------------------------------
 module "backup" {
   source                = "./modules/backup"
   environment           = "development"

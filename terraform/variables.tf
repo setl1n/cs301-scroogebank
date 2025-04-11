@@ -52,9 +52,9 @@ variable "applications" {
     identifier = string
   }))
   default = {
-    # client = {
-    #   identifier = "client-db"
-    # },
+    client = {
+      identifier = "client-db"
+    },
     account = {
       identifier = "account-db"
     },
@@ -112,28 +112,28 @@ variable "lambda_functions" {
         SFTP_TARGET = "/sftp/target"
       }
     },
-    # user = {
-    #   name                  = "user_lambda_function"
-    #   handler               = "com.cs301g2t1.user.UserHandler::handleRequest"
-    #   runtime               = "java21"
-    #   filename              = "../backend/user/target/user-0.0.1-SNAPSHOT.jar" // seems to be this .jar
-    #   timeout               = 15
-    #   memory_size           = 256
-    #   cognito_enabled       = true
-    #   environment_variables = {}
-    # },
-    # log = {
-    #   name                = "log_lambda_function"
-    #   handler             = "com.cs301g2t1.log.LogHandler::handleRequest"
-    #   runtime             = "java21"
-    #   filename            = "../backend/log/target/log-1.0-SNAPSHOT.jar"
-    #   timeout             = 15
-    #   memory_size         = 256
-    #   dynamodb_enabled    = true
-    #   sqs_enabled         = true
-    #   sqs_trigger_enabled = true # Enable SQS triggering
-    #   sqs_batch_size      = 10   # Process 10 messages at a time
-    # }
+    user = {
+      name                  = "user_lambda_function"
+      handler               = "com.cs301g2t1.user.UserHandler::handleRequest"
+      runtime               = "java21"
+      filename              = "../backend/user/target/user-0.0.1-SNAPSHOT.jar" // seems to be this .jar
+      timeout               = 15
+      memory_size           = 256
+      cognito_enabled       = true
+      environment_variables = {}
+    },
+    log = {
+      name                = "log_lambda_function"
+      handler             = "com.cs301g2t1.log.LogHandler::handleRequest"
+      runtime             = "java21"
+      filename            = "../backend/log/target/log-1.0-SNAPSHOT.jar"
+      timeout             = 15
+      memory_size         = 256
+      dynamodb_enabled    = true
+      sqs_enabled         = true
+      sqs_trigger_enabled = true # Enable SQS triggering
+      sqs_batch_size      = 10   # Process 10 messages at a time
+    }
     # Example with other services
     # notification_sender = {
     #   name             = "notification-sender"
@@ -193,19 +193,15 @@ variable "aws_region" {
   default     = "ap-southeast-1"
 }
 
-variable "COGNITO_CALLBACK_URL" {
-  description = "Callback URL for the Cognito User Pool Client"
-  type        = string
-}
-
-variable "COGNITO_LOGOUT_URL" {
-  description = "Logout URL for the Cognito User Pool Client"
-  type        = string
-}
-
 variable "COGNITO_DOMAIN" {
   description = "Custom domain name for the Cognito User Pool"
   type        = string
+}
+
+variable "CUSTOM_DOMAIN" {
+  description = "Custom domain for the application"
+  type        = string
+  default     = "alb.itsag2t1.com"
 }
 
 #--------------------------------------------------------------
