@@ -356,7 +356,7 @@ resource "aws_iam_policy" "s3_access" {
           "s3:ListBucket",
           "s3:DeleteObject"
         ]
-        Effect   = "Allow"
+        Effect = "Allow"
         Resource = [
           "arn:aws:s3:::${lookup(each.value.s3_config, "s3_bucket_name", "*")}",
           "arn:aws:s3:::${lookup(each.value.s3_config, "s3_bucket_name", "*")}/*"

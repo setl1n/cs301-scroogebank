@@ -179,11 +179,6 @@ module "cognito" {
   custom_domain = var.CUSTOM_DOMAIN # to use if have one configured
 
   cognito_domain = var.COGNITO_DOMAIN
-  callback_urls = [
-    module.ecs.alb_callback_url,
-    module.ecs.alb_callback_url_custom
-  ]
-  logout_urls = [module.ecs.alb_logout_url]
 
   enable_local_development = var.ENABLE_LOCAL_DEVELOPMENT
   local_development_ports  = var.LOCAL_DEVELOPMENT_PORTS
