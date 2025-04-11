@@ -1,8 +1,8 @@
-#--------------------------------------------------------------
-# CS301 Group 2 Team 1 Project - SQS Module
-#
-# This module creates Amazon SQS queues for message processing
-#--------------------------------------------------------------
+#----------------------------------------
+# SQS Queue Resources
+# Creates Amazon SQS queues for message processing
+# Configurable queue properties with sensible defaults
+#----------------------------------------
 
 resource "aws_sqs_queue" "queues" {
   for_each = var.queues

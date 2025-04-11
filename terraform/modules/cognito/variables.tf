@@ -1,3 +1,12 @@
+#----------------------------------------
+# Cognito User Pool Configuration
+# Variables for configuring AWS Cognito identity services
+#----------------------------------------
+
+#----------------------------------------
+# User Pool Basic Configuration
+# Core properties for the Cognito User Pool
+#----------------------------------------
 variable "user_pool_name" {
   description = "Name of the Cognito User Pool"
   type        = string
@@ -10,6 +19,10 @@ variable "user_pool_client_name" {
   default     = "CS301-G2-T1-AppClient"
 }
 
+#----------------------------------------
+# Password Policy
+# Security requirements for user passwords
+#----------------------------------------
 variable "password_min_length" {
   description = "Minimum length of the password"
   type        = number
@@ -44,6 +57,10 @@ variable "password_require_symbols" {
   default     = false
 }
 
+#----------------------------------------
+# Multi-Factor Authentication
+# MFA settings for user authentication
+#----------------------------------------
 variable "mfa_configuration" {
   description = "MFA configuration for the user pool. Can be 'OFF', 'ON', or 'OPTIONAL'"
   type        = string
@@ -54,6 +71,10 @@ variable "mfa_configuration" {
   }
 }
 
+#----------------------------------------
+# Hosted UI Configuration
+# Settings for Cognito's built-in authentication UI
+#----------------------------------------
 variable "cognito_domain" {
   description = "Domain prefix for Cognito hosted UI"
   type        = string
@@ -69,6 +90,10 @@ variable "logout_urls" {
   type        = list(string)
 }
 
+#----------------------------------------
+# Environment Configuration
+# Regional and network-related settings
+#----------------------------------------
 variable "aws_region" {
   description = "AWS region for the Cognito User Pool"
   type        = string
@@ -85,6 +110,10 @@ variable "custom_domain" {
   default     = "alb.itsag2t1.com" # Make it optional with a default value
 }
 
+#----------------------------------------
+# Development Settings
+# Configuration for local development environment
+#----------------------------------------
 variable "enable_local_development" {
   description = "Whether to enable localhost URLs for local development"
   type        = bool

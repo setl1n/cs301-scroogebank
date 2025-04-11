@@ -1,7 +1,12 @@
-# Route53 DNS configuration
+#----------------------------------------
+# Route53 DNS Configuration
 # This file defines the DNS records that point to the ALB
+#----------------------------------------
 
-# Route53 record for the domain pointing to the ALB
+#----------------------------------------
+# Route53 Record for ALB
+# Creates an alias record pointing to the Application Load Balancer
+#----------------------------------------
 resource "aws_route53_record" "alb" {
   zone_id = var.route53_zone_id
   name    = "alb.${var.certificate_domain}"

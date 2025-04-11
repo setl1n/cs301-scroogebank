@@ -1,3 +1,7 @@
+#----------------------------------------
+# ACM Certificate Configuration
+# Variables for SSL/TLS certificate provisioning
+#----------------------------------------
 variable "certificate_domain" {
   description = "The base domain for the certificate (e.g., example.com)"
   type        = string
