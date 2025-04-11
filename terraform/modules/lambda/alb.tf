@@ -34,7 +34,6 @@ resource "aws_lb_target_group" "lambda_target_group" {
   health_check {
     healthy_threshold   = "2"
     interval            = "60"
-    protocol            = "HTTP"
     matcher             = "200"
     timeout             = "3"
     path                = "/api/health"
