@@ -12,7 +12,7 @@ output "alb_dns_name" {
 
 output "alb_callback_url" {
   description = "The callback URL for Cognito authentication"
-  value       = "https://${aws_alb.main.dns_name}/oauth2/idpresponse"  # CHANGED: Using ALB's default callback path
+  value       = "https://${aws_alb.main.dns_name}/oauth2/idpresponse" # CHANGED: Using ALB's default callback path
 }
 
 output "alb_callback_url_custom" {

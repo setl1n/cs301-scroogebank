@@ -50,7 +50,7 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
       ]
     ]) : []
   ))
-  
+
   logout_urls = distinct(concat(
     compact([
       "https://${var.alb_dns_name}/logout",
@@ -61,7 +61,7 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
       for port in var.local_development_ports : "http://localhost:${port}/logout"
     ] : []
   ))
-  
+
   supported_identity_providers = ["COGNITO"]
 
   explicit_auth_flows = [

@@ -208,6 +208,12 @@ variable "ENABLE_LOCAL_DEVELOPMENT" {
   description = "Whether to enable localhost URLs for local development in Cognito"
   type        = bool
   default     = true
+
+}
+variable "LOCAL_DEVELOPMENT_PORTS" {
+  description = "List of localhost ports to allow for local development"
+  type        = list(number)
+  default     = [3000, 8080, 4200, 5173] # Common ports for React, Node, Angular development
 }
 
 #--------------------------------------------------------------

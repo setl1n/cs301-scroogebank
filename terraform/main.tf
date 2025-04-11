@@ -203,7 +203,7 @@ module "cognito" {
   logout_urls = [module.ecs.alb_logout_url]
 
   enable_local_development = var.ENABLE_LOCAL_DEVELOPMENT
-  local_development_ports  = [3000, 8080, 4200, 5173] # Common ports for React, Node, Angular development
+  local_development_ports  = var.LOCAL_DEVELOPMENT_PORTS
 
   aws_region = var.aws_region
 }

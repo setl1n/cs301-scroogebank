@@ -82,7 +82,7 @@ variable "alb_dns_name" {
 variable "custom_domain" {
   description = "Custom domain for the application (if configured)"
   type        = string
-  default     = "alb.itsag2t1.com"  # Make it optional with a default value
+  default     = "alb.itsag2t1.com" # Make it optional with a default value
 }
 
 variable "enable_local_development" {
