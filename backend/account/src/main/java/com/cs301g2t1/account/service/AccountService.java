@@ -1,28 +1,30 @@
 package com.cs301g2t1.account.service;
 
-import java.util.Base64;
-import java.util.List;
 import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import org.hibernate.annotations.Cache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
-import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
-import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
-import com.cs301g2t1.account.model.Account;
-import com.cs301g2t1.account.repository.AccountRepository;
-import org.springframework.transaction.annotation.Transactional;
-
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.core.log.LogMessage;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.cs301g2t1.account.model.Account;
+import com.cs301g2t1.account.repository.AccountRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.http.HttpServletRequest;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
+import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 
 @Service
 public class AccountService {
@@ -58,12 +60,13 @@ public class AccountService {
     public Account createAccount(Account account, String agentId) {
         // Check if account with the same clientId already exists
         Account createdAccount = accountRepository.save(account);
-        String log = String.format("'operation': 'CREATE', 'attributeName': 'Account ID|Client ID|Account Type|Account Status|Opening Date|Initial Deposit|Currency|Branch ID', 'beforeValue': '|||||||', 'afterValue': '%s|%s|%s|%s|%s|%s|%s|%s', 'agentId': %s, 'clientId': %d, 'dateTime': '%s'",
-                createdAccount.getAccountId(), createdAccount.getClientId(), createdAccount.getAccountType(),
-                createdAccount.getAccountStatus(), createdAccount.getOpeningDate(), createdAccount.getInitialDeposit(),
-                createdAccount.getCurrency(), createdAccount.getBranchId(), agentId, account.getClientId(), 
-                LocalDateTime.now());
-        pushLogToSQS(log);
+        
+        Map<String, Object> logRequest = getLogRequest("CREATE", "|||||||", String.format("%s|%s|%s|%s|%s|%s|%s|%s",
+                        createdAccount.getAccountId(), createdAccount.getClientId(), createdAccount.getAccountType(),
+                        createdAccount.getAccountStatus(), createdAccount.getOpeningDate(), createdAccount.getInitialDeposit(),
+                        createdAccount.getCurrency(), createdAccount.getBranchId()), 
+                        agentId, account.getClientId(), "POST");
+        pushLogToSQS(logRequest);
 
         return createdAccount;
     }
@@ -77,12 +80,13 @@ public class AccountService {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new IllegalArgumentException("Account not found with ID: " + accountId));
         accountRepository.delete(account);
-        String log = String.format("'operation': 'DELETE', 'attributeName': 'Account ID|Client ID|Account Type|Account Status|Opening Date|Initial Deposit|Currency|Branch ID', 'beforeValue': '%s|%s|%s|%s|%s|%s|%s|%s', 'afterValue': '|||||||', 'agentId': %s, 'clientId': %d, 'dateTime': '%s'",
-                account.getAccountId(), account.getClientId(), account.getAccountType(),
-                account.getAccountStatus(), account.getOpeningDate(), account.getInitialDeposit(),
-                account.getCurrency(), account.getBranchId(), agentId, account.getClientId(), 
-                LocalDateTime.now());
-        pushLogToSQS(log);
+
+        Map<String, Object> logRequest = getLogRequest("DELETE", String.format("%s|%s|%s|%s|%s|%s|%s|%s",
+                        account.getAccountId(), account.getClientId(), account.getAccountType(),
+                        account.getAccountStatus(), account.getOpeningDate(), account.getInitialDeposit(),
+                        account.getCurrency(), account.getBranchId()), 
+                        "|||||||", agentId, account.getClientId(), "DELETE");
+        pushLogToSQS(logRequest);
         return account;
     }
 
@@ -125,37 +129,50 @@ public class AccountService {
         account.setCurrency(newAccount.getCurrency());
         account.setBranchId(newAccount.getBranchId());
         Account updatedAccount = accountRepository.save(account);
-        String log = String.format("'operation': 'UPDATE', 'attributeName': 'Account ID|Client ID|Account Type|Account Status|Opening Date|Initial Deposit|Currency|Branch ID', 'beforeValue': '%s', 'afterValue': '%s|%s|%s|%s|%s|%s|%s|%s', 'agentId': %s, 'clientId': %d, 'dateTime': '%s'",
-                oldValues, updatedAccount.getAccountId(), updatedAccount.getClientId(), updatedAccount.getAccountType(),
-                updatedAccount.getAccountStatus(), updatedAccount.getOpeningDate(), updatedAccount.getInitialDeposit(),
-                updatedAccount.getCurrency(), updatedAccount.getBranchId(), agentId, updatedAccount.getClientId(), 
-                LocalDateTime.now());
-        pushLogToSQS(log);
+
+        Map<String, Object> logRequest = getLogRequest("UPDATE", oldValues, String.format("%s|%s|%s|%s|%s|%s|%s|%s",
+                        updatedAccount.getAccountId(), updatedAccount.getClientId(), updatedAccount.getAccountType(),
+                        updatedAccount.getAccountStatus(), updatedAccount.getOpeningDate(), updatedAccount.getInitialDeposit(),
+                        updatedAccount.getCurrency(), updatedAccount.getBranchId()), 
+                        agentId, updatedAccount.getClientId(), "PUT");
+        pushLogToSQS(logRequest);
         return updatedAccount;
     }
 
     public String getAgentId(HttpServletRequest request) {
         // Get the JWT token from ALB header
-        // String userId = request.getHeader("x-amzn-oidc-identity");
-        // System.out.println("User ID: " + userId);
         String token = request.getHeader("x-amzn-oidc-data");
-        
         if (token == null) {
             throw new RuntimeException("No authentication token found");
         }
-
         String[] parts = token.split("\\.");
         String payload = new String(Base64.getDecoder().decode(parts[1]));
-        // Parse JSON and get agentId claim
-        // This is just a simplified example
         String agentId = payload.split("\"sub\":\"")[1].split("\"")[0]; // called sub in the token
-        // System.out.println("Agent ID: " + agentId);
-        // System.out.println("Payload: " + payload);
         return agentId;
     }
 
-    public void pushLogToSQS(String log) {
+    public Map<String, Object> getLogRequest(String operation, String beforeValue, String afterValue, String agentId, Long clientId, String operationType) {
+        Map<String, Object> logEntry = new HashMap<>();
+        logEntry.put("operation", operation);
+        logEntry.put("attributeName", "Account ID|Client ID|Account Type|Account Status|Opening Date|Initial Deposit|Currency|Branch ID");
+        logEntry.put("beforeValue", beforeValue);
+        logEntry.put("afterValue", afterValue);
+        logEntry.put("agentId", agentId);
+        logEntry.put("clientId", clientId);
+        logEntry.put("dateTime", LocalDateTime.now().toString());
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("operation", operationType);
+        request.put("logEntry", logEntry);
+        return request;
+    }
+
+    public void pushLogToSQS(Map<String, Object> logMessage) {
         try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String logJson = objectMapper.writeValueAsString(logMessage);
+
+            System.out.println("Log JSON: " + logJson);
             GetQueueUrlRequest getQueueUrlRequest = GetQueueUrlRequest.builder()
                     .queueName(queueName)
                     .build();
@@ -163,11 +180,13 @@ public class AccountService {
 
             SendMessageRequest request = SendMessageRequest.builder()
                     .queueUrl(queueUrl)
-                    .messageBody(log)
+                    .messageBody(logJson)
                     .delaySeconds(0)
                     .build();
-
+            
+            System.out.println("request: " + request);
             SendMessageResponse response = sqsClient.sendMessage(request);
+            System.out.println("response: " + response);
             System.out.println("Message sent with ID: " + response.messageId());
 
         } catch (Exception e) {
