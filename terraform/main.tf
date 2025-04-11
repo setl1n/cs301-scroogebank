@@ -147,28 +147,11 @@ module "ecs" {
 
   # Services map defining ECS service requirements for each app component
   services = {
-    client = {
-      cluster_name   = "client-cluster"
-      db_endpoint    = module.rds.db_endpoints["client"]
-      db_port        = 5432
-      redis_endpoint = module.elasticache.valkey_endpoints["client"]
+    for name, config in var.ecs_services : name => merge(config, {
+      db_endpoint    = module.rds.db_endpoints[name]
+      redis_endpoint = module.elasticache.valkey_endpoints[name]
       redis_port     = module.elasticache.valkey_port
-      app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-client:latest"
-      app_port       = 8080
-      path_pattern   = ["/api/v1/clients*"]
-      auth_enabled   = true # for cognito stuffs
-    }
-    account = {
-      cluster_name   = "account-cluster"
-      db_endpoint    = module.rds.db_endpoints["account"]
-      db_port        = 5432
-      redis_endpoint = module.elasticache.valkey_endpoints["account"]
-      redis_port     = module.elasticache.valkey_port
-      app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-account:latest" # change back when using actual app
-      app_port       = 8080
-      path_pattern   = ["/api/v1/accounts*"]
-      auth_enabled   = true # for cognito stuffs
-    }
+    })
   }
 
   sqs_log_queue_arn = module.sqs.queue_arns["logs_queue"]

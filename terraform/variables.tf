@@ -236,3 +236,46 @@ variable "sftp_private_key_secret_name" {
   type        = string
   default     = "sftp-server-private-key"
 }
+
+#--------------------------------------------------------------
+# ECS Services Configuration
+# Defines ECS services including database, cache, and application settings
+#--------------------------------------------------------------
+variable "ecs_services" {
+  description = "Configuration map for ECS services including database, cache, and application settings"
+  type = map(object({
+    cluster_name   = string
+    db_endpoint    = string
+    db_port        = number
+    redis_endpoint = string
+    redis_port     = number
+    app_image      = string
+    app_port       = number
+    path_pattern   = list(string)
+    auth_enabled   = bool
+  }))
+  default = {
+    client = {
+      cluster_name   = "client-cluster"
+      db_endpoint    = null # Will be filled dynamically in main.tf
+      db_port        = 5432
+      redis_endpoint = null # Will be filled dynamically in main.tf
+      redis_port     = null # Will be filled dynamically in main.tf
+      app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-client:latest"
+      app_port       = 8080
+      path_pattern   = ["/api/v1/clients*"]
+      auth_enabled   = true
+    }
+    account = {
+      cluster_name   = "account-cluster"
+      db_endpoint    = null # Will be filled dynamically in main.tf
+      db_port        = 5432
+      redis_endpoint = null # Will be filled dynamically in main.tf
+      redis_port     = null # Will be filled dynamically in main.tf
+      app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-account:latest"
+      app_port       = 8080
+      path_pattern   = ["/api/v1/accounts*"]
+      auth_enabled   = true
+    }
+  }
+}
