@@ -1,3 +1,9 @@
+#----------------------------------------
+# SES Module Variables
+# Defines input variables for the SES module configuration
+# Includes domain settings, mail configuration, and verification options
+#----------------------------------------
+
 variable "domain" {
   description = "The domain to use for sending emails"
   type        = string

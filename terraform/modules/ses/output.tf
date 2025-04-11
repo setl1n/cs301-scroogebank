@@ -1,3 +1,9 @@
+#----------------------------------------
+# SES Module Outputs
+# Defines outputs for the SES module including domain identities,
+# verification tokens, and DKIM information
+#----------------------------------------
+
 output "domain_identity_arn" {
   description = "The ARN of the SES domain identity"
   value       = aws_ses_domain_identity.domain.arn

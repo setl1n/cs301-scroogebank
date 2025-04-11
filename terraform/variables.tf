@@ -5,6 +5,37 @@
 #--------------------------------------------------------------
 
 #--------------------------------------------------------------
+# AWS General Configuration
+#--------------------------------------------------------------
+variable "aws_region" {
+  description = "AWS region for resources"
+  type        = string
+  default     = "ap-southeast-1"
+}
+
+#--------------------------------------------------------------
+# Domain and DNS Configuration
+# Used for setting up Route53 DNS records and certificates
+#--------------------------------------------------------------
+variable "DOMAIN_NAME" {
+  description = "Domain name"
+  type        = string
+  sensitive   = true
+}
+
+variable "ROUTE53_ZONE_ID" {
+  description = "Hosted zone ID for Route53"
+  type        = string
+  sensitive   = true
+}
+
+variable "CUSTOM_DOMAIN" {
+  description = "Custom domain for the application"
+  type        = string
+  default     = "alb.itsag2t1.com"
+}
+
+#--------------------------------------------------------------
 # Database Configuration
 # These credentials will be used for RDS instance setup
 #--------------------------------------------------------------
@@ -22,22 +53,6 @@ variable "DATABASE_USERNAME" {
 
 variable "DATABASE_PASSWORD" {
   description = "Password for database access"
-  type        = string
-  sensitive   = true
-}
-
-#--------------------------------------------------------------
-# Domain Configuration
-# Used for setting up Route53 DNS records and certificates
-#--------------------------------------------------------------
-variable "DOMAIN_NAME" {
-  description = "Domain name"
-  type        = string
-  sensitive   = true
-}
-
-variable "ROUTE53_ZONE_ID" {
-  description = "Hosted zone ID for Route53"
   type        = string
   sensitive   = true
 }
@@ -62,6 +77,68 @@ variable "applications" {
       identifier = "transaction-db"
     },
   }
+}
+
+#--------------------------------------------------------------
+# S3 Bucket Configurations
+# Defines buckets for:
+# - Frontend hosting (configured as static websites)
+# - Document storage
+#--------------------------------------------------------------
+variable "s3_buckets" {
+  description = "Map of S3 buckets to create with their configurations"
+  type = map(object({
+    name           = string
+    is_website     = bool
+    index_document = optional(string, "index.html")
+    error_document = optional(string, "index.html")
+  }))
+
+  default = {
+    main_frontend = {
+      name       = "cs301g2t1-main-frontend-bucket"
+      is_website = true
+    },
+    verification_frontend = {
+      name       = "cs301g2t1-verification-frontend-bucket"
+      is_website = true
+    },
+    verification_documents = {
+      name       = "cs301g2t1-verification-documents-bucket"
+      is_website = false
+    }
+  }
+}
+
+#--------------------------------------------------------------
+# Cognito Configuration
+# Defines AWS Cognito settings for user authentication
+#--------------------------------------------------------------
+variable "COGNITO_DOMAIN" {
+  description = "Custom domain name for the Cognito User Pool"
+  type        = string
+}
+
+variable "ENABLE_LOCAL_DEVELOPMENT" {
+  description = "Whether to enable localhost URLs for local development in Cognito"
+  type        = bool
+  default     = true
+}
+
+variable "LOCAL_DEVELOPMENT_PORTS" {
+  description = "List of localhost ports to allow for local development"
+  type        = list(number)
+  default     = [3000, 8080, 4200, 5173] # Common ports for React, Node, Angular development
+}
+
+#--------------------------------------------------------------
+# SFTP Server Configuration
+# Used for securely transferring files
+#--------------------------------------------------------------
+variable "sftp_private_key_secret_name" {
+  description = "Name for the AWS Secrets Manager secret that will store the SFTP private key"
+  type        = string
+  default     = "sftp-server-private-key"
 }
 
 #--------------------------------------------------------------
@@ -118,7 +195,7 @@ variable "lambda_functions" {
       name            = "user_lambda_function"
       handler         = "com.cs301g2t1.user.UserHandler::handleRequest"
       runtime         = "java21"
-      filename        = "../backend/user/target/user-0.0.1-SNAPSHOT.jar" // seems to be this .jar
+      filename        = "../backend/user/target/user-0.0.1-SNAPSHOT.jar"
       timeout         = 45
       memory_size     = 256
       cognito_enabled = true
@@ -139,7 +216,7 @@ variable "lambda_functions" {
       name          = "verification_lambda_function"
       handler       = "com.cs301g2t1.verification.VerificationHandler::handleRequest"
       runtime       = "java21"
-      filename      = "../backend/verification/target/verification-0.0.1-SNAPSHOT.jar" // seems to be this .jar
+      filename      = "../backend/verification/target/verification-0.0.1-SNAPSHOT.jar"
       timeout       = 45
       memory_size   = 256
       s3_enabled    = true
@@ -161,80 +238,6 @@ variable "lambda_functions" {
     #   dynamodb_enabled = true
     # }
   }
-}
-
-#--------------------------------------------------------------
-# S3 Bucket Configurations
-# Defines buckets for:
-# - Frontend hosting (configured as static websites)
-# - Document storage
-#--------------------------------------------------------------
-variable "s3_buckets" {
-  description = "Map of S3 buckets to create with their configurations"
-  type = map(object({
-    name           = string
-    is_website     = bool
-    index_document = optional(string, "index.html")
-    error_document = optional(string, "index.html")
-  }))
-
-  default = {
-    main_frontend = {
-      name       = "cs301g2t1-main-frontend-bucket"
-      is_website = true
-    },
-    verification_frontend = {
-      name       = "cs301g2t1-verification-frontend-bucket"
-      is_website = true
-    },
-    verification_documents = {
-      name       = "cs301g2t1-verification-documents-bucket"
-      is_website = false
-    }
-  }
-}
-
-#--------------------------------------------------------------
-# Cognito Configuration
-# Defines AWS Cognito settings for user authentication
-#--------------------------------------------------------------
-variable "aws_region" {
-  description = "AWS region for Cognito"
-  type        = string
-  default     = "ap-southeast-1"
-}
-
-variable "COGNITO_DOMAIN" {
-  description = "Custom domain name for the Cognito User Pool"
-  type        = string
-}
-
-variable "CUSTOM_DOMAIN" {
-  description = "Custom domain for the application"
-  type        = string
-  default     = "alb.itsag2t1.com"
-}
-
-variable "ENABLE_LOCAL_DEVELOPMENT" {
-  description = "Whether to enable localhost URLs for local development in Cognito"
-  type        = bool
-  default     = true
-
-}
-variable "LOCAL_DEVELOPMENT_PORTS" {
-  description = "List of localhost ports to allow for local development"
-  type        = list(number)
-  default     = [3000, 8080, 4200, 5173] # Common ports for React, Node, Angular development
-}
-
-#--------------------------------------------------------------
-# SFTP Server Configuration
-# Used for securely transferring files
-#--------------------------------------------------------------
-variable "sftp_private_key_secret_name" {
-  description = "Name for the AWS Secrets Manager secret that will store the SFTP private key"
-  type        = string
-  default     = "sftp-server-private-key"
 }
 
 #--------------------------------------------------------------
