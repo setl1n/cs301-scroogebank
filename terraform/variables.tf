@@ -136,14 +136,14 @@ variable "lambda_functions" {
       sqs_batch_size      = 10   # Process 10 messages at a time
     },
     verification = {
-      name            = "verification_lambda_function"
-      handler         = "com.cs301g2t1.verification.UserHandler::handleRequest"
-      runtime         = "java21"
-      filename        = "../backend/verification/target/verification-0.0.1-SNAPSHOT.jar" // seems to be this .jar
-      timeout         = 15
-      memory_size     = 256
-      cognito_enabled = true
-      public_facing   = true
+      name          = "verification_lambda_function"
+      handler       = "com.cs301g2t1.verification.VerificationHandler::handleRequest"
+      runtime       = "java21"
+      filename      = "../backend/verification/target/verification-0.0.1-SNAPSHOT.jar" // seems to be this .jar
+      timeout       = 15
+      memory_size   = 256
+      s3_enabled    = true
+      public_facing = true
     },
     # Example with other services
     # notification_sender = {

@@ -157,6 +157,13 @@ resource "aws_security_group" "lambda_sg" {
   }
 }
 
+resource "aws_vpc_security_group_ingress_rule" "allow_traffic_from_lb_lambda" {
+  security_group_id            = aws_security_group.lambda_sg.id
+  referenced_security_group_id = aws_security_group.lb_sg.id
+  ip_protocol                  = "-1" # all protocols
+  description                  = "Allow all traffic from load balancer"
+}
+
 # Allow all outbound traffic from Lambda functions (for updates, API calls, etc.)
 resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4_lambda" {
   security_group_id = aws_security_group.lambda_sg.id

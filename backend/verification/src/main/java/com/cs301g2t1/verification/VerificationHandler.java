@@ -38,7 +38,7 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
         // Route based on path
         if (path.equals("/api/v1/health")) {
             return handleHealthCheck(response);
-        } else if (path.equals("/api/v1/health/upload")) {
+        } else if (path.equals("/api/v1/verification/upload")) {
             return handleUpload(request, response, context);
         } else {
             return createErrorResponse(response, 404, "Path not found: " + path);
