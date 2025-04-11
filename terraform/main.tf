@@ -269,8 +269,8 @@ module "lambda" {
 
       # Add Cognito configuration if enabled
       cognito_config = config.cognito_enabled ? {
-        user_pool_id  = ""
-        app_client_id = ""
+        user_pool_id  = module.cognito.user_pool_id
+        app_client_id = module.cognito.user_pool_client_id
         region        = var.aws_region
       } : null,
 

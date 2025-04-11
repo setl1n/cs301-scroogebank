@@ -114,6 +114,13 @@ resource "aws_vpc_security_group_ingress_rule" "allow_traffic_from_lb" {
   description                  = "Allow all traffic from load balancer"
 }
 
+resource "aws_vpc_security_group_ingress_rule" "allow_traffic_from_lambda_ecs" {
+  security_group_id            = aws_security_group.ecs_tasks_sg.id
+  referenced_security_group_id = aws_security_group.lambda_sg.id
+  ip_protocol                  = "-1" # all protocols
+  description                  = "Allow all traffic from load balancer"
+}
+
 # # Allow HTTP access from any IP to ECS tasks
 # resource "aws_vpc_security_group_ingress_rule" "allow_http_from_anywhere" {
 #   security_group_id = aws_security_group.ecs_tasks_sg.id
