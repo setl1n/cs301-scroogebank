@@ -36,8 +36,8 @@ resource "aws_lambda_function" "lambda_functions" {
   # This avoids unnecessary ENI creation for functions that don't need VPC access
   # ENIs count against your VPC limits and can be a potential bottleneck
   vpc_config {
-    subnet_ids         = (each.value.rds_config != null || each.value.name == "") ? var.private_lambda_subnet_ids : []
-    security_group_ids = (each.value.rds_config != null) ? [var.lambda_sg_id] : []
+    subnet_ids         = (each.value.rds_config != null || each.value.name == s3_config != null) ? var.private_lambda_subnet_ids : []
+    security_group_ids = (each.value.rds_config != null || each.value.name == s3_config != null) ? [var.lambda_sg_id] : []
   }
 
   # Set up environment variables dynamically based on required service integrations
@@ -85,6 +85,10 @@ resource "aws_lambda_function" "lambda_functions" {
         SFTP_USER                    = each.value.sftp_config.sftp_user,
         SFTP_HOST                    = each.value.sftp_config.sftp_host,
         SFTP_PRIVATE_KEY_SECRET_NAME = each.value.sftp_config.sftp_private_key_secret_name,
+      } : {},
+
+      each.value.s3_config != null ? {
+        S3_BUCKET_NAME = each.value.s3_config.s3_bucket_name,
       } : {}
     )
   }

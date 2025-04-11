@@ -87,6 +87,7 @@ variable "lambda_functions" {
     cognito_enabled  = optional(bool, false)
     sftp_enabled     = optional(bool, false)
     sqs_enabled      = optional(bool, false)
+    s3_enabled       = optional(bool, false)
 
     # SQS specific configuration
     sqs_trigger_enabled         = optional(bool, false)
@@ -133,7 +134,17 @@ variable "lambda_functions" {
       sqs_enabled         = true
       sqs_trigger_enabled = true # Enable SQS triggering
       sqs_batch_size      = 10   # Process 10 messages at a time
-    }
+    },
+    verification = {
+      name                  = "verification_lambda_function"
+      handler               = "com.cs301g2t1.verification.UserHandler::handleRequest"
+      runtime               = "java21"
+      filename              = "../backend/verification/target/verification-0.0.1-SNAPSHOT.jar" // seems to be this .jar
+      timeout               = 15
+      memory_size           = 256
+      cognito_enabled       = true
+      environment_variables = {}
+    },
     # Example with other services
     # notification_sender = {
     #   name             = "notification-sender"

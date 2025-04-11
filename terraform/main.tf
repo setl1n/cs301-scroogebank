@@ -283,6 +283,10 @@ module "lambda" {
         queue_arn = module.sqs.queue_arns["logs_queue"]
         region    = var.aws_region
       } : null,
+
+      s3_config = config.s3_enabled ? {
+        s3_bucket_name = var.s3_buckets.verification_documents.name
+      } : null,
     })
   }
 }
