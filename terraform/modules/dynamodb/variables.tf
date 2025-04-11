@@ -1,9 +1,22 @@
+#----------------------------------------
+# DynamoDB Table Configuration
+# Variables for configuring the logs storage table
+#----------------------------------------
+
+#----------------------------------------
+# Table Basics
+# Core table properties
+#----------------------------------------
 variable "table_name" {
   description = "Name of the DynamoDB table for logging service"
   type        = string
   default     = "application-logs"
 }
 
+#----------------------------------------
+# Capacity Configuration
+# Controls table throughput and billing settings
+#----------------------------------------
 variable "billing_mode" {
   description = "DynamoDB billing mode (PROVISIONED or PAY_PER_REQUEST)"
   type        = string
@@ -22,6 +35,10 @@ variable "write_capacity" { # baseline, not peak capacity
   default     = 1
 }
 
+#----------------------------------------
+# Key Schema
+# Defines the primary key structure
+#----------------------------------------
 variable "hash_key" {
   description = "Hash key (partition key) name for the DynamoDB table"
   type        = string
@@ -34,6 +51,10 @@ variable "range_key" {
   default     = "timestamp"
 }
 
+#----------------------------------------
+# Data Lifecycle Management
+# Controls automatic expiration of records
+#----------------------------------------
 variable "ttl_attribute" {
   description = "TTL attribute name for log expiration"
   type        = string
@@ -46,6 +67,10 @@ variable "ttl_enabled" {
   default     = true
 }
 
+#----------------------------------------
+# Resource Tagging
+# Common tags to apply to all resources
+#----------------------------------------
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

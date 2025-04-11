@@ -1,6 +1,8 @@
-# Bucket identifiers
+#----------------------------------------
+# Bucket Identifiers
 # Provides a map of bucket keys to their AWS resource IDs
 # Useful for referencing buckets in other resources or modules
+#----------------------------------------
 output "bucket_ids" {
   description = "Map of bucket names to their IDs"
   value = {
@@ -8,9 +10,11 @@ output "bucket_ids" {
   }
 }
 
-# Website endpoints for website buckets
+#----------------------------------------
+# Website Endpoints
 # Returns the URLs where the static websites can be accessed
 # Only includes buckets where is_website = true
+#----------------------------------------
 output "website_endpoints" {
   description = "Map of website bucket names to their website endpoints"
   value = {
@@ -18,9 +22,11 @@ output "website_endpoints" {
   }
 }
 
-# Index document configuration
+#----------------------------------------
+# Index Document Configuration
 # Maps each website bucket to its configured index document
 # Useful for debugging or referencing in frontend deployment processes
+#----------------------------------------
 output "index_documents" {
   description = "Map of website bucket names to their index documents"
   value = {

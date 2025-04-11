@@ -1,6 +1,8 @@
-#--------------------------------------------------------------
+#----------------------------------------
 # SQS Module Variables
-#--------------------------------------------------------------
+# Defines configuration parameters for SQS queues
+# Supports customization of queue properties
+#----------------------------------------
 
 variable "queues" {
   description = "Map of SQS queues to create"
