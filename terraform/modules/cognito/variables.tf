@@ -84,3 +84,15 @@ variable "custom_domain" {
   type        = string
   default     = "alb.itsag2t1.com"  # Make it optional with a default value
 }
+
+variable "enable_local_development" {
+  description = "Whether to enable localhost URLs for local development"
+  type        = bool
+  default     = true
+}
+
+variable "local_development_ports" {
+  description = "List of localhost ports to allow for local development"
+  type        = list(number)
+  default     = [3000, 8080]
+}

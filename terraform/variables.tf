@@ -204,6 +204,18 @@ variable "CUSTOM_DOMAIN" {
   default     = "alb.itsag2t1.com"
 }
 
+variable "ENABLE_LOCAL_DEVELOPMENT" {
+  description = "Whether to enable localhost URLs for local development in Cognito"
+  type        = bool
+  default     = true
+}
+
+variable "LOCAL_DEVELOPMENT_PORTS" {
+  description = "List of ports to use for local development URLs in Cognito"
+  type        = list(number)
+  default     = [3000, 8080, 4200, 5173]
+}
+
 #--------------------------------------------------------------
 # SFTP Server Configuration
 # Used for securely transferring files
