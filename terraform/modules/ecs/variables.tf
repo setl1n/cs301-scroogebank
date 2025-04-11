@@ -136,3 +136,27 @@ variable "sqs_log_queue_arn" {
   description = "ARN of the SQS log queue for the service"
   type        = string
 }
+
+# ---------------------------------------------------------------------------------------------------------------------
+# ALB CONFIGURATION
+# These variables define the Application Load Balancer parameters
+# ---------------------------------------------------------------------------------------------------------------------
+variable "alb_id" {
+  description = "ID of the Application Load Balancer"
+  type        = string
+}
+
+variable "alb_dns_name" {
+  description = "DNS name of the Application Load Balancer"
+  type        = string
+}
+
+variable "http_listener_arn" {
+  description = "ARN of the HTTP listener"
+  type        = string
+}
+
+variable "https_listener_arn" {
+  description = "ARN of the HTTPS listener"
+  type        = string
+}

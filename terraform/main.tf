@@ -119,6 +119,22 @@ module "elasticache" {
 }
 
 #--------------------------------------------------------------
+# ALB Module
+# Manages the Application Load Balancer for the application
+#--------------------------------------------------------------
+module "alb" {
+  source = "./modules/alb"
+
+  public_subnet_ids  = module.network.public_subnet_ids
+  lb_sg_ids          = [module.network.lb_sg_id]
+  certificate_arn    = module.acm.ap_certificate_arn
+  route53_zone_id    = var.ROUTE53_ZONE_ID
+  certificate_domain = var.DOMAIN_NAME
+
+  depends_on = [module.acm.ap_certificate_validation_id]
+}
+
+#--------------------------------------------------------------
 # ECS Module 
 # Container orchestration service for running microservices
 #--------------------------------------------------------------
@@ -139,7 +155,12 @@ module "ecs" {
 
   route53_zone_id = var.ROUTE53_ZONE_ID
 
-  depends_on = [module.acm.ap_certificate_validation_id]
+  # ALB references
+  alb_id             = module.alb.alb_id
+  alb_dns_name       = module.alb.alb_dns_name
+  http_listener_arn  = module.alb.http_listener_arn
+  https_listener_arn = module.alb.https_listener_arn
+  health_check_path  = var.health_check_path
 
   cognito_user_pool_arn       = module.cognito.user_pool_arn
   cognito_user_pool_client_id = module.cognito.user_pool_client_id
@@ -147,28 +168,11 @@ module "ecs" {
 
   # Services map defining ECS service requirements for each app component
   services = {
-    client = {
-      cluster_name   = "client-cluster"
-      db_endpoint    = module.rds.db_endpoints["client"]
-      db_port        = 5432
-      redis_endpoint = module.elasticache.valkey_endpoints["client"]
+    for name, config in var.ecs_services : name => merge(config, {
+      db_endpoint    = module.rds.db_endpoints[name]
+      redis_endpoint = module.elasticache.valkey_endpoints[name]
       redis_port     = module.elasticache.valkey_port
-      app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-client:latest"
-      app_port       = 8080
-      path_pattern   = ["/api/v1/clients*"]
-      auth_enabled   = true # for cognito stuffs
-    }
-    account = {
-      cluster_name   = "account-cluster"
-      db_endpoint    = module.rds.db_endpoints["account"]
-      db_port        = 5432
-      redis_endpoint = module.elasticache.valkey_endpoints["account"]
-      redis_port     = module.elasticache.valkey_port
-      app_image      = "677761253473.dkr.ecr.ap-southeast-1.amazonaws.com/cs301g2t1-account:latest" # change back when using actual app
-      app_port       = 8080
-      path_pattern   = ["/api/v1/accounts*"]
-      auth_enabled   = true # for cognito stuffs
-    }
+    })
   }
 
   sqs_log_queue_arn = module.sqs.queue_arns["logs_queue"]
@@ -196,11 +200,6 @@ module "cognito" {
   custom_domain = var.CUSTOM_DOMAIN # to use if have one configured
 
   cognito_domain = var.COGNITO_DOMAIN
-  callback_urls = [
-    module.ecs.alb_callback_url,
-    module.ecs.alb_callback_url_custom
-  ]
-  logout_urls = [module.ecs.alb_logout_url]
 
   enable_local_development = var.ENABLE_LOCAL_DEVELOPMENT
   local_development_ports  = var.LOCAL_DEVELOPMENT_PORTS
@@ -239,6 +238,9 @@ module "lambda" {
   lambda_sg_id              = module.network.lambda_sg_id
   aws_region                = var.aws_region
 
+  https_listener_arn = module.alb.https_listener_arn
+  health_check_path  = var.health_check_path
+
   # Define multiple Lambda functions with different use cases
   lambda_functions = {
     for name, config in var.lambda_functions : name => merge(config, {
@@ -267,8 +269,8 @@ module "lambda" {
 
       # Add Cognito configuration if enabled
       cognito_config = config.cognito_enabled ? {
-        user_pool_id  = ""
-        app_client_id = ""
+        user_pool_id  = module.cognito.user_pool_id
+        app_client_id = module.cognito.user_pool_client_id
         region        = var.aws_region
       } : null,
 
@@ -282,6 +284,10 @@ module "lambda" {
         queue_url = module.sqs.queue_urls["logs_queue"]
         queue_arn = module.sqs.queue_arns["logs_queue"]
         region    = var.aws_region
+      } : null,
+
+      s3_config = config.s3_enabled ? {
+        s3_bucket_name = var.s3_buckets.verification_documents.name
       } : null,
     })
   }
@@ -348,4 +354,19 @@ module "backup" {
     Service     = "backup"
     ManagedBy   = "terraform"
   }
+}
+
+#--------------------------------------------------------------
+# SES Module
+# Email sending capabilities for application notifications
+#--------------------------------------------------------------
+module "ses" {
+  source = "./modules/ses"
+
+  domain              = var.DOMAIN_NAME
+  zone_id             = var.ROUTE53_ZONE_ID
+  enable_verification = true
+
+  # Remove email verification
+  emails = []
 }

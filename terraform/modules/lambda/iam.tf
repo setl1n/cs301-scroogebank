@@ -327,6 +327,56 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_access" {
 }
 
 #------------------------------------------------------------------------------
+# S3 Access Permissions
+# For Lambda functions that need to upload images or other content to S3 buckets
+#
+# These permissions allow Lambda functions to:
+# - Upload files to S3 buckets (PutObject)
+# - Retrieve files from S3 buckets (GetObject)
+# - List bucket contents (ListBucket)
+# - Generate pre-signed URLs
+#------------------------------------------------------------------------------
+resource "aws_iam_policy" "s3_access" {
+  # Create only for functions that have s3_enabled flag set to true
+  for_each = {
+    for name, config in var.lambda_functions : name => config
+    if lookup(config, "s3_enabled", false) == true
+  }
+
+  name        = "${var.lambda_functions[each.key].name}-s3-policy"
+  description = "Policy for Lambda function ${each.key} to upload to and access S3 buckets"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:DeleteObject"
+        ]
+        Effect = "Allow"
+        Resource = [
+          "arn:aws:s3:::${lookup(each.value.s3_config, "s3_bucket_name", "*")}",
+          "arn:aws:s3:::${lookup(each.value.s3_config, "s3_bucket_name", "*")}/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "s3_access" {
+  for_each = {
+    for name, config in var.lambda_functions : name => config
+    if lookup(config, "s3_enabled", false) == true
+  }
+
+  role       = aws_iam_role.lambda_role[each.key].name
+  policy_arn = aws_iam_policy.s3_access[each.key].arn
+}
+
+#------------------------------------------------------------------------------
 # EC2 Network Interface Permissions
 # Required for Lambda functions running in a VPC or accessing EC2 resources
 #

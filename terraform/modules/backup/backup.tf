@@ -22,10 +22,10 @@ resource "aws_backup_plan" "backup_plan" {
   rule {
     rule_name         = "monthly_backup_rule"
     target_vault_name = aws_backup_vault.backup_vault.name
-    schedule          = "cron(0 0 1 * ? *)" # Run at midnight on the 1st of every month
+    schedule          = "cron(0 0 * * ? *)" # Run at midnight every day
     lifecycle {
       delete_after       = var.backup_retention_days
-      cold_storage_after = 30 # Move to cold storage after 30 days
+      cold_storage_after = 7 # Move to cold storage after 7 days
     }
 
     # Backup copy configuration (optional)

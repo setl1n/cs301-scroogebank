@@ -1,67 +1,7 @@
-# Application Load Balancer configuration for ECS services
-# This file defines the ALB, listeners, target groups, and routing rules
-
 #--------------------------------------------------------------
-# Public Subnets
-# These subnets have direct internet access and are used for
-# internet-facing resources like load balancers
+# Target Groups and Listener Rules for ECS Services
+# This file defines the target groups and routing rules for the ALB
 #--------------------------------------------------------------
-
-# Main application load balancer that will distribute traffic to our services
-resource "aws_alb" "main" {
-  name                 = "alb"
-  subnets              = var.public_subnet_ids
-  security_groups      = var.lb_sg_ids
-  preserve_host_header = true
-}
-
-#--------------------------------------------------------------
-# Listeners
-# These handle incoming traffic and define default routing behaviors
-#--------------------------------------------------------------
-
-# HTTP listener that redirects all traffic to HTTPS for security
-resource "aws_alb_listener" "alb_http_listener" {
-  load_balancer_arn = aws_alb.main.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  # default_action {
-  #   type = "redirect"
-  #   redirect {
-  #     port        = "443"
-  #     protocol    = "HTTPS"
-  #     status_code = "HTTP_301"
-  #   }
-  # }
-  default_action {
-    type = "fixed-response"
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Invalid request"
-      status_code  = "403"
-    }
-  }
-}
-
-# HTTPS listener that handles encrypted traffic and forwards to appropriate target groups
-# Default action returns 404 if no matching rule is found
-resource "aws_alb_listener" "alb_https_listener" {
-  load_balancer_arn = aws_alb.main.arn
-  port              = 443
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = var.certificate_arn # Added certificate ARN parameter
-
-  default_action {
-    type = "fixed-response"
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "404: Not Found"
-      status_code  = "404"
-    }
-  }
-}
 
 #--------------------------------------------------------------
 # Target Groups
@@ -70,7 +10,6 @@ resource "aws_alb_listener" "alb_https_listener" {
 #--------------------------------------------------------------
 
 # Target groups for each service - these are the destinations for traffic from the load balancer
-# Each target group contains health check configuration to ensure traffic is only sent to healthy instances
 resource "aws_alb_target_group" "app" {
   for_each = var.services
 
@@ -98,12 +37,10 @@ resource "aws_alb_target_group" "app" {
 #--------------------------------------------------------------
 
 # Listener rules that determine which requests go to which target groups
-# Based on path patterns defined in the services variable
 resource "aws_lb_listener_rule" "app" {
   for_each     = var.services
-  listener_arn = aws_alb_listener.alb_https_listener.arn
-  # listener_arn = aws_alb_listener.alb_http_listener.arn # change back on actual acct
-  priority = 10 + index(keys(var.services), each.key) # Generate unique priority
+  listener_arn = var.https_listener_arn
+  priority     = 10 + index(keys(var.services), each.key)
 
   # Use dynamic action block for authentication when auth_enabled is true
   dynamic "action" {
@@ -117,7 +54,7 @@ resource "aws_lb_listener_rule" "app" {
         user_pool_domain    = var.cognito_domain
 
         session_cookie_name = "AWSELBAuthSessionCookie"
-        session_timeout     = 604800 # can change, i put 7 days instead of 1h
+        session_timeout     = 604800
         scope               = "openid email"
         authentication_request_extra_params = {
           "prompt" = "login"
@@ -133,7 +70,7 @@ resource "aws_lb_listener_rule" "app" {
   action {
     type             = "forward"
     target_group_arn = aws_alb_target_group.app[each.key].arn
-    order            = each.value.auth_enabled ? 2 : 1 # second order if we auth with cognito
+    order            = each.value.auth_enabled ? 2 : 1
   }
 
   condition {

@@ -42,15 +42,15 @@ resource "aws_rds_cluster_instance" "aurora_writer" {
 # These replicas help distribute read load across multiple instances
 # and provide high availability
 #----------------------------------------
-# resource "aws_rds_cluster_instance" "aurora_readers" {
-#   for_each = var.applications
-#
-#   identifier          = "${each.value.identifier}-reader"
-#   cluster_identifier  = aws_rds_cluster.aurora_cluster[each.key].id
-#   instance_class      = "db.t3.medium"
-#   engine              = aws_rds_cluster.aurora_cluster[each.key].engine
-#   engine_version      = aws_rds_cluster.aurora_cluster[each.key].engine_version
-#   publicly_accessible = false
-#   availability_zone   = "ap-southeast-1b"
-#   promotion_tier      = 1
-# }
+resource "aws_rds_cluster_instance" "aurora_readers" {
+  for_each = var.applications
+
+  identifier          = "${each.value.identifier}-reader"
+  cluster_identifier  = aws_rds_cluster.aurora_cluster[each.key].id
+  instance_class      = "db.t3.medium"
+  engine              = aws_rds_cluster.aurora_cluster[each.key].engine
+  engine_version      = aws_rds_cluster.aurora_cluster[each.key].engine_version
+  publicly_accessible = false
+  availability_zone   = "ap-southeast-1b"
+  promotion_tier      = 1
+}

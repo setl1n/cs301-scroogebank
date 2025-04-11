@@ -80,16 +80,6 @@ variable "cognito_domain" {
   type        = string
 }
 
-variable "callback_urls" {
-  description = "List of allowed callback URLs for the identity providers"
-  type        = list(string)
-}
-
-variable "logout_urls" {
-  description = "List of allowed logout URLs for the identity providers"
-  type        = list(string)
-}
-
 #----------------------------------------
 # Environment Configuration
 # Regional and network-related settings
