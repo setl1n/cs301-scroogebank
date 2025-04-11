@@ -28,8 +28,7 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
   name         = var.user_pool_client_name
   user_pool_id = aws_cognito_user_pool.user_pool.id
 
-  # Generate a secret for backend authentication
-  generate_secret = true
+  generate_secret = false
 
   allowed_oauth_flows  = ["code"]
   allowed_oauth_scopes = ["email", "openid", "profile"]
