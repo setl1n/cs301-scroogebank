@@ -8,6 +8,8 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.time.Period;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Data
 @Entity
 public class Client implements Serializable {
@@ -71,6 +73,7 @@ public class Client implements Serializable {
 
     // Custom validation: Ensure age is between 18 and 100 years.
     @AssertTrue(message = "Client must be between 18 and 100 years old")
+    @JsonIgnore
     public boolean isAgeValid() {
         if (dateOfBirth == null) {
             return false;
@@ -79,5 +82,4 @@ public class Client implements Serializable {
         return age >= 18 && age <= 100;
     }
 
-    // Constructors, getters, and setters...
 }

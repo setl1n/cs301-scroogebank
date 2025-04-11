@@ -14,8 +14,8 @@ public class SecurityConfig {
         // (1) Permit all requests to the H2 console and /clients endpoints
         http.authorizeHttpRequests(auth -> {
             auth.requestMatchers("/h2-console/**").permitAll();
-            auth.requestMatchers("/clients/**").permitAll();
-            auth.requestMatchers("/clients").permitAll();
+            // auth.requestMatchers("/clients/**").permitAll();
+            // auth.requestMatchers("/clients").permitAll();
             auth.requestMatchers("/health").permitAll();
             auth.anyRequest().permitAll();
         });
