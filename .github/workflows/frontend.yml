@@ -165,7 +165,7 @@ jobs:
     - name: Sync Built Files to S3
       if: github.ref == 'refs/heads/master' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
       run: |
-        aws s3 sync frontend/dist s3://${{ secrets.FRONTEND_S3_BUCKET }} --delete --acl public-read
+        aws s3 sync frontend/dist s3://${{ secrets.FRONTEND_S3_BUCKET }} --delete
 
     - name: Invalidate CloudFront Cache
       if: github.ref == 'refs/heads/master' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
