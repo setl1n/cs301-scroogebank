@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.core.env.Environment;
 
@@ -45,9 +47,9 @@ public class ClientController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createClient(@Valid @RequestBody Client client) {
+    public ResponseEntity<?> createClient(HttpServletRequest request, @Valid @RequestBody Client client) {
         try {
-            Client createdClient = clientService.createClient(client);
+            Client createdClient = clientService.createClient(client, request);
             return new ResponseEntity<>(createdClient, HttpStatus.CREATED);
         } catch (IllegalArgumentException ex) {
             // Return a conflict response if email or phone number already exists
@@ -56,10 +58,10 @@ public class ClientController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateClient(@PathVariable("id") Long id,
+    public ResponseEntity<?> updateClient(HttpServletRequest request, @PathVariable("id") Long id,
                                           @Valid @RequestBody Client updatedClient) {
         try {
-            Client client = clientService.updateClient(id, updatedClient);
+            Client client = clientService.updateClient(id, updatedClient, request);
             return ResponseEntity.ok(client);
         } catch (IllegalArgumentException ex) {
             // Could return 404 if not found or 409 if uniqueness is violated
@@ -72,9 +74,9 @@ public class ClientController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteClient(@PathVariable("id") Long id) {
+    public ResponseEntity<?> deleteClient(HttpServletRequest request, @PathVariable("id") Long id) {
         try {
-            clientService.deleteClient(id);
+            clientService.deleteClient(id, request);
             return ResponseEntity.noContent().build(); // 204 No Content
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.notFound().build();

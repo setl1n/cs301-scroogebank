@@ -2,6 +2,7 @@ package com.cs301g2t1.client.service;
 
 import com.cs301g2t1.client.model.Client;
 import com.cs301g2t1.client.repository.ClientRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +21,10 @@ import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ClientServiceImpl implements ClientService {
@@ -60,7 +64,7 @@ public class ClientServiceImpl implements ClientService {
 
     @Transactional
     @CachePut(value = CLIENTS_CACHE, key = "#result.clientId")
-    public Client createClient(Client client) {
+    public Client createClient(Client client, HttpServletRequest request) {
         // Check if email or phone number already exists in RDS
         clientRepository.findByEmailAddress(client.getEmailAddress())
                 .ifPresent(existing -> {
@@ -74,19 +78,14 @@ public class ClientServiceImpl implements ClientService {
 
         // Save the client in RDS (JPA)
         Client savedClient = clientRepository.save(client);
-        
         // Log to SQS
-        Long agentId = 1L; // Default agent ID, can be updated to use getAgentId method
-        String log = String.format("'operation': 'CREATE', 'attributeName': 'Client ID|First Name|Last Name|DOB|Gender|Email|Phone|Address|City|State|Country|Postal Code', " +
-                "'beforeValue': '||||||||||||', " +
-                "'afterValue': '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s', " +
-                "'agentId': %d, 'clientId': %d, 'dateTime': '%s'",
+        String agentId = getAgentId(request);
+        Map<String, Object> logRequest = getLogRequest("CREATE", "||||||||||||", String.format("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s", 
                 savedClient.getClientId(), savedClient.getFirstName(), savedClient.getLastName(), 
                 savedClient.getDateOfBirth(), savedClient.getGender(), savedClient.getEmailAddress(),
                 savedClient.getPhoneNumber(), savedClient.getAddress(), savedClient.getCity(),
-                savedClient.getState(), savedClient.getCountry(), savedClient.getPostalCode(),
-                agentId, savedClient.getClientId(), LocalDateTime.now());
-        pushLogToSQS(log);
+                savedClient.getState(), savedClient.getCountry(), savedClient.getPostalCode()), agentId, savedClient.getClientId(), "POST");
+        pushLogToSQS(logRequest);
 
         // The newly saved client is returned and automatically cached (via @CachePut)
         return savedClient;
@@ -94,7 +93,7 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     @CachePut(value = CLIENTS_CACHE, key = "#clientId")
-    public Client updateClient(Long clientId, Client updatedClient) {
+    public Client updateClient(Long clientId, Client updatedClient, HttpServletRequest request) {
         // Fetch the existing client from RDS
         Client existingClient = clientRepository.findById(clientId)
             .orElseThrow(() -> new IllegalArgumentException("Client not found with ID: " + clientId));
@@ -123,19 +122,15 @@ public class ClientServiceImpl implements ClientService {
         Client updatedClientFromDb = clientRepository.save(existingClient);
         
         // Log to SQS
-        Long agentId = 1L; // Default agent ID, can be updated to use getAgentId method
+        String agentId = getAgentId(request);
         String afterValue = String.format("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s",
                 updatedClientFromDb.getClientId(), updatedClientFromDb.getFirstName(), updatedClientFromDb.getLastName(), 
                 updatedClientFromDb.getDateOfBirth(), updatedClientFromDb.getGender(), updatedClientFromDb.getEmailAddress(),
                 updatedClientFromDb.getPhoneNumber(), updatedClientFromDb.getAddress(), updatedClientFromDb.getCity(),
                 updatedClientFromDb.getState(), updatedClientFromDb.getCountry(), updatedClientFromDb.getPostalCode());
         
-        String log = String.format("'operation': 'UPDATE', 'attributeName': 'Client ID|First Name|Last Name|DOB|Gender|Email|Phone|Address|City|State|Country|Postal Code', " +
-                "'beforeValue': '%s', " +
-                "'afterValue': '%s', " +
-                "'agentId': %d, 'clientId': %d, 'dateTime': '%s'",
-                beforeValue, afterValue, agentId, updatedClientFromDb.getClientId(), LocalDateTime.now());
-        pushLogToSQS(log);
+        Map<String, Object> logRequest = getLogRequest("UPDATE", beforeValue, afterValue, agentId, updatedClientFromDb.getClientId(), "PUT");
+        pushLogToSQS(logRequest);
 
         // The returned client is automatically placed into the cache (via @CachePut)
         return updatedClientFromDb;
@@ -146,7 +141,7 @@ public class ClientServiceImpl implements ClientService {
         @CacheEvict(value = "clients", key = "#clientId"),
         @CacheEvict(value = "clientsAll", allEntries = true)
     })
-    public void deleteClient(Long clientId) {
+    public void deleteClient(Long clientId, HttpServletRequest request) {
         Client client = clientRepository.findById(clientId)
             .orElseThrow(() -> new IllegalArgumentException("Client not found with ID: " + clientId));
         
@@ -161,17 +156,45 @@ public class ClientServiceImpl implements ClientService {
         clientRepository.deleteById(clientId);
         
         // Log to SQS
-        Long agentId = 1L; // Default agent ID, can be updated to use getAgentId method
-        String log = String.format("'operation': 'DELETE', 'attributeName': 'Client ID|First Name|Last Name|DOB|Gender|Email|Phone|Address|City|State|Country|Postal Code', " +
-                "'beforeValue': '%s', " +
-                "'afterValue': '||||||||||||', " +
-                "'agentId': %d, 'clientId': %d, 'dateTime': '%s'",
-                beforeValue, agentId, clientId, LocalDateTime.now());
-        pushLogToSQS(log);
+        String agentId = getAgentId(request);
+        Map<String, Object> logRequest = getLogRequest("DELETE", beforeValue, "||||||||||||", agentId, clientId, "DELETE");
+        pushLogToSQS(logRequest);
     }
     
-    public void pushLogToSQS(String log) {
+    public String getAgentId(HttpServletRequest request) {
+        // Get the JWT token from ALB header
+        String token = request.getHeader("x-amzn-oidc-data");
+        if (token == null) {
+            throw new RuntimeException("No authentication token found");
+        }
+        String[] parts = token.split("\\.");
+        String payload = new String(Base64.getDecoder().decode(parts[1]));
+        String agentId = payload.split("\"sub\":\"")[1].split("\"")[0]; // called sub in the token
+        return agentId;
+    }
+
+    public Map<String, Object> getLogRequest(String operation, String beforeValue, String afterValue, String agentId, Long clientId, String operationType) {
+        Map<String, Object> logEntry = new HashMap<>();
+        logEntry.put("operation", operation);
+        logEntry.put("attributeName", "Client ID|First Name|Last Name|DOB|Gender|Email|Phone|Address|City|State|Country|Postal Code");
+        logEntry.put("beforeValue", beforeValue);
+        logEntry.put("afterValue", afterValue);
+        logEntry.put("agentId", agentId);
+        logEntry.put("clientId", clientId);
+        logEntry.put("dateTime", LocalDateTime.now().toString());
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("operation", operationType);
+        request.put("logEntry", logEntry);
+        return request;
+    }
+
+    public void pushLogToSQS(Map<String, Object> logMessage) {
         try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String logJson = objectMapper.writeValueAsString(logMessage);
+
+            System.out.println("Log JSON: " + logJson);
             GetQueueUrlRequest getQueueUrlRequest = GetQueueUrlRequest.builder()
                     .queueName(queueName)
                     .build();
@@ -179,22 +202,18 @@ public class ClientServiceImpl implements ClientService {
 
             SendMessageRequest request = SendMessageRequest.builder()
                     .queueUrl(queueUrl)
-                    .messageBody(log)
+                    .messageBody(logJson)
                     .delaySeconds(0)
                     .build();
-
+            
+            System.out.println("request: " + request);
             SendMessageResponse response = sqsClient.sendMessage(request);
+            System.out.println("response: " + response);
             System.out.println("Message sent with ID: " + response.messageId());
 
         } catch (Exception e) {
             System.err.println("SQS Error: " + e.getMessage());
             throw new RuntimeException("Error sending message to SQS", e);
         }
-    }
-    
-    public Long getAgentId(HttpServletRequest request) {
-        // This is a placeholder method similar to AccountService
-        // In a real implementation, you would extract the agent ID from the JWT token
-        return 1L;
     }
 }
