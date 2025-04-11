@@ -36,6 +36,16 @@ variable "aws_region" {
   default     = "ap-southeast-1"
 }
 
+variable "https_listener_arn" {
+  description = "ARN of the HTTPS listener"
+  type        = string
+}
+
+variable "health_check_path" {
+  type        = string
+  default     = "/api/v1/health"
+  description = "Health check path for microservices"
+}
 #------------------------------------------------------------------------------
 # Lambda Function Configurations
 # Main configuration map that defines all Lambda functions to be created

@@ -25,6 +25,33 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
         headers.put("Content-Type", "application/json");
         response.put("headers", headers);
         
+        // Extract the path from the request
+        String path = "";
+        if (request.containsKey("path")) {
+            path = (String) request.get("path");
+        } else if (request.containsKey("requestContext") && ((Map)request.get("requestContext")).containsKey("path")) {
+            path = (String) ((Map)request.get("requestContext")).get("path");
+        }
+        
+        context.getLogger().log("Request path: " + path);
+        
+        // Route based on path
+        if (path.equals("/api/v1/health")) {
+            return handleHealthCheck(response);
+        } else if (path.equals("/api/v1/health/upload")) {
+            return handleUpload(request, response, context);
+        } else {
+            return createErrorResponse(response, 404, "Path not found: " + path);
+        }
+    }
+    
+    private Map<String, Object> handleHealthCheck(Map<String, Object> response) {
+        response.put("statusCode", 200);
+        response.put("body", "{\"status\":\"healthy\"}");
+        return response;
+    }
+    
+    private Map<String, Object> handleUpload(Map<String, Object> request, Map<String, Object> response, Context context) {
         if (bucketName == null || bucketName.isEmpty()) {
             context.getLogger().log("Error: S3_BUCKET_NAME environment variable is not set");
             return createErrorResponse(response, 500, "Server configuration error: S3 bucket not configured");

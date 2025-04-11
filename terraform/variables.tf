@@ -88,6 +88,7 @@ variable "lambda_functions" {
     sftp_enabled     = optional(bool, false)
     sqs_enabled      = optional(bool, false)
     s3_enabled       = optional(bool, false)
+    public_facing    = optional(bool, false) # Whether this Lambda should be exposed via ALB
 
     # SQS specific configuration
     sqs_trigger_enabled         = optional(bool, false)
@@ -114,14 +115,13 @@ variable "lambda_functions" {
       }
     },
     user = {
-      name                  = "user_lambda_function"
-      handler               = "com.cs301g2t1.user.UserHandler::handleRequest"
-      runtime               = "java21"
-      filename              = "../backend/user/target/user-0.0.1-SNAPSHOT.jar" // seems to be this .jar
-      timeout               = 15
-      memory_size           = 256
-      cognito_enabled       = true
-      environment_variables = {}
+      name            = "user_lambda_function"
+      handler         = "com.cs301g2t1.user.UserHandler::handleRequest"
+      runtime         = "java21"
+      filename        = "../backend/user/target/user-0.0.1-SNAPSHOT.jar" // seems to be this .jar
+      timeout         = 15
+      memory_size     = 256
+      cognito_enabled = true
     },
     log = {
       name                = "log_lambda_function"
@@ -136,14 +136,14 @@ variable "lambda_functions" {
       sqs_batch_size      = 10   # Process 10 messages at a time
     },
     verification = {
-      name                  = "verification_lambda_function"
-      handler               = "com.cs301g2t1.verification.UserHandler::handleRequest"
-      runtime               = "java21"
-      filename              = "../backend/verification/target/verification-0.0.1-SNAPSHOT.jar" // seems to be this .jar
-      timeout               = 15
-      memory_size           = 256
-      cognito_enabled       = true
-      environment_variables = {}
+      name            = "verification_lambda_function"
+      handler         = "com.cs301g2t1.verification.UserHandler::handleRequest"
+      runtime         = "java21"
+      filename        = "../backend/verification/target/verification-0.0.1-SNAPSHOT.jar" // seems to be this .jar
+      timeout         = 15
+      memory_size     = 256
+      cognito_enabled = true
+      public_facing   = true
     },
     # Example with other services
     # notification_sender = {
@@ -278,4 +278,10 @@ variable "ecs_services" {
       auth_enabled   = true
     }
   }
+}
+
+variable "health_check_path" {
+  type        = string
+  default     = "/api/v1/health"
+  description = "Health check path for microservices"
 }

@@ -57,6 +57,9 @@ public class LogHandler implements RequestHandler<SQSEvent, Void> {
         for (SQSEvent.SQSMessage message : event.getRecords()) {
 
             try {
+                String body = message.getBody();
+                context.getLogger().log("Raw message body: " + body);
+
                 Request request = GSON.fromJson(message.getBody(), Request.class);    
                 processRequest(request, context);
 

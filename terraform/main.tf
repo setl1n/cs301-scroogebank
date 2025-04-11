@@ -156,10 +156,11 @@ module "ecs" {
   route53_zone_id = var.ROUTE53_ZONE_ID
 
   # ALB references
-  alb_id            = module.alb.alb_id
-  alb_dns_name      = module.alb.alb_dns_name
-  http_listener_arn = module.alb.http_listener_arn
+  alb_id             = module.alb.alb_id
+  alb_dns_name       = module.alb.alb_dns_name
+  http_listener_arn  = module.alb.http_listener_arn
   https_listener_arn = module.alb.https_listener_arn
+  health_check_path  = var.health_check_path
 
   cognito_user_pool_arn       = module.cognito.user_pool_arn
   cognito_user_pool_client_id = module.cognito.user_pool_client_id
@@ -236,6 +237,9 @@ module "lambda" {
   private_lambda_subnet_ids = module.network.private_lambda_subnet_ids
   lambda_sg_id              = module.network.lambda_sg_id
   aws_region                = var.aws_region
+
+  https_listener_arn = module.alb.https_listener_arn
+  health_check_path  = var.health_check_path
 
   # Define multiple Lambda functions with different use cases
   lambda_functions = {
