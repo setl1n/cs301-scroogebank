@@ -1,32 +1,45 @@
 package com.cs301g2t1.client.service;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import software.amazon.awssdk.services.ses.SesClient;
+import software.amazon.awssdk.services.ses.model.*;
 
 @Service
 public class EmailService {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final SesClient sesClient;
 
-    // Hardcoded email service URL for testing
-    private static final String EMAIL_SERVICE_URL = "http://localhost:8081/api/v1/email";
-
-    public void sendImageUploadLink(String emailAddress, String uploadLink) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        var emailRequest = new EmailRequest(
-            emailAddress,
-            "Upload Your Image",
-            "Click this link to upload your image: " + uploadLink
-        );
-
-        HttpEntity<EmailRequest> request = new HttpEntity<>(emailRequest, headers);
-        restTemplate.postForObject(EMAIL_SERVICE_URL, request, String.class);
+    public EmailService() {
+        this.sesClient = SesClient.builder().build();
     }
 
-    private record EmailRequest(String to, String subject, String body) {}
+    public void sendImageUploadLink(String emailAddress, String uploadLink) {
+        String subject = "Upload Your Image";
+        String body = "Click this link to upload your image: " + uploadLink;
+
+        SendEmailRequest emailRequest = SendEmailRequest.builder()
+            .destination(Destination.builder()
+                .toAddresses(emailAddress)
+                .build())
+            .message(Message.builder()
+                .subject(Content.builder()
+                    .data(subject)
+                    .build())
+                .body(Body.builder()
+                    .text(Content.builder()
+                        .data(body)
+                        .build())
+                    .build())
+                .build())
+            .source("your-verified-email@example.com") // Replace with a verified email in SES
+            .build();
+
+        try {
+            SendEmailResponse response = sesClient.sendEmail(emailRequest);
+            System.out.println("Email sent successfully! Message ID: " + response.messageId());
+        } catch (SesException e) {
+            System.err.println("Failed to send email: " + e.awsErrorDetails().errorMessage());
+            throw new RuntimeException("Failed to send email", e);
+        }
+    }
 }
