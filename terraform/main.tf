@@ -119,6 +119,22 @@ module "elasticache" {
 }
 
 #--------------------------------------------------------------
+# ALB Module
+# Manages the Application Load Balancer for the application
+#--------------------------------------------------------------
+module "alb" {
+  source = "./modules/alb"
+
+  public_subnet_ids  = module.network.public_subnet_ids
+  lb_sg_ids          = [module.network.lb_sg_id]
+  certificate_arn    = module.acm.ap_certificate_arn
+  route53_zone_id    = var.ROUTE53_ZONE_ID
+  certificate_domain = var.DOMAIN_NAME
+
+  depends_on = [module.acm.ap_certificate_validation_id]
+}
+
+#--------------------------------------------------------------
 # ECS Module 
 # Container orchestration service for running microservices
 #--------------------------------------------------------------
@@ -139,7 +155,11 @@ module "ecs" {
 
   route53_zone_id = var.ROUTE53_ZONE_ID
 
-  depends_on = [module.acm.ap_certificate_validation_id]
+  # ALB references
+  alb_id            = module.alb.alb_id
+  alb_dns_name      = module.alb.alb_dns_name
+  http_listener_arn = module.alb.http_listener_arn
+  https_listener_arn = module.alb.https_listener_arn
 
   cognito_user_pool_arn       = module.cognito.user_pool_arn
   cognito_user_pool_client_id = module.cognito.user_pool_client_id
