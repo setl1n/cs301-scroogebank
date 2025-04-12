@@ -21,15 +21,10 @@ interface ClientAccount {
 
 const AgentDashboard = () => {
     const [isCreateProfileOpen, setIsCreateProfileOpen] = useState(false);
-    const [isTransactionListOpen, setIsTransactionListOpen] = useState(false);
     const [selectedClient, setSelectedClient] = useState<string>("");
 
     const handleManageProfiles = () => {
         console.log('Manage profiles clicked');
-    };
-
-    const handleViewTransactions = () => {
-        setIsTransactionListOpen(true);
     };
 
     const recentActivities = [
@@ -251,16 +246,8 @@ const AgentDashboard = () => {
                     >
                         <Card className="bg-zinc-900 border-zinc-800">
                             <CardContent className="p-6">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-xl font-semibold text-white">Transactions</h3>
-                                    <Button
-                                        onClick={handleViewTransactions}
-                                        variant="default"
-                                    >
-                                        View All Transactions
-                                    </Button>
-                                </div>
-                                <p className="text-zinc-400">Recent transaction summary will be displayed here.</p>
+                                <h3 className="text-xl font-semibold text-white mb-4">Transactions</h3>
+                                <TransactionList />
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -270,11 +257,6 @@ const AgentDashboard = () => {
             <CreateProfileDialog
                 isOpen={isCreateProfileOpen}
                 onClose={() => setIsCreateProfileOpen(false)}
-            />
-
-            <TransactionList
-                isOpen={isTransactionListOpen}
-                onClose={() => setIsTransactionListOpen(false)}
             />
         </div>
     );
