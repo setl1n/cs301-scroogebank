@@ -30,7 +30,7 @@ resource "aws_alb_target_group" "app" {
   }
 
   stickiness {
-    enabled = false  # <-- disables sticky sessions
+    enabled = false # <-- disables sticky sessions
     type    = "lb_cookie"
   }
 }

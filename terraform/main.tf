@@ -299,14 +299,14 @@ module "lambda" {
 # EC2 instance for file retrieval via SFTP
 #--------------------------------------------------------------
 module "sftp_server" {
-  source            = "./modules/sftp-server"
-  ami_id            = "ami-0aebd6a41cf6ab2eb" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
-  instance_type     = "t2.micro"
-  key_name          = "my-key-pair"
-  public_subnet_id  = module.network.public_subnet_ids[0]
-  vpc_id            = module.network.vpc_id
-  security_group_id = module.network.sftp_sg_id
-  # private_key_path  = "~/.ssh/id_rsa"  # Update this to your actual key path
+  source                       = "./modules/sftp-server"
+  ami_id                       = "ami-0aebd6a41cf6ab2eb" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
+  instance_type                = "t2.micro"
+  key_name                     = "my-key-pair"
+  public_subnet_id             = module.network.public_subnet_ids[0]
+  vpc_id                       = module.network.vpc_id
+  security_group_id            = module.network.sftp_sg_id
+  aws_region                   = var.aws_region
   csv_file_path                = "${path.root}/../mock_transactions.csv" # Path to the CSV file
   sftp_private_key_secret_name = var.sftp_private_key_secret_name
 }

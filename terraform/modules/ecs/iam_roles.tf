@@ -174,7 +174,7 @@ resource "aws_iam_policy" "ses_send_email_policy" {
           "ses:SendEmail",
           "ses:SendRawEmail"
         ]
-        Resource = "*"  # You may want to restrict this to specific SES resources/identities
+        Resource = "*" # You may want to restrict this to specific SES resources/identities
       }
     ]
   })

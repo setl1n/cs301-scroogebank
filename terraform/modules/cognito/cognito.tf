@@ -32,8 +32,8 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
 
   generate_secret = true
 
-  allowed_oauth_flows  = ["code"]
-  allowed_oauth_scopes = ["email", "openid", "profile"]
+  allowed_oauth_flows                  = ["code"]
+  allowed_oauth_scopes                 = ["email", "openid", "profile"]
   allowed_oauth_flows_user_pool_client = true
 
 
@@ -81,8 +81,8 @@ resource "aws_cognito_user_pool_client" "spa_client" {
 
   generate_secret = false
 
-  allowed_oauth_flows  = ["implicit", "code"]
-  allowed_oauth_scopes = ["email", "openid", "profile"]
+  allowed_oauth_flows                  = ["implicit", "code"]
+  allowed_oauth_scopes                 = ["email", "openid", "profile"]
   allowed_oauth_flows_user_pool_client = true
 
   # SPA callback and logout URLs

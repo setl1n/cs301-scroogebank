@@ -37,6 +37,12 @@ variable "vpc_id" {
   type        = string
 }
 
+variable "aws_region" {
+  description = "AWS region to deploy resources"
+  type        = string
+  default     = "ap-southeast-1" # Change this to your preferred region
+}
+
 #--------------------------------------------------------------
 # File and Security Configuration
 # Settings for file upload and secure access
