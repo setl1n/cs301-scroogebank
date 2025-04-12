@@ -14,5 +14,8 @@ resource "aws_sqs_queue" "queues" {
   receive_wait_time_seconds  = lookup(each.value, "receive_wait_time_seconds", 0)
   visibility_timeout_seconds = lookup(each.value, "visibility_timeout_seconds", 30)
 
+  # Enable server-side encryption with AWS owned keys (no additional cost)
+  sqs_managed_sse_enabled = true
+
   tags = lookup(each.value, "tags", {})
 }

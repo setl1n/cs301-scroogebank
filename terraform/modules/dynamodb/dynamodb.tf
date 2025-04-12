@@ -32,6 +32,12 @@ resource "aws_dynamodb_table" "logs_table" {
 
   stream_enabled = false
 
+  # Enable server-side encryption with AWS owned key (no additional cost)
+  server_side_encryption {
+    enabled = true
+    # Using default AWS owned key (no kms_key_arn specified)
+  }
+
   # Add tags
   tags = merge(
     {

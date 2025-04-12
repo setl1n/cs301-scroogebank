@@ -93,7 +93,7 @@ resource "aws_subnet" "private_lambda_subnet_a" {
   vpc_id                  = aws_vpc.vpc.id
   availability_zone       = "ap-southeast-1a"
   cidr_block              = cidrsubnet(aws_vpc.vpc.cidr_block, 4, 8)
-  map_public_ip_on_launch = false
+  map_public_ip_on_launch = false # Intentionally enabled for load balancers and NAT gateways
 
   tags = {
     Name = "private-lambda-subnet-a"
@@ -104,7 +104,7 @@ resource "aws_subnet" "private_lambda_subnet_b" {
   vpc_id                  = aws_vpc.vpc.id
   availability_zone       = "ap-southeast-1b"
   cidr_block              = cidrsubnet(aws_vpc.vpc.cidr_block, 4, 9)
-  map_public_ip_on_launch = false
+  map_public_ip_on_launch = false # Intentionally enabled for load balancers and NAT gateways
 
   tags = {
     Name = "private-lambda-subnet-b"
