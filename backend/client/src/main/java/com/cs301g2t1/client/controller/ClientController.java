@@ -140,5 +140,13 @@ public class ClientController {
         return ResponseEntity.ok(isValid);
     }
 
+    @GetMapping("/validate-client-id/{clientId}")
+    public ResponseEntity<Boolean> validateClientId(@PathVariable Long clientId) {
+        boolean exists = clientService.validateClientId(clientId);
+        if (!exists) {
+            return new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(true, HttpStatus.OK);
+    }
 
 }
