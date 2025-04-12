@@ -2,6 +2,29 @@
 # CloudFront Distributions
 # CloudFront is AWS's Content Delivery Network (CDN) that speeds up distribution of static and dynamic web content
 #----------------------------------------
+resource "aws_cloudfront_response_headers_policy" "cors_policy" {
+  name    = "cors-policy"
+  comment = "Policy to enable CORS for CloudFront distributions"
+
+  cors_config {
+    access_control_allow_credentials = true
+    
+    access_control_allow_headers {
+      items = ["Authorization", "Content-Type", "Origin", "Accept"]
+    }
+    
+    access_control_allow_methods {
+      items = ["HEAD", "POST", "PATCH", "DELETE", "PUT", "GET", "OPTIONS"]
+    }
+    
+    access_control_allow_origins {
+      items = ["https://main-frontend.itsag2t1.com", "http://localhost:5173"] # Consider restricting this to specific origins in production
+    }
+    
+    origin_override = true
+  }
+}
+
 resource "aws_cloudfront_distribution" "s3_distribution" {
   for_each = var.s3_website_buckets
 
@@ -38,6 +61,8 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-Website-${each.value.bucket_id}"
+    
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.cors_policy.id
 
     forwarded_values {
       query_string = false
