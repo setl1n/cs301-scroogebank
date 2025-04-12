@@ -15,6 +15,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import { useState } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 
@@ -28,7 +36,7 @@ type Gender = 'male' | 'female' | 'non-binary' | 'prefer not to say';
 interface ProfileData {
     firstName: string;
     lastName: string;
-    dateOfBirth: string;
+    dateOfBirth: Date | undefined;
     gender: Gender | '';
     email: string;
     phone: string;
@@ -56,7 +64,7 @@ const formatGenderLabel = (gender: Gender): string => {
 const initialFormData: ProfileData = {
     firstName: '',
     lastName: '',
-    dateOfBirth: '',
+    dateOfBirth: undefined,
     gender: '',
     email: '',
     phone: '',
@@ -76,7 +84,19 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
     };
 
     const handleClose = () => {
-        if (Object.values(formData).some(value => value !== '')) {
+        if (
+            formData.firstName !== '' || 
+            formData.lastName !== '' || 
+            formData.dateOfBirth !== undefined || 
+            formData.gender !== '' ||
+            formData.email !== '' ||
+            formData.phone !== '' ||
+            formData.address !== '' ||
+            formData.city !== '' ||
+            formData.state !== '' ||
+            formData.country !== '' ||
+            formData.postalCode !== ''
+        ) {
             setIsConfirmDialogOpen(true);
         } else {
             onClose();
@@ -101,6 +121,13 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
         setFormData(prev => ({
             ...prev,
             [name]: value
+        }));
+    };
+
+    const handleDateChange = (date: Date | undefined) => {
+        setFormData(prev => ({
+            ...prev,
+            dateOfBirth: date
         }));
     };
 
@@ -162,15 +189,32 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
                                 <Label htmlFor="dateOfBirth" className="text-sm font-medium text-white">
                                     Date of Birth
                                 </Label>
-                                <Input
-                                    id="dateOfBirth"
-                                    type="date"
-                                    name="dateOfBirth"
-                                    value={formData.dateOfBirth}
-                                    onChange={handleInputChange}
-                                    className="bg-zinc-800 border-zinc-700 text-white"
-                                    required
-                                />
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className={`w-full justify-start text-left font-normal bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 ${
+                                                !formData.dateOfBirth && "text-zinc-400"
+                                            }`}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {formData.dateOfBirth ? (
+                                                format(formData.dateOfBirth, "PP")
+                                            ) : (
+                                                <span>Pick a date</span>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0 bg-zinc-800 border-zinc-700">
+                                        <Calendar
+                                            mode="single"
+                                            selected={formData.dateOfBirth}
+                                            onSelect={handleDateChange}
+                                            initialFocus
+                                            className="bg-zinc-800 text-white"
+                                        />
+                                    </PopoverContent>
+                                </Popover>
                             </div>
 
                             <div className="space-y-2">
