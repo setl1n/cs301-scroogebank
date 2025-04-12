@@ -174,13 +174,6 @@ const AdminDashboard = () => {
                                 >
                                     Create Account
                                 </Button>
-                                <Button
-                                    onClick={() => setIsManageAccountsOpen(true)}
-                                    variant="outline"
-                                    className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700"
-                                >
-                                    Manage Accounts
-                                </Button>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline" className="h-9 w-9 p-0 bg-zinc-800 border-zinc-700">
@@ -216,16 +209,16 @@ const AdminDashboard = () => {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <span className={`text-sm ${
-                                                    account.status === "Success" ? "text-green-500" : 
-                                                    account.status === "Processing" ? "text-blue-500" : 
-                                                    "text-red-500"
+                                                <span className={`inline-block px-2 py-1 rounded-md text-xs font-medium ${
+                                                    account.status === "Success" ? "bg-green-900 text-green-300" : 
+                                                    account.status === "Processing" ? "bg-blue-900 text-blue-300" : 
+                                                    "bg-red-900 text-red-300"
                                                 }`}>
                                                     {account.status}
                                                 </span>
                                             </TableCell>
-                                            <TableCell>{account.email}</TableCell>
-                                            <TableCell className="text-right">{account.amount}</TableCell>
+                                            <TableCell className="text-zinc-200 font-medium">{account.email}</TableCell>
+                                            <TableCell className="text-right font-bold text-white">{account.amount}</TableCell>
                                             <TableCell className="w-12">
                                                 <MoreVertical className="h-4 w-4 text-zinc-400" />
                                             </TableCell>
