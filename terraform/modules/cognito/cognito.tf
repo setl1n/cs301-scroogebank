@@ -50,7 +50,9 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
   callback_urls = distinct(concat(
     compact([
       var.custom_domain != "" ? "https://${var.custom_domain}/oauth2/idpresponse" : "",
-      var.custom_domain != "" ? "https://${var.custom_domain}/login/oauth2/code/cognito" : ""
+      var.custom_domain != "" ? "https://${var.custom_domain}/login/oauth2/code/cognito" : "",
+      var.frontend_domain != "" ? "https://${var.frontend_domain}/oauth2/idpresponse" : "",
+      var.frontend_domain != "" ? "https://${var.frontend_domain}/login/oauth2/code/cognito" : ""
     ]),
     var.enable_local_development ? flatten([
       for port in var.local_development_ports : [
@@ -63,7 +65,8 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
   logout_urls = distinct(concat(
     compact([
       "https://${var.alb_dns_name}/login",
-      var.custom_domain != "" ? "https://${var.custom_domain}/login" : ""
+      var.custom_domain != "" ? "https://${var.custom_domain}/login" : "",
+      var.frontend_domain != "" ? "https://${var.frontend_domain}/login" : ""
     ]),
     var.enable_local_development ? [
       for port in var.local_development_ports : "http://localhost:${port}/login"
@@ -98,7 +101,9 @@ resource "aws_cognito_user_pool_client" "spa_client" {
   callback_urls = distinct(concat(
     compact([
       var.custom_domain != "" ? "https://${var.custom_domain}" : "",
-      var.custom_domain != "" ? "https://${var.custom_domain}/login/oauth2/code/cognito" : ""
+      var.custom_domain != "" ? "https://${var.custom_domain}/login/oauth2/code/cognito" : "",
+      var.frontend_domain != "" ? "https://${var.frontend_domain}" : "",
+      var.frontend_domain != "" ? "https://${var.frontend_domain}/login/oauth2/code/cognito" : ""
     ]),
     var.enable_local_development ? flatten([
       for port in var.local_development_ports : [
@@ -111,7 +116,9 @@ resource "aws_cognito_user_pool_client" "spa_client" {
   logout_urls = distinct(concat(
     compact([
       var.custom_domain != "" ? "https://${var.custom_domain}" : "",
-      var.custom_domain != "" ? "https://${var.custom_domain}/logout" : ""
+      var.custom_domain != "" ? "https://${var.custom_domain}/login" : "",
+      var.frontend_domain != "" ? "https://${var.frontend_domain}" : "",
+      var.frontend_domain != "" ? "https://${var.frontend_domain}/login" : ""
     ]),
     var.enable_local_development ? [
       for port in var.local_development_ports : "http://localhost:${port}"

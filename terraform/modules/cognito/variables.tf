@@ -100,6 +100,12 @@ variable "custom_domain" {
   default     = "alb.itsag2t1.com" # Make it optional with a default value
 }
 
+variable "frontend_domain" {
+  description = "Main frontend domain for the application (if configured)"
+  type        = string
+  default     = "main-frontend.itsag2t1.com"
+}
+
 #----------------------------------------
 # Development Settings
 # Configuration for local development environment
