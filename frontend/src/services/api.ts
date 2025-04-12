@@ -25,7 +25,7 @@ export const api = {
   },
   
   // POST request
-  async post(en]dpoint: string, data: any) {
+  async post(endpoint: string, data: any) {
     const response = await fetch(`${config.apiBaseUrl}${endpoint}`, {
       method: 'POST',
       headers: new Headers(defaultOptions.headers),
