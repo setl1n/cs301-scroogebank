@@ -18,13 +18,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ManageAccountsDialog from './ManageAccountsDialog';
+import CreateAccountDialog from './CreateAccountDialog';
 import { DollarSign, Users, ShoppingCart, Activity, MoreVertical } from "lucide-react";
 
 const AdminDashboard = () => {
     const [isManageAccountsOpen, setIsManageAccountsOpen] = useState(false);
+    const [isCreateAccountOpen, setIsCreateAccountOpen] = useState(false);
 
     const handleCreateAccount = () => {
-        console.log('Create account clicked');
+        setIsCreateAccountOpen(true);
     };
 
     // Sample data for accounts
@@ -259,6 +261,11 @@ const AdminDashboard = () => {
                 isOpen={isManageAccountsOpen}
                 onClose={() => setIsManageAccountsOpen(false)}
                 onCreateAccount={handleCreateAccount}
+            />
+            
+            <CreateAccountDialog 
+                isOpen={isCreateAccountOpen}
+                onClose={() => setIsCreateAccountOpen(false)}
             />
         </div>
     );
