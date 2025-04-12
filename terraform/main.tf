@@ -199,10 +199,10 @@ module "cognito" {
 
   mfa_configuration = var.mfa_configuration
 
-  alb_dns_name  = module.ecs.alb_dns_name
-  custom_domain = var.CUSTOM_DOMAIN  # to use if have one configured
+  alb_dns_name    = module.ecs.alb_dns_name
+  custom_domain   = var.CUSTOM_DOMAIN # to use if have one configured
   frontend_domain = var.FRONTEND_DOMAIN
-  cognito_domain = var.COGNITO_DOMAIN
+  cognito_domain  = var.COGNITO_DOMAIN
 
   enable_local_development = var.ENABLE_LOCAL_DEVELOPMENT
   local_development_ports  = var.LOCAL_DEVELOPMENT_PORTS
