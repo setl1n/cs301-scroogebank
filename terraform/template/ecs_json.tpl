@@ -14,7 +14,9 @@
       {"name": "REDIS_HOST", "value": "${REDIS_HOST}"},
       {"name": "REDIS_PORT", "value": "${REDIS_PORT}"},
       {"name": "SQS_QUEUE_NAME", "value": "${SQS_QUEUE_NAME}"},
-      {"name": "SQS_REGION", "value": "${SQS_REGION}"}
+      {"name": "SQS_REGION", "value": "${SQS_REGION}"}, 
+      {"name": "CLIENT_SERVICE_URL", "value":"${CLIENT_SERVICE_URL}"}
+
     ],
     "logConfiguration": {
         "logDriver": "awslogs",

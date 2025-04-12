@@ -44,6 +44,7 @@ resource "aws_ecs_task_definition" "app" {
     REDIS_PORT        = each.value.redis_port
     SQS_QUEUE_NAME    = "application-logs-queue"
     SQS_REGION        = var.aws_region
+    CLIENT_SERVICE_URL = "http://client.${aws_service_discovery_private_dns_namespace.ecs_namespace.name}:${lookup(var.services["client"], "app_port", 8080)}/api/v1/clients"
   })
 }
 
