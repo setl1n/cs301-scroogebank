@@ -146,13 +146,13 @@ resource "aws_security_group" "ecs_tasks_sg" {
   # }
 
   # Commented HTTP port 8080 access from anywhere
-  # ingress {
-  #   from_port   = 8080
-  #   to_port     = 8080
-  #   protocol    = "tcp"
-  #   cidr_blocks = ["0.0.0.0/0"]
-  #   description = "Allow HTTP traffic from anywhere"
-  # }
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow HTTP traffic from anywhere"
+  }
 
   # Allow all outbound traffic from ECS tasks
   egress {
@@ -166,6 +166,16 @@ resource "aws_security_group" "ecs_tasks_sg" {
   tags = {
     Name = "ecs-tasks-security-group"
   }
+}
+
+resource "aws_security_group_rule" "ecs_tasks_self" {
+  description              = "Allow ECS tasks to communicate with each other"
+  type                     = "ingress" # For inbound rules
+  from_port                = 8080
+  to_port                  = 8080
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.ecs_tasks_sg.id
+  source_security_group_id = aws_security_group.ecs_tasks_sg.id
 }
 
 #--------------------------------------------------------------
