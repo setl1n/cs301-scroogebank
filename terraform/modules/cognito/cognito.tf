@@ -20,9 +20,11 @@ resource "aws_cognito_user_pool" "user_pool" {
 }
 
 #--------------------------------------------------------------
-# AWS COGNITO USER POOL CLIENT
+# AWS COGNITO USER POOL CLIENT FOR BACKEND
 # Defines the app that will use this Cognito User Pool for
 # authentication, including OAuth settings and callback URLs
+# This client is for confidential clients (backends) that can
+# securely store a client secret
 #--------------------------------------------------------------
 resource "aws_cognito_user_pool_client" "user_pool_client" {
   name         = var.user_pool_client_name
@@ -65,6 +67,54 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
     "ALLOW_USER_SRP_AUTH",
     "ALLOW_REFRESH_TOKEN_AUTH",
     "ALLOW_ADMIN_USER_PASSWORD_AUTH"
+  ]
+}
+
+#--------------------------------------------------------------
+# AWS COGNITO USER POOL CLIENT FOR FRONTEND SPA
+# A separate client for the frontend SPA that doesn't require
+# a client secret since public clients cannot securely store secrets
+#--------------------------------------------------------------
+resource "aws_cognito_user_pool_client" "spa_client" {
+  name         = "${var.user_pool_client_name}-spa"
+  user_pool_id = aws_cognito_user_pool.user_pool.id
+
+  generate_secret = false
+
+  allowed_oauth_flows  = ["implicit", "code"]
+  allowed_oauth_scopes = ["email", "openid", "profile"]
+  allowed_oauth_flows_user_pool_client = true
+
+  # SPA callback and logout URLs
+  callback_urls = distinct(concat(
+    compact([
+      var.custom_domain != "" ? "https://${var.custom_domain}" : "",
+      var.custom_domain != "" ? "https://${var.custom_domain}/login/oauth2/code/cognito" : ""
+    ]),
+    var.enable_local_development ? flatten([
+      for port in var.local_development_ports : [
+        "http://localhost:${port}",
+        "http://localhost:${port}/login/oauth2/code/cognito"
+      ]
+    ]) : []
+  ))
+
+  logout_urls = distinct(concat(
+    compact([
+      var.custom_domain != "" ? "https://${var.custom_domain}" : "",
+      var.custom_domain != "" ? "https://${var.custom_domain}/logout" : ""
+    ]),
+    var.enable_local_development ? [
+      for port in var.local_development_ports : "http://localhost:${port}"
+    ] : []
+  ))
+
+  supported_identity_providers = ["COGNITO"]
+
+  explicit_auth_flows = [
+    "ALLOW_USER_SRP_AUTH",
+    "ALLOW_REFRESH_TOKEN_AUTH",
+    "ALLOW_CUSTOM_AUTH"
   ]
 }
 

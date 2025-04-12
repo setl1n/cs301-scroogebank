@@ -16,7 +16,8 @@ interface AppConfig {
 // Default Cognito configuration
 const cognitoRegion = 'ap-southeast-1';
 const cognitoUserPoolId = 'ap-southeast-1_yb2KzXwYv';
-const cognitoClientId = 'c4f3n7qokjeljtf8al4bsb3t';
+// This client ID should be for a client WITHOUT a client secret (SPA client)
+const cognitoClientId = import.meta.env.VITE_APP_COGNITO_CLIENT_ID || '3rvr3e49skqasnq9hmg8kvdq4n';
 
 // Build configuration based on environment variables
 const config: AppConfig = {
