@@ -52,3 +52,29 @@ resource "aws_alb_listener" "alb_https_listener" {
     }
   }
 }
+
+
+
+# Apply the policy to your OPTIONS preflight rule
+resource "aws_alb_listener_rule" "options_preflight" {
+  listener_arn = aws_alb_listener.alb_https_listener.arn
+  priority     = 1
+
+  action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = ""
+      status_code  = "200"
+
+      
+    }
+    
+  }
+
+  condition {
+    http_request_method {
+      values = ["OPTIONS"]
+    }
+  }
+}
