@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import LoginPage from './pages/login/LoginPage'
 import AdminPage from './pages/admin/AdminPage'
 import AgentPage from './pages/agent/AgentPage'
+import SignInSide from './pages/other/SignInSide'
+import NewAgent from './pages/other/NewAgent'
 
 function App() {
   return (
@@ -27,6 +29,9 @@ function App() {
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/agent" element={<AgentPage />} />
             <Route path="/" element={<LoginPage />} />
+            {/* cooking */}
+            <Route path="/other" element={<SignInSide />} />
+            <Route path="/newagent" element={<NewAgent/>} />
           </Routes>
         </main>
       </div>
