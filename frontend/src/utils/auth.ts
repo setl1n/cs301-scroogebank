@@ -125,4 +125,20 @@ export const hasGroupAccess = (auth: AuthContextProps, allowedGroups?: string[])
   return Array.isArray(userGroups)
     ? userGroups.some(group => allowedGroups.includes(group))
     : allowedGroups.includes(userGroups as string);
+};
+
+/**
+ * Get the user's Cognito groups/roles
+ * 
+ * @param auth The auth context from useAuth()
+ * @returns Array of group names or empty array if not authenticated
+ */
+export const getUserGroups = (auth: AuthContextProps): string[] => {
+  if (!auth.isAuthenticated || !auth.user) {
+    return [];
+  }
+  
+  const userGroups = auth.user.profile['cognito:groups'] || [];
+  
+  return Array.isArray(userGroups) ? userGroups : [userGroups as string];
 }; 
