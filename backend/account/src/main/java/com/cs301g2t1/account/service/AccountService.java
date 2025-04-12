@@ -198,10 +198,7 @@ public class AccountService {
                     .delaySeconds(0)
                     .build();
             
-            System.out.println("request: " + request);
             SendMessageResponse response = sqsClient.sendMessage(request);
-            System.out.println("response: " + response);
-            System.out.println("Message sent with ID: " + response.messageId());
 
         } catch (Exception e) {
             System.err.println("SQS Error: " + e.getMessage());
@@ -210,8 +207,6 @@ public class AccountService {
     }
 
     private boolean validateClientId(Long clientId) {
-        System.out.println("Validating client ID: " + clientId);
-        System.out.println("serviceUrl: " + serviceUrl);
         try {
             
             // Create and configure HttpClient
@@ -233,8 +228,6 @@ public class AccountService {
             // Process the response
             int statusCode = httpResponse.statusCode();
             String body = httpResponse.body();
-            System.out.println("Response status code: " + statusCode);
-            System.out.println("Response body: " + body);
 
             if (statusCode == 200) {
                 return true;

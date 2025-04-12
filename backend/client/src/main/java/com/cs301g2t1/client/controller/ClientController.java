@@ -142,10 +142,7 @@ public class ClientController {
 
     @GetMapping("/validate-client-id/{clientId}")
     public ResponseEntity<Boolean> validateClientId(@PathVariable Long clientId) {
-        System.out.println("inside client ms validateClientId method");
-        System.out.println("clientId: " + clientId);
         boolean exists = clientService.validateClientId(clientId);
-        System.out.println("Client ID exists: " + exists);
         if (!exists) {
             return new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
         }
