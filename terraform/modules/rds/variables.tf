@@ -11,6 +11,11 @@ variable "db_subnet_group_name" {
   description = "Subnet Group Name to be used by the DB"
 }
 
+variable "db_subnet_group_ids" {
+  type        = list(string)
+  description = "Subnet Group IDs to be used by the DB"
+}
+
 #----------------------------------------
 # Database Connection Variables
 #----------------------------------------

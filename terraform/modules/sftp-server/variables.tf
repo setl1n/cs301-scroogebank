@@ -22,21 +22,6 @@ variable "key_name" {
 # Network Configuration Variables
 # Settings related to VPC, subnet, and security groups
 #--------------------------------------------------------------
-variable "public_subnet_id" {
-  description = "The public subnet ID where the SFTP server will be deployed"
-  type        = string
-}
-
-variable "security_group_id" {
-  description = "The security group ID for the SFTP server"
-  type        = string
-}
-
-variable "vpc_id" {
-  description = "The VPC ID where the SFTP server will be deployed"
-  type        = string
-}
-
 variable "aws_region" {
   description = "AWS region to deploy resources"
   type        = string

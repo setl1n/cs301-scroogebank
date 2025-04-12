@@ -52,10 +52,6 @@ output "lambda_sg_id" {
   description = "Security group ID for Lambda functions"
 }
 
-output "sftp_sg_id" {
-  value       = aws_security_group.sftp_sg.id
-  description = "Security group ID for SFTP server"
-}
 
 #--------------------------------------------------------------
 # Database Subnet Resources

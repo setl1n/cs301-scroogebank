@@ -44,6 +44,7 @@ module "rds" {
   security_group_id = module.network.db_sg_id
   # db_subnet_group_name = module.network.public_db_subnet_group_name
   db_subnet_group_name = module.network.db_subnet_group_name
+  db_subnet_group_ids  = module.network.db_subnet_group_ids
 
   # Database Connection Credentials - Passed from variables for security
   database_name     = var.DATABASE_NAME
@@ -303,9 +304,6 @@ module "sftp_server" {
   ami_id                       = "ami-0aebd6a41cf6ab2eb" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
   instance_type                = "t2.micro"
   key_name                     = "my-key-pair"
-  public_subnet_id             = module.network.public_subnet_ids[0]
-  vpc_id                       = module.network.vpc_id
-  security_group_id            = module.network.sftp_sg_id
   aws_region                   = var.aws_region
   csv_file_path                = "${path.root}/../mock_transactions.csv" # Path to the CSV file
   sftp_private_key_secret_name = var.sftp_private_key_secret_name
