@@ -1,5 +1,6 @@
-import { Button } from '@headlessui/react';
 import { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ManageAccountsDialog from './ManageAccountsDialog';
 
 const AdminDashboard = () => {
@@ -28,49 +29,53 @@ const AdminDashboard = () => {
                 Admin Dashboard
             </h2>
             
-            <div className="grid grid-cols-4 gap-3 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
                 <Button
                     onClick={handleCreateAccount}
-                    className="px-3 py-3 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors whitespace-nowrap"
+                    variant="default"
                 >
                     Create Account
                 </Button>
 
                 <Button
                     onClick={() => setIsManageAccountsOpen(true)}
-                    className="px-3 py-3 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors whitespace-nowrap"
+                    variant="default"
                 >
                     Manage Accounts
                 </Button>
 
                 <Button
                     onClick={handleViewTransactions}
-                    className="px-3 py-3 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors whitespace-nowrap"
+                    variant="default"
                 >
                     View Transactions
                 </Button>
 
                 <Button
                     onClick={handleSettings}
-                    className="px-3 py-3 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors whitespace-nowrap"
+                    variant="default"
                 >
                     Settings
                 </Button>
             </div>
 
-            <div className="flex-1 bg-secondary-800 rounded-lg p-6 overflow-auto">
-                <h3 className="text-xl font-semibold text-white mb-4">Recent Activities:</h3>
-                <ul className="space-y-2">
-                    {recentActivities.map((activity, index) => (
-                        <li 
-                            key={index}
-                            className="text-secondary-200 p-3 bg-secondary-700 rounded-md"
-                        >
-                            {activity}
-                        </li>
-                    ))}
-                </ul>
-            </div>
+            <Card className="flex-1 bg-zinc-900 border-zinc-800">
+                <CardHeader>
+                    <CardTitle className="text-xl font-semibold text-white">Recent Activities</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <ul className="space-y-2">
+                        {recentActivities.map((activity, index) => (
+                            <li 
+                                key={index}
+                                className="text-zinc-300 p-3 bg-zinc-800 rounded-md"
+                            >
+                                {activity}
+                            </li>
+                        ))}
+                    </ul>
+                </CardContent>
+            </Card>
 
             <ManageAccountsDialog
                 isOpen={isManageAccountsOpen}
