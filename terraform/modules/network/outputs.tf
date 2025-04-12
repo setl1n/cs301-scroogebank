@@ -17,6 +17,11 @@ output "public_subnet_ids" {
   description = "List of public subnet IDs"
 }
 
+output "private_app_subnet_ids" {
+  value       = [aws_subnet.private_app_subnet_a.id, aws_subnet.private_app_subnet_b.id]
+  description = "List of private subnet IDs"
+}
+
 output "private_app_subnet_a_id" {
   value       = aws_subnet.private_app_subnet_a.id
   description = "ID of private application subnet in availability zone A"

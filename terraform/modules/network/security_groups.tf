@@ -136,24 +136,6 @@ resource "aws_security_group" "ecs_tasks_sg" {
     description     = "Allow all traffic from Lambda functions"
   }
 
-  # Commented HTTP access from anywhere
-  # ingress {
-  #   from_port   = 80
-  #   to_port     = 80
-  #   protocol    = "tcp"
-  #   cidr_blocks = ["0.0.0.0/0"]
-  #   description = "Allow HTTP traffic from anywhere"
-  # }
-
-  # Commented HTTP port 8080 access from anywhere
-  ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow HTTP traffic from anywhere"
-  }
-
   # Allow all outbound traffic from ECS tasks
   egress {
     from_port   = 0

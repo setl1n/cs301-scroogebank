@@ -141,11 +141,11 @@ module "alb" {
 # Container orchestration service for running microservices
 #--------------------------------------------------------------
 module "ecs" {
-  source            = "./modules/ecs"
-  lb_sg_ids         = [module.network.lb_sg_id]
-  vpc_id            = module.network.vpc_id
-  ecs_tasks_sg_ids  = [module.network.ecs_tasks_sg_id]
-  public_subnet_ids = module.network.public_subnet_ids
+  source           = "./modules/ecs"
+  lb_sg_ids        = [module.network.lb_sg_id]
+  vpc_id           = module.network.vpc_id
+  ecs_tasks_sg_ids = [module.network.ecs_tasks_sg_id]
+  subnet_ids       = module.network.private_app_subnet_ids
 
   # Database Connection Credentials - Passed from variables for security
   database_name     = var.DATABASE_NAME

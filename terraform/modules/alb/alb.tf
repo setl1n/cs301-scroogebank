@@ -7,10 +7,11 @@
 # Main ALB Resource
 #--------------------------------------------------------------
 resource "aws_alb" "main" {
-  name                 = "alb"
-  subnets              = var.public_subnet_ids
-  security_groups      = var.lb_sg_ids
-  preserve_host_header = true
+  name                       = "alb"
+  subnets                    = var.public_subnet_ids
+  security_groups            = var.lb_sg_ids
+  preserve_host_header       = true
+  drop_invalid_header_fields = true
 }
 
 #--------------------------------------------------------------
@@ -25,11 +26,11 @@ resource "aws_alb_listener" "alb_http_listener" {
   protocol          = "HTTP"
 
   default_action {
-    type = "fixed-response"
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Invalid request"
-      status_code  = "403"
+    type = "redirect"
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
     }
   }
 }
@@ -39,7 +40,7 @@ resource "aws_alb_listener" "alb_https_listener" {
   load_balancer_arn = aws_alb.main.arn
   port              = 443
   protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
   certificate_arn   = var.certificate_arn
 
   default_action {

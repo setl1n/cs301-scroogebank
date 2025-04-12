@@ -34,6 +34,9 @@ resource "aws_elasticache_replication_group" "valkey" {
 
   # Disabled since we're using a single node configuration
   automatic_failover_enabled = false
+
+  # Enable encryption
+  at_rest_encryption_enabled = true
 }
 
 #--------------------------------------------------------------

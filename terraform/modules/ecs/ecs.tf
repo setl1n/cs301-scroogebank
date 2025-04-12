@@ -55,8 +55,8 @@ resource "aws_ecs_service" "app" {
   # Network configuration for the Fargate tasks
   network_configuration {
     security_groups  = var.ecs_tasks_sg_ids
-    subnets          = var.public_subnet_ids
-    assign_public_ip = true
+    subnets          = var.subnet_ids
+    assign_public_ip = false
   }
 
   # Register the service with the load balancer
