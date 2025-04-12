@@ -162,16 +162,3 @@ resource "aws_db_proxy_target" "aurora_proxy_cluster_target" {
   target_group_name     = aws_db_proxy_default_target_group.aurora_proxy_target[each.key].name
   db_cluster_identifier = aws_rds_cluster.aurora_cluster[each.key].id
 }
-
-#----------------------------------------
-# RDS Proxy Endpoints (Optional)
-# Creates additional endpoints for the proxy if needed
-# e.g., for different applications or read-only access
-#----------------------------------------
-resource "aws_db_proxy_endpoint" "read_only_endpoint" {
-  for_each               = var.applications
-  db_proxy_name          = aws_db_proxy.aurora_proxy[each.key].name
-  db_proxy_endpoint_name = "${each.value.identifier}-readonly"
-  vpc_subnet_ids         = var.db_subnet_group_ids
-  target_role            = "READ_ONLY"
-}

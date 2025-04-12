@@ -4,9 +4,18 @@
 output "db_endpoints" {
   value = {
     for app_key, app in var.applications :
+    app_key => aws_db_proxy.aurora_proxy[app_key].endpoint
+  }
+  description = "Map of proxy endpoints for all databases"
+}
+
+# Optional: Keep direct DB endpoints for reference
+output "direct_db_endpoints" {
+  value = {
+    for app_key, app in var.applications :
     app_key => aws_rds_cluster.aurora_cluster[app_key].endpoint
   }
-  description = "Map of writer endpoints for all databases"
+  description = "Map of direct writer endpoints for all databases (for reference only)"
 }
 
 output "db_arns" {
