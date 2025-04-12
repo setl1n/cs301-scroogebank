@@ -23,8 +23,12 @@ const AgentDashboard = () => {
     const [isCreateProfileOpen, setIsCreateProfileOpen] = useState(false);
     const [selectedClient, setSelectedClient] = useState<string>("");
 
-    const handleManageProfiles = () => {
-        console.log('Manage profiles clicked');
+    const handleClearSelection = (value: string) => {
+        if (value === "all") {
+            setSelectedClient("");
+        } else {
+            setSelectedClient(value);
+        }
     };
 
     const recentActivities = [
@@ -188,13 +192,6 @@ const AgentDashboard = () => {
                                 >
                                     Create Client Profile
                                 </Button>
-                                <Button
-                                    onClick={handleManageProfiles}
-                                    variant="outline"
-                                    className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700"
-                                >
-                                    Manage Profiles
-                                </Button>
                             </div>
                         </div>
 
@@ -203,11 +200,12 @@ const AgentDashboard = () => {
                                 <div className="flex items-center gap-4 mb-4">
                                     <h3 className="text-xl font-semibold text-white">Client List</h3>
                                     <div className="w-64">
-                                        <Select value={selectedClient} onValueChange={setSelectedClient}>
+                                        <Select value={selectedClient || "all"} onValueChange={handleClearSelection}>
                                             <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
                                                 <SelectValue placeholder="Select client account" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+                                                <SelectItem value="all">All Clients</SelectItem>
                                                 {clientAccounts.map((client) => (
                                                     <SelectItem key={client.id} value={client.id}>
                                                         {client.name}
