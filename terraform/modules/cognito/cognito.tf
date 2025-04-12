@@ -32,6 +32,8 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
 
   allowed_oauth_flows  = ["code"]
   allowed_oauth_scopes = ["email", "openid", "profile"]
+  allowed_oauth_flows_user_pool_client = true
+
 
   # Use compact() to remove any empty strings if custom_domain is not provided
   callback_urls = distinct(concat(
