@@ -1,5 +1,10 @@
 package com.cs301g2t1.account.service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
@@ -12,7 +17,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.core.log.LogMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +46,9 @@ public class AccountService {
     private static final String ACCOUNTS_CLIENT_CACHE = "accountsClient"; // Caches accounts by client ID
     private static final String ACCOUNTS_ALL_CACHE = "accountsAll";  // Caches the whole list of accounts
 
+    @Value("${aws.ecs.client.serviceUrl}")
+    private String serviceUrl;
+
 
     @Autowired
     public AccountService(AccountRepository accountRepository, SqsClient sqsClient) {
@@ -58,6 +65,9 @@ public class AccountService {
         }
     )
     public Account createAccount(Account account, String agentId) {
+        if (!validateClientId(account.getClientId())) {
+            throw new IllegalArgumentException("Client with ID " + account.getClientId() + " not found");
+        }
         // Check if account with the same clientId already exists
         Account createdAccount = accountRepository.save(account);
         
@@ -115,6 +125,10 @@ public class AccountService {
     )
     public Account updateAccount(Long accountId, Account newAccount, String agentId) {
         // System.out.println("Updating account with ID: " + newAccount.getAccountId());
+        if (!validateClientId(newAccount.getClientId())) {
+            throw new IllegalArgumentException("Client with ID " + newAccount.getClientId() + " not found");
+        }
+
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new IllegalArgumentException("Account not found with ID: " + accountId));
         
@@ -192,6 +206,45 @@ public class AccountService {
         } catch (Exception e) {
             System.err.println("SQS Error: " + e.getMessage());
             throw new RuntimeException("Error sending message to SQS", e);
+        }
+    }
+
+    private boolean validateClientId(Long clientId) {
+        System.out.println("Validating client ID: " + clientId);
+        System.out.println("serviceUrl: " + serviceUrl);
+        try {
+            
+            // Create and configure HttpClient
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build();
+                    
+            // Build the request
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(serviceUrl + "/validate-client-id/" + clientId))
+                    .GET()
+                    .timeout(Duration.ofSeconds(10))
+                    .header("Accept", "application/json")
+                    .build();
+
+            // Send the request and get response
+            HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            
+            // Process the response
+            int statusCode = httpResponse.statusCode();
+            String body = httpResponse.body();
+            System.out.println("Response status code: " + statusCode);
+            System.out.println("Response body: " + body);
+
+            if (statusCode == 200) {
+                return true;
+            } else { // not found or other error
+                System.err.println("Error response from external service: " + statusCode + " - " + body);
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Exception while validating client ID: " + e.getMessage());
+            throw new RuntimeException("Error response from external service: " + e.getMessage(), e);
         }
     }
 }

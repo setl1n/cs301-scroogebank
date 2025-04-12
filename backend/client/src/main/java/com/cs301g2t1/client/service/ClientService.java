@@ -12,4 +12,5 @@ public interface ClientService {
     Client createClient(Client client, HttpServletRequest request);
     Client updateClient(Long clientId, Client updatedClient, HttpServletRequest request);
     void deleteClient(Long clientId, HttpServletRequest request);
+    public boolean validateClientId(Long clientId);
 }
