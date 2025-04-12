@@ -158,6 +158,11 @@ resource "aws_s3_bucket_lifecycle_configuration" "logging_bucket_lifecycle" {
     id     = "log-rotation"
     status = "Enabled"
 
+    # Use a prefix filter to match all objects
+    filter {
+      prefix = "" # Empty prefix matches all objects
+    }
+
     expiration {
       days = 90 # Keep logs for 90 days
     }

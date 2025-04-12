@@ -200,6 +200,7 @@ variable "lambda_functions" {
       timeout         = 45
       memory_size     = 256
       cognito_enabled = true
+      public_facing = true
     },
     log = {
       name                = "log_lambda_function"
