@@ -162,6 +162,7 @@ module "ecs" {
   https_listener_arn = module.alb.https_listener_arn
   health_check_path  = var.health_check_path
 
+  # Cognito authentication references
   cognito_user_pool_arn       = module.cognito.user_pool_arn
   cognito_user_pool_client_id = module.cognito.user_pool_client_id
   cognito_domain              = var.COGNITO_DOMAIN

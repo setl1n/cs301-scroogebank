@@ -1,14 +1,19 @@
-import { Dialog, DialogPanel, DialogTitle, Button } from '@headlessui/react';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface Transaction {
     id: number;
     amount: number;
     status: 'Completed' | 'Pending' | 'Failed';
-}
-
-interface TransactionListProps {
-    isOpen: boolean;
-    onClose: () => void;
 }
 
 const MOCK_TRANSACTIONS: Transaction[] = [
@@ -17,7 +22,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     { id: 1003, amount: 200, status: 'Failed' }
 ];
 
-const TransactionList = ({ isOpen, onClose }: TransactionListProps) => {
+const TransactionList = () => {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         console.log('Searching transactions...');
@@ -32,89 +37,68 @@ const TransactionList = ({ isOpen, onClose }: TransactionListProps) => {
     };
 
     return (
-        <Dialog open={isOpen} onClose={onClose} className="relative z-50">
-            <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-            
-            <div className="fixed inset-0 flex items-center justify-center p-4">
-                <DialogPanel className="mx-auto max-w-4xl w-full rounded-lg bg-secondary-800 p-6">
-                    <DialogTitle className="text-2xl font-bold text-input-text mb-6">
-                        Transactions
-                    </DialogTitle>
+        <>
+            <form onSubmit={handleSearch} className="flex gap-2 mb-4">
+                <Input
+                    type="text"
+                    placeholder="Search transactions..."
+                    className="flex-1 bg-zinc-800 border-zinc-700 text-white"
+                />
+                <Button type="submit">
+                    Search
+                </Button>
+            </form>
 
-                    <form onSubmit={handleSearch} className="flex gap-2 mb-6">
-                        <input
-                            type="text"
-                            placeholder="Search transactions..."
-                            className="flex-1 bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus p-2.5 transition-colors"
-                        />
-                        <Button
-                            type="submit"
-                            className="px-4 py-2 font-medium rounded-lg bg-button-bg text-input-text hover:bg-button-hover focus:outline-none focus:ring-2 focus:ring-button-focus transition-colors"
-                        >
-                            Search
-                        </Button>
-                    </form>
-
-                    <div className="overflow-x-auto">
-                        <h3 className="text-xl font-semibold text-input-text mb-4">Transaction List:</h3>
-                        <table className="w-full text-input-text">
-                            <thead>
-                                <tr className="bg-secondary-700">
-                                    <th className="px-4 py-2 text-left">Transaction ID</th>
-                                    <th className="px-4 py-2 text-left">Amount</th>
-                                    <th className="px-4 py-2 text-left">Status</th>
-                                    <th className="px-4 py-2 text-left">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {MOCK_TRANSACTIONS.map((transaction) => (
-                                    <tr key={transaction.id} className="border-b border-secondary-700">
-                                        <td className="px-4 py-2">Transaction ID: {transaction.id}</td>
-                                        <td className="px-4 py-2">Amount: ${transaction.amount}</td>
-                                        <td className="px-4 py-2">
-                                            <span className={`inline-block px-2 py-1 rounded w-24 text-center ${
-                                                transaction.status === 'Completed' ? 'bg-green-600' :
-                                                transaction.status === 'Pending' ? 'bg-yellow-600' :
-                                                'bg-red-600'
-                                            }`}>
-                                                {transaction.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-2">
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    onClick={() => handleViewDetails(transaction.id)}
-                                                    className="px-3 py-1 text-sm font-medium rounded-lg bg-secondary-600 text-white hover:bg-secondary-700 transition-colors"
-                                                >
-                                                    View Details
-                                                </Button>
-                                                {transaction.status === 'Failed' && (
-                                                    <Button
-                                                        onClick={() => handleRetry(transaction.id)}
-                                                        className="px-3 py-1 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors"
-                                                    >
-                                                        Retry
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div className="flex justify-end mt-6">
-                        <Button
-                            onClick={onClose}
-                            className="px-4 py-2 font-medium rounded-lg bg-secondary-600 text-white hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-secondary-500 transition-colors"
-                        >
-                            Close
-                        </Button>
-                    </div>
-                </DialogPanel>
+            <div className="overflow-x-auto rounded-md border border-zinc-700">
+                <Table>
+                    <TableHeader className="bg-zinc-800">
+                        <TableRow className="border-zinc-700 hover:bg-zinc-800">
+                            <TableHead className="text-zinc-400">Transaction ID</TableHead>
+                            <TableHead className="text-zinc-400">Amount</TableHead>
+                            <TableHead className="text-zinc-400">Status</TableHead>
+                            <TableHead className="text-zinc-400">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody className="bg-zinc-900">
+                        {MOCK_TRANSACTIONS.map((transaction) => (
+                            <TableRow key={transaction.id} className="border-zinc-700 hover:bg-zinc-800">
+                                <TableCell>Transaction ID: {transaction.id}</TableCell>
+                                <TableCell>Amount: ${transaction.amount}</TableCell>
+                                <TableCell>
+                                    <Badge className={
+                                        transaction.status === 'Completed' ? "bg-green-600 hover:bg-green-700" :
+                                        transaction.status === 'Pending' ? "bg-yellow-600 hover:bg-yellow-700" :
+                                        "bg-red-600 hover:bg-red-700"
+                                    }>
+                                        {transaction.status}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            onClick={() => handleViewDetails(transaction.id)}
+                                            variant="outline"
+                                            size="sm"
+                                            className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700"
+                                        >
+                                            View Details
+                                        </Button>
+                                        {transaction.status === 'Failed' && (
+                                            <Button
+                                                onClick={() => handleRetry(transaction.id)}
+                                                size="sm"
+                                            >
+                                                Retry
+                                            </Button>
+                                        )}
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             </div>
-        </Dialog>
+        </>
     );
 };
 

@@ -1,6 +1,10 @@
 import { useAuth } from 'react-oidc-context';
 import { useEffect } from 'react';
 import config from '../../config';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
 const LoginPage = () => {
   const auth = useAuth();
@@ -32,56 +36,71 @@ const LoginPage = () => {
 
   // Check if user is already authenticated
   if (auth.isLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-secondary-900">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black dark">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   if (auth.isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary-900 p-4">
-        <div className="max-w-md w-full space-y-8 bg-secondary-800 p-8 rounded-lg">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-white mb-4">Welcome</h1>
-            <p className="text-secondary-200 mb-4">You are logged in as {auth.user?.profile.email}</p>
-            <button 
+      <div className="min-h-screen flex items-center justify-center bg-black p-4 dark">
+        <Card className="max-w-md w-full bg-zinc-900 border-zinc-800">
+          <CardHeader>
+            <CardTitle className="text-center text-white">Welcome</CardTitle>
+            <CardDescription className="text-center text-zinc-400">
+              You are logged in as {auth.user?.profile.email}
+            </CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button 
+              variant="destructive" 
+              className="w-full" 
               onClick={() => auth.removeUser()}
-              className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             >
               Sign Out
-            </button>
-          </div>
-        </div>
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary-900 p-4">
-      <div className="max-w-md w-full space-y-8 bg-secondary-800 p-8 rounded-lg">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">Login</h1>
-          <p className="text-secondary-200 mb-4">Please sign in with your Cognito credentials</p>
+    <div className="min-h-screen flex items-center justify-center bg-black p-4 dark">
+      <Card className="max-w-md w-full bg-zinc-900 border-zinc-800">
+        <CardHeader>
+          <CardTitle className="text-center text-white">Login</CardTitle>
+          <CardDescription className="text-center text-zinc-400">
+            Please sign in with your Cognito credentials
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           {auth.error && (
-            <div className="bg-red-600 text-white p-3 mb-4 rounded">
-              Error: {auth.error.message}
-            </div>
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>
+                Error: {auth.error.message}
+              </AlertDescription>
+            </Alert>
           )}
-          <button 
+          <Button 
+            className="w-full" 
             onClick={handleLoginClick}
-            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           >
             Sign In with Cognito
-          </button>
-          {config.isDevelopment && (
-            <div className="mt-4 p-3 border border-secondary-700 rounded text-left text-xs text-secondary-300">
-              <p className="font-bold">Debug Info:</p>
-              <p>Environment: {config.env}</p>
-              <p>Redirect URI: {config.cognitoConfig.redirect_uri}</p>
-            </div>
-          )}
-        </div>
-      </div>
+          </Button>
+        </CardContent>
+        {config.isDevelopment && (
+          <CardFooter className="flex flex-col items-start text-xs text-zinc-500">
+            <p className="font-bold">Debug Info:</p>
+            <p>Environment: {config.env}</p>
+            <p>Redirect URI: {config.cognitoConfig.redirect_uri}</p>
+          </CardFooter>
+        )}
+      </Card>
     </div>
   );
 }
 
-export default LoginPage
+export default LoginPage;
