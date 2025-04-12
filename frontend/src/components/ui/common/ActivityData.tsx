@@ -1,7 +1,12 @@
 import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
 
-// Define the column structure
+// Define the columns
 export const columns: GridColDef[] = [
+  { 
+    field: 'id', 
+    headerName: 'ID', 
+    width: 100 
+  },
   { 
     field: 'activityType', 
     headerName: 'Activity', 
@@ -23,6 +28,13 @@ export const columns: GridColDef[] = [
     headerName: 'Client Name', 
     width: 180,
   },
+  {
+    field: 'agentId',
+    headerName: 'Agent ID',
+    width: 120,
+    // Hide this column by default, mainly used for filtering
+    hide: true,
+  },
   { 
     field: 'timestamp', 
     headerName: 'Time', 
@@ -31,70 +43,78 @@ export const columns: GridColDef[] = [
   }
 ];
 
-// Sample activity data
+// Sample activity data with agentId added
 export const rows: GridRowsProp = [
   { 
     id: '1',
     activityType: 'Account Created',
     description: 'New client account was created',
-    clientId: '1001',
+    clientId: 'C001',
     clientName: 'John Smith',
+    agentId: 'G001',
     timestamp: new Date('2025-04-12T14:32:00')
   },
   { 
     id: '2',
     activityType: 'Profile Updated',
     description: 'Client details were updated',
-    clientId: '1003',
+    clientId: 'C003',
     clientName: 'Michael Chen',
+    agentId: 'G002',
     timestamp: new Date('2025-04-12T11:27:00')
   },
   { 
     id: '3',
     activityType: 'Transaction Processed',
     description: 'New transaction was processed',
-    clientId: '1005',
+    clientId: 'C005',
     clientName: 'Emma Davis',
+    agentId: 'G001',
     timestamp: new Date('2025-04-11T16:45:00')
   },
   { 
     id: '4',
     activityType: 'Account Created',
     description: 'New client account was created',
-    clientId: '1008',
+    clientId: 'C008',
     clientName: 'Thomas Anderson',
+    agentId: 'G003',
     timestamp: new Date('2025-04-11T10:11:00')
   },
   { 
     id: '5',
     activityType: 'Document Uploaded',
     description: 'New document was uploaded',
-    clientId: '1002',
+    clientId: 'C002',
     clientName: 'Sarah Johnson',
+    agentId: 'G002',
     timestamp: new Date('2025-04-10T15:38:00')
   },
   { 
     id: '6',
     activityType: 'Status Change',
     description: 'Account status was changed to active',
-    clientId: '1004',
+    clientId: 'C004',
     clientName: 'David Wilson',
+    agentId: 'G003',
     timestamp: new Date('2025-04-10T09:22:00')
   },
   { 
     id: '7',
     activityType: 'Profile Updated',
     description: 'Client contact information was updated',
-    clientId: '1007',
+    clientId: 'C007',
     clientName: 'Lisa Garcia',
+    agentId: 'G001',
     timestamp: new Date('2025-04-09T14:17:00')
   },
   { 
     id: '8',
     activityType: 'Transaction Processed',
     description: 'Deposit transaction was processed',
-    clientId: '1006',
+    clientId: 'C006',
     clientName: 'Robert Brown',
+    agentId: 'G002',
     timestamp: new Date('2025-04-09T11:05:00')
   }
 ];

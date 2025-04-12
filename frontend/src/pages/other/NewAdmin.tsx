@@ -7,7 +7,7 @@ import ActivityGrid from '../../components/ui/common/ActivityGrid';
 import SearchBar from '../../components/ui/navigation/SearchBar';
 import { rows as activityData } from '../../components/ui/common/ActivityData';
 
-export default function NewAgent() {
+export default function NewAdmin() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredActivities, setFilteredActivities] = useState(activityData);
   
@@ -89,10 +89,7 @@ export default function NewAgent() {
               bgcolor: 'transparent',
             }}
           >
-            {/* HERE TOO SETLIN */}
-            <ActivityGrid 
-            agentId="G001"
-            rows={filteredActivities} />
+            <ActivityGrid rows={filteredActivities} />
           </Paper>
         </Container>
       </Box>

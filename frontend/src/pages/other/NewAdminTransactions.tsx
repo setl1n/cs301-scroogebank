@@ -7,7 +7,7 @@ import TransactionGrid from '../../components/ui/common/TransactionGrid';
 import SearchBar from '../../components/ui/navigation/SearchBar';
 import { rows as transactionData } from '../../components/ui/common/TransactionData';
 
-export default function NewAgentTransactions() {
+export default function NewAdminTransactions() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredTransactions, setFilteredTransactions] = useState(transactionData);
   
@@ -79,7 +79,6 @@ export default function NewAgentTransactions() {
             }}
           >
             <TransactionGrid
-              agentId="G001"
               rows={filteredTransactions}
             />
           </Paper>

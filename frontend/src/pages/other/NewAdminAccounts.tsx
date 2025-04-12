@@ -3,45 +3,48 @@ import { Box, Container, Paper } from '@mui/material';
 import NavBar from '../../components/ui/navigation/NavBar';
 import AppTheme from '../../components/ui/template/shared-theme/AppTheme';
 import CssBaseline from '@mui/material/CssBaseline';
-import AgentGrid from '../../components/ui/agent/AgentGrid';
+import AdminGrid from '../../components/ui/admin/AdminGrid';
 import SearchBar from '../../components/ui/navigation/SearchBar';
-import { rows as agentData } from '../../components/ui/agent/AgentData';
+import { rows as adminData } from '../../components/ui/admin/AdminData';
 
-export default function NewAgentAccounts() {
+export default function NewAdminAccounts() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredAgents, setFilteredAgents] = useState(agentData);
+  const [filteredAccounts, setFilteredAccounts] = useState(adminData);
   
   // Handle search across multiple columns
   const handleSearch = (term: string) => {
     setSearchTerm(term);
     
     if (!term.trim()) {
-      // If search is empty, show all agents
-      setFilteredAgents(agentData);
+      // If search is empty, show all accounts
+      setFilteredAccounts(adminData);
       return;
     }
     
     // Search across multiple fields
     const lowercasedTerm = term.toLowerCase();
-    const filtered = agentData.filter(agent => {
+    const filtered = adminData.filter(account => {
       return (
         // Search by ID
-        agent.id.toString().toLowerCase().includes(lowercasedTerm) ||
+        account.id.toString().toLowerCase().includes(lowercasedTerm) ||
         // Search by name
-        agent.agentName.toLowerCase().includes(lowercasedTerm) ||
-        // Add other searchable fields here as needed
-        // For example, if you have email, phone, etc.
-        (agent.email && agent.email.toLowerCase().includes(lowercasedTerm)) ||
-        (agent.phone && agent.phone.toLowerCase().includes(lowercasedTerm))
+        account.name.toLowerCase().includes(lowercasedTerm) ||
+        // Search by account type
+        account.accountType.toLowerCase().includes(lowercasedTerm) ||
+        // Search by status
+        account.status.toLowerCase().includes(lowercasedTerm) ||
+        // Search by date (convert to string)
+        (account.dateCreated && 
+          account.dateCreated.toLocaleDateString().includes(lowercasedTerm))
       );
     });
     
-    setFilteredAgents(filtered);
+    setFilteredAccounts(filtered);
   };
   
   const handleCreateAccount = () => {
     console.log('Create account clicked');
-    // Implement account creation logic
+    // Implement account creation logic here
   };
   
   return (
@@ -63,14 +66,14 @@ export default function NewAgentAccounts() {
           <SearchBar 
             onSearch={handleSearch}
             onCreateAction={handleCreateAccount}
-            totalItems={filteredAgents.length}
+            totalItems={filteredAccounts.length}
             createButtonText="Create Account"
-            searchPlaceholder="Search agents by name, ID..."
-            title="Accounts"
+            searchPlaceholder="Search by name, ID, account type..."
+            title="System Accounts"
             showCount={true}
           />
           
-          {/* Agent Grid */}
+          {/* Admin Grid */}
           <Paper 
             elevation={0}
             sx={{ 
@@ -80,8 +83,7 @@ export default function NewAgentAccounts() {
               bgcolor: 'transparent'
             }}
           >
-            {/* SETLIN YOU NEED TO IMPLEMENT STUFF HERE FOR AGENTID */}
-            <AgentGrid rows={filteredAgents} />
+            <AdminGrid rows={filteredAccounts} />
           </Paper>
         </Container>
       </Box>

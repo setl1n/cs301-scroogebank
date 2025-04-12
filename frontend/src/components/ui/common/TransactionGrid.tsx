@@ -1,18 +1,28 @@
+import { useState, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { useTheme, alpha } from '@mui/material';
 import { columns, rows as defaultRows } from './TransactionData';
 
 interface TransactionGridProps {
   rows?: any[];
+  agentId?: string; // Add optional agentId for filtering
 }
 
-export default function TransactionGrid({ rows = defaultRows }: TransactionGridProps) {
+export default function TransactionGrid({ 
+  rows = defaultRows, 
+  agentId 
+}: TransactionGridProps) {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
   
+  // Filter rows by agentId if provided
+  const filteredRows = agentId 
+    ? rows.filter(row => row.agentId === agentId)
+    : rows;
+  
   return (
     <DataGrid
-      rows={rows}
+      rows={filteredRows}
       columns={columns}
       initialState={{
         pagination: { paginationModel: { pageSize: 10 } },

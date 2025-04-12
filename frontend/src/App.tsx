@@ -6,6 +6,9 @@ import SignInSide from './pages/other/SignInSide'
 import NewAgentAccounts from './pages/other/NewAgentAccounts'
 import NewAgent from './pages/other/NewAgent'
 import NewAgentTransactions from './pages/other/NewAgentTransactions'
+import NewAdmin from './pages/other/NewAdmin'
+import NewAdminAccounts from './pages/other/NewAdminAccounts'
+import NewAdminTransactions from './pages/other/NewAdminTransactions'
 
 function App() {
   return (
@@ -32,10 +35,13 @@ function App() {
             <Route path="/agent" element={<AgentPage />} />
             <Route path="/" element={<LoginPage />} />
             {/* cooking */}
-            <Route path="/other" element={<SignInSide />} />
             <Route path="/newagent" element={<NewAgent/>} />
             <Route path="/newagent/accounts" element={<NewAgentAccounts/>} />
             <Route path="/newagent/transactions" element={<NewAgentTransactions/>} />
+
+            <Route path="/newadmin" element={<NewAdmin/>} />
+            <Route path="/newadmin/accounts" element={<NewAdminAccounts/>} />
+            <Route path="/newadmin/transactions" element={<NewAdminTransactions/>} />
 
           </Routes>
         </main>
