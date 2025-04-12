@@ -114,6 +114,8 @@ variable "services" {
     app_port       = number
     path_pattern   = list(string)
     auth_enabled   = optional(bool, false)
+    sqs_enabled    = optional(bool, false)
+    ses_enabled    = optional(bool, false)
   }))
 }
 

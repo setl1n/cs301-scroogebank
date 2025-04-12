@@ -255,7 +255,9 @@ variable "ecs_services" {
     app_image      = string
     app_port       = number
     path_pattern   = list(string)
-    auth_enabled   = bool
+    auth_enabled   = optional(bool, false)
+    sqs_enabled    = optional(bool, false)
+    ses_enabled    = optional(bool, false)
   }))
   default = {
     client = {
@@ -268,6 +270,8 @@ variable "ecs_services" {
       app_port       = 8080
       path_pattern   = ["/api/v1/clients*"]
       auth_enabled   = true
+      sqs_enabled    = true
+      ses_enabled    = true
     }
     account = {
       cluster_name   = "account-cluster"
@@ -279,6 +283,7 @@ variable "ecs_services" {
       app_port       = 8080
       path_pattern   = ["/api/v1/accounts*"]
       auth_enabled   = true
+      sqs_enabled    = true
     }
   }
 }
