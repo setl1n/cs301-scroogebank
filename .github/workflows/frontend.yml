@@ -31,7 +31,7 @@ jobs:
     - name: Install Dependencies
       run: |
         cd frontend
-        npm install
+        npm install --legacy-peer-deps
     
     # add env later on if required
     - name: Build Project with Environment Variables
