@@ -32,6 +32,11 @@ output "user_pool_client_secret" {
   sensitive   = true
 }
 
+output "spa_client_id" {
+  description = "The Client ID of the Cognito User Pool Client for SPA (no secret)"
+  value       = aws_cognito_user_pool_client.spa_client.id
+}
+
 #----------------------------------------
 # Hosted UI Configuration
 # URLs and endpoints for the Cognito Hosted UI
