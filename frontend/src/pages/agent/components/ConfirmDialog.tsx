@@ -1,4 +1,12 @@
-import { Dialog, DialogPanel, DialogTitle, Button } from '@headlessui/react';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface ConfirmDialogProps {
     isOpen: boolean;
@@ -10,35 +18,36 @@ interface ConfirmDialogProps {
 
 const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message }: ConfirmDialogProps) => {
     return (
-        <Dialog open={isOpen} onClose={onClose} className="relative z-50">
-            <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-            
-            <div className="fixed inset-0 flex items-center justify-center p-4">
-                <DialogPanel className="mx-auto max-w-sm w-full rounded-lg bg-secondary-800 p-6">
-                    <DialogTitle className="text-xl font-bold text-input-text mb-4">
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800 text-white">
+                <DialogHeader>
+                    <DialogTitle className="text-xl font-bold text-white">
                         {title}
                     </DialogTitle>
-                    
-                    <p className="text-secondary-200 mb-6">{message}</p>
-
-                    <div className="flex justify-end space-x-3">
+                    <DialogDescription className="text-zinc-400">
+                        {message}
+                    </DialogDescription>
+                </DialogHeader>
+                
+                <DialogFooter className="sm:justify-end mt-2">
+                    <div className="flex gap-3">
                         <Button
                             type="button"
+                            variant="outline"
                             onClick={onClose}
-                            className="px-4 py-2 font-medium rounded-lg bg-secondary-600 text-input-text hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-secondary-500 transition-colors"
+                            className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700"
                         >
                             Cancel
                         </Button>
                         <Button
                             type="button"
                             onClick={onConfirm}
-                            className="px-4 py-2 font-medium rounded-lg bg-button-bg text-input-text hover:bg-button-hover focus:outline-none focus:ring-2 focus:ring-button-focus transition-colors"
                         >
                             Confirm
                         </Button>
                     </div>
-                </DialogPanel>
-            </div>
+                </DialogFooter>
+            </DialogContent>
         </Dialog>
     );
 };

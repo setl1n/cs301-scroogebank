@@ -1,4 +1,20 @@
-import { Dialog, Fieldset, Label, Button, DialogPanel, DialogTitle, Select } from '@headlessui/react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { useState } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 
@@ -73,8 +89,15 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
         onClose();
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSelectChange = (value: string, name: string) => {
         setFormData(prev => ({
             ...prev,
             [name]: value
@@ -95,196 +118,203 @@ const CreateProfileDialog = ({ isOpen, onClose }: CreateProfileDialogProps) => {
 
     return (
         <>
-            <Dialog open={isOpen} onClose={handleClose} className="relative z-50">
-                <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-                
-                <div className="fixed inset-0 flex items-center justify-center p-4">
-                    <DialogPanel className="mx-auto max-w-2xl w-full rounded-lg bg-secondary-800 p-6">
-                        <DialogTitle className="text-2xl font-bold text-input-text mb-6">
+            <Dialog open={isOpen} onOpenChange={handleClose}>
+                <DialogContent className="sm:max-w-2xl bg-zinc-900 border-zinc-800 text-white">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-bold text-white">
                             Create Client Profile
                         </DialogTitle>
+                    </DialogHeader>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <Fieldset className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="block text-sm font-medium text-input-text mb-1">
-                                        First Name
-                                    </Label>
-                                    <input
-                                        type="text"
-                                        name="firstName"
-                                        value={formData.firstName}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <Label className="block text-sm font-medium text-input-text mb-1">
-                                        Last Name
-                                    </Label>
-                                    <input
-                                        type="text"
-                                        name="lastName"
-                                        value={formData.lastName}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <Label className="block text-sm font-medium text-input-text mb-1">
-                                        Date of Birth
-                                    </Label>
-                                    <input
-                                        type="date"
-                                        name="dateOfBirth"
-                                        value={formData.dateOfBirth}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <Label className="block text-sm font-medium text-input-text mb-1">
-                                        Gender
-                                    </Label>
-                                    <Select
-                                        name="gender"
-                                        value={formData.gender}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
-                                        required
-                                    >
-                                        <option value="">Select Gender</option>
-                                        {GENDER_OPTIONS.map((gender) => (
-                                            <option key={gender} value={gender}>
-                                                {formatGenderLabel(gender)}
-                                            </option>
-                                        ))}
-                                    </Select>
-                                </div>
-
-                                <div>
-                                    <Label className="block text-sm font-medium text-input-text mb-1">
-                                        Email
-                                    </Label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <Label className="block text-sm font-medium text-input-text mb-1">
-                                        Phone
-                                    </Label>
-                                    <input
-                                        type="tel"
-                                        name="phone"
-                                        value={formData.phone}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="col-span-2">
-                                    <Label className="block text-sm font-medium text-input-text mb-1">
-                                        Address
-                                    </Label>
-                                    <input
-                                        type="text"
-                                        name="address"
-                                        value={formData.address}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <Label className="block text-sm font-medium text-input-text mb-1">
-                                        City
-                                    </Label>
-                                    <input
-                                        type="text"
-                                        name="city"
-                                        value={formData.city}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <Label className="block text-sm font-medium text-input-text mb-1">
-                                        State
-                                    </Label>
-                                    <input
-                                        type="text"
-                                        name="state"
-                                        value={formData.state}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <Label className="block text-sm font-medium text-input-text mb-1">
-                                        Country
-                                    </Label>
-                                    <input
-                                        type="text"
-                                        name="country"
-                                        value={formData.country}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <Label className="block text-sm font-medium text-input-text mb-1">
-                                        Postal Code
-                                    </Label>
-                                    <input
-                                        type="text"
-                                        name="postalCode"
-                                        value={formData.postalCode}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-input-bg border border-input-border text-input-text rounded-md focus:ring-2 focus:ring-input-focus block p-2.5 transition-colors"
-                                        required
-                                    />
-                                </div>
-                            </Fieldset>
-
-                            <div className="flex justify-end space-x-3 mt-6">
-                                <Button
-                                    type="button"
-                                    onClick={handleClose}
-                                    className="px-4 py-2 font-medium rounded-lg bg-secondary-600 text-input-text hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-secondary-500 transition-colors"
-                                >
-                                    Close
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    className="px-4 py-2 font-medium rounded-lg bg-button-bg text-input-text hover:bg-button-hover focus:outline-none focus:ring-2 focus:ring-button-focus transition-colors"
-                                >
-                                    Save
-                                </Button>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="firstName" className="text-sm font-medium text-white">
+                                    First Name
+                                </Label>
+                                <Input
+                                    id="firstName"
+                                    type="text"
+                                    name="firstName"
+                                    value={formData.firstName}
+                                    onChange={handleInputChange}
+                                    className="bg-zinc-800 border-zinc-700 text-white"
+                                    required
+                                />
                             </div>
-                        </form>
-                    </DialogPanel>
-                </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="lastName" className="text-sm font-medium text-white">
+                                    Last Name
+                                </Label>
+                                <Input
+                                    id="lastName"
+                                    type="text"
+                                    name="lastName"
+                                    value={formData.lastName}
+                                    onChange={handleInputChange}
+                                    className="bg-zinc-800 border-zinc-700 text-white"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="dateOfBirth" className="text-sm font-medium text-white">
+                                    Date of Birth
+                                </Label>
+                                <Input
+                                    id="dateOfBirth"
+                                    type="date"
+                                    name="dateOfBirth"
+                                    value={formData.dateOfBirth}
+                                    onChange={handleInputChange}
+                                    className="bg-zinc-800 border-zinc-700 text-white"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="gender" className="text-sm font-medium text-white">
+                                    Gender
+                                </Label>
+                                <Select 
+                                    value={formData.gender} 
+                                    onValueChange={(value) => handleSelectChange(value, 'gender')}
+                                >
+                                    <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+                                        <SelectValue placeholder="Select Gender" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+                                        {GENDER_OPTIONS.map((gender) => (
+                                            <SelectItem key={gender} value={gender}>
+                                                {formatGenderLabel(gender)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="email" className="text-sm font-medium text-white">
+                                    Email
+                                </Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                    className="bg-zinc-800 border-zinc-700 text-white"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="phone" className="text-sm font-medium text-white">
+                                    Phone
+                                </Label>
+                                <Input
+                                    id="phone"
+                                    type="tel"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleInputChange}
+                                    className="bg-zinc-800 border-zinc-700 text-white"
+                                    required
+                                />
+                            </div>
+
+                            <div className="col-span-2 space-y-2">
+                                <Label htmlFor="address" className="text-sm font-medium text-white">
+                                    Address
+                                </Label>
+                                <Input
+                                    id="address"
+                                    type="text"
+                                    name="address"
+                                    value={formData.address}
+                                    onChange={handleInputChange}
+                                    className="bg-zinc-800 border-zinc-700 text-white"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="city" className="text-sm font-medium text-white">
+                                    City
+                                </Label>
+                                <Input
+                                    id="city"
+                                    type="text"
+                                    name="city"
+                                    value={formData.city}
+                                    onChange={handleInputChange}
+                                    className="bg-zinc-800 border-zinc-700 text-white"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="state" className="text-sm font-medium text-white">
+                                    State
+                                </Label>
+                                <Input
+                                    id="state"
+                                    type="text"
+                                    name="state"
+                                    value={formData.state}
+                                    onChange={handleInputChange}
+                                    className="bg-zinc-800 border-zinc-700 text-white"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="country" className="text-sm font-medium text-white">
+                                    Country
+                                </Label>
+                                <Input
+                                    id="country"
+                                    type="text"
+                                    name="country"
+                                    value={formData.country}
+                                    onChange={handleInputChange}
+                                    className="bg-zinc-800 border-zinc-700 text-white"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="postalCode" className="text-sm font-medium text-white">
+                                    Postal Code
+                                </Label>
+                                <Input
+                                    id="postalCode"
+                                    type="text"
+                                    name="postalCode"
+                                    value={formData.postalCode}
+                                    onChange={handleInputChange}
+                                    className="bg-zinc-800 border-zinc-700 text-white"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <DialogFooter className="mt-6">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleClose}
+                                className="bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700"
+                            >
+                                Close
+                            </Button>
+                            <Button type="submit">
+                                Save
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
             </Dialog>
 
             <ConfirmDialog
