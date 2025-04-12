@@ -14,8 +14,8 @@ resource "aws_appautoscaling_target" "app" {
   resource_id        = "service/${aws_ecs_cluster.service_cluster[each.key].name}/${aws_ecs_service.app[each.key].name}"
   scalable_dimension = "ecs:service:DesiredCount"
   role_arn           = aws_iam_role.ecs_autoscaling_role.arn
-  min_capacity       = 1
-  max_capacity       = 2
+  min_capacity       = 2
+  max_capacity       = 6
 
   depends_on = [aws_iam_role_policy_attachment.ecs_autoscaling_policy_attachment]
 }

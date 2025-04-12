@@ -28,6 +28,11 @@ resource "aws_alb_target_group" "app" {
     path                = var.health_check_path
     unhealthy_threshold = "4"
   }
+
+  stickiness {
+    enabled = false  # <-- disables sticky sessions
+    type    = "lb_cookie"
+  }
 }
 
 #--------------------------------------------------------------
