@@ -160,6 +160,32 @@ resource "aws_iam_role_policy_attachment" "ecs_tasks_sqs_send_message_policy_att
   policy_arn = aws_iam_policy.sqs_send_message_policy.arn
 }
 
+# SES policy document allowing sending emails via SES
+resource "aws_iam_policy" "ses_send_email_policy" {
+  name        = "ses-send-email-policy"
+  description = "Policy to allow sending emails via Amazon SES"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ses:SendEmail",
+          "ses:SendRawEmail"
+        ]
+        Resource = "*"  # You may want to restrict this to specific SES resources/identities
+      }
+    ]
+  })
+}
+
+# Attach the SES policy to the ECS task role
+resource "aws_iam_role_policy_attachment" "ecs_tasks_ses_send_email_policy_attachment" {
+  role       = aws_iam_role.ecs_tasks_role.name
+  policy_arn = aws_iam_policy.ses_send_email_policy.arn
+}
+
 # # Attach AmazonEC2ContainerRegistryReadOnly policy to the ECS execution role
 # resource "aws_iam_role_policy_attachment" "ecs_execution_role_ecr_policy_attachment" {
 #   role       = aws_iam_role.ecs_execution_role.name

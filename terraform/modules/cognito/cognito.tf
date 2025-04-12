@@ -28,10 +28,12 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
   name         = var.user_pool_client_name
   user_pool_id = aws_cognito_user_pool.user_pool.id
 
-  generate_secret = false
+  generate_secret = true
 
   allowed_oauth_flows  = ["code"]
   allowed_oauth_scopes = ["email", "openid", "profile"]
+  allowed_oauth_flows_user_pool_client = true
+
 
   # Use compact() to remove any empty strings if custom_domain is not provided
   callback_urls = distinct(concat(

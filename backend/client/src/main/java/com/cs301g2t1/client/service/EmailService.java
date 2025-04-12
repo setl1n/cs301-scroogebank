@@ -31,7 +31,7 @@ public class EmailService {
                         .build())
                     .build())
                 .build())
-            .source("your-verified-email@example.com") // Replace with a verified email in SES
+            .source("no-reply@itsag2t1.com") // Replace with a verified email in SES
             .build();
 
         try {
