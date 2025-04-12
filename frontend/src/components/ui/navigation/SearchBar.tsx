@@ -9,20 +9,35 @@ import {
   Tooltip,
   Divider
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ClearIcon from '@mui/icons-material/Clear';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 
-interface AgentBarProps {
+interface SearchBarProps {
   onSearch: (searchTerm: string) => void;
-  onCreateAccount: () => void;
-  totalClients?: number;
+  onCreateAction?: () => void;
+  totalItems?: number;
+  showCreateButton?: boolean;
+  createButtonText?: string;
+  createButtonMobileText?: string;
+  searchPlaceholder?: string;
+  title?: string;
+  showCount?: boolean;
 }
 
-export default function AgentBar({ onSearch, onCreateAccount, totalClients = 0 }: AgentBarProps) {
+export default function SearchBar({ 
+  onSearch, 
+  onCreateAction, 
+  totalItems = 0, 
+  showCreateButton = true,
+  createButtonText = 'Create Account',
+  createButtonMobileText = 'Create',
+  searchPlaceholder = 'Search by name...',
+  title = 'Items',
+  showCount = true
+}: SearchBarProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -42,43 +57,38 @@ export default function AgentBar({ onSearch, onCreateAccount, totalClients = 0 }
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: { xs: 'column', sm: 'row' },
-        alignItems: { xs: 'stretch', sm: 'center' },
-        justifyContent: 'space-between',
-        mb: 3,
-        gap: 2
-      }}
-    >
-      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <Typography variant="h6" component="h2" sx={{ mb: 1, fontWeight: 'bold' }}>
-          Clients {totalClients > 0 && `(${totalClients})`}
-        </Typography>
-        
+    <Box sx={{ mb: 3 }}>
+      
+      {/* Search and button row - THIS IS THE MAIN CONTAINER */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: 'center',
+          gap: 2,
+          width: '100%',
+        }}
+      >
+        {/* Search bar */}
         <Paper
           component="form"
           sx={{
             p: '2px 4px',
             display: 'flex',
             alignItems: 'center',
-            width: '100%',
-            maxWidth: { sm: 400, md: 500 },
+            width: '100%', 
+            flex: 1,
             bgcolor: 'background.paper',
-            borderRadius: 2
+            borderRadius: 2,
           }}
           elevation={1}
         >
-          <IconButton sx={{ p: '10px' }} aria-label="search">
-            <SearchIcon />
-          </IconButton>
           <InputBase
-            sx={{ ml: 1, flex: 1 }}
-            placeholder="Search clients by name..."
+            sx={{ ml: 2, flex: 1 }}
+            placeholder={searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            inputProps={{ 'aria-label': 'search clients' }}
+            inputProps={{ 'aria-label': 'search' }}
           />
           {searchTerm && (
             <IconButton 
@@ -96,21 +106,24 @@ export default function AgentBar({ onSearch, onCreateAccount, totalClients = 0 }
             </IconButton>
           </Tooltip>
         </Paper>
-      </Box>
 
-      <Button
-        variant="contained"
-        color="primary"
-        startIcon={<AddIcon />}
-        onClick={onCreateAccount}
-        sx={{ 
-          whiteSpace: 'nowrap',
-          height: 'fit-content',
-          alignSelf: { xs: 'flex-end', sm: 'center' }
-        }}
-      >
-        {isMobile ? 'Create' : 'Create Account'}
-      </Button>
+        {/* Create button - NOW INSIDE THE SAME BOX AS THE SEARCH BAR */}
+        {showCreateButton && onCreateAction && (
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={onCreateAction}
+            sx={{ 
+              whiteSpace: 'nowrap',
+              height: 40, // Fixed height to match search bar
+              minWidth: { xs: '100%', sm: 'auto' } // Full width on mobile, auto on desktop
+            }}
+          >
+            {isMobile ? createButtonMobileText : createButtonText}
+          </Button>
+        )}
+      </Box>
     </Box>
   );
 }

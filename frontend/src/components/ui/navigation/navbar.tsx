@@ -35,13 +35,19 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
 export default function NavBar() {
   const [open, setOpen] = React.useState(false);
   const navigate = useNavigate();
-  const location = useLocation(); // Get current location
   const username = "John Doe"; // Replace with actual username from auth context
 
-  // Check if current route matches path
   const isActive = (path: string) => {
-    return location.pathname.includes(path);
+    // For dashboard, only active when exactly at /newagent
+    if (path === 'newagent') {
+      return location.pathname === '/newagent';
+    }
+    
+    // For other routes, check if the path segment is present
+    return location.pathname.includes(`/${path}`);
   };
+
+
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -80,11 +86,26 @@ export default function NavBar() {
                   borderRadius: 1,
                   pb: 0.5,
                   px: 1.5,
-                  transition: 'all 0.2s',
                   color: isActive('newagent') ? '#000000 !important' : 'info.main',
                   bgcolor: isActive('newagent') ? 'common.white' : 'transparent',
                   boxShadow: isActive('newagent') ? 1 : 0,
-                  fontWeight: isActive('newagent') ? 'bold' : 'normal',
+                  fontWeight: isActive('newagent') ? 'bold' : 'normal'
+                }}
+              >
+                Dashboard
+              </Button>
+              <Button 
+                variant="text" 
+                size="small"
+                onClick={() => navigate('/newagent/accounts')}
+                sx={{
+                  borderRadius: 1,
+                  pb: 0.5,
+                  px: 1.5,
+                  color: isActive('accounts') ? '#000000 !important' : 'info.main',
+                  bgcolor: isActive('accounts') ? 'common.white' : 'transparent',
+                  boxShadow: isActive('accounts') ? 1 : 0,
+                  fontWeight: isActive('accounts') ? 'bold' : 'normal'
                 }}
               >
                 Accounts
@@ -92,12 +113,11 @@ export default function NavBar() {
               <Button 
                 variant="text" 
                 size="small"
-                onClick={() => navigate('/newagentransactions')}
+                onClick={() => navigate('/newagent/transactions')}
                 sx={{
                   borderRadius: 1,
                   pb: 0.5,
                   px: 1.5,
-                  transition: 'all 0.2s',
                   color: isActive('transactions') ? '#000000 !important' : 'info.main',
                   bgcolor: isActive('transactions') ? 'common.white' : 'transparent',
                   boxShadow: isActive('transactions') ? 1 : 0,

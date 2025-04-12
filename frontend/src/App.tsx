@@ -3,7 +3,9 @@ import LoginPage from './pages/login/LoginPage'
 import AdminPage from './pages/admin/AdminPage'
 import AgentPage from './pages/agent/AgentPage'
 import SignInSide from './pages/other/SignInSide'
+import NewAgentAccounts from './pages/other/NewAgentAccounts'
 import NewAgent from './pages/other/NewAgent'
+import NewAgentTransactions from './pages/other/NewAgentTransactions'
 
 function App() {
   return (
@@ -32,6 +34,9 @@ function App() {
             {/* cooking */}
             <Route path="/other" element={<SignInSide />} />
             <Route path="/newagent" element={<NewAgent/>} />
+            <Route path="/newagent/accounts" element={<NewAgentAccounts/>} />
+            <Route path="/newagent/transactions" element={<NewAgentTransactions/>} />
+
           </Routes>
         </main>
       </div>

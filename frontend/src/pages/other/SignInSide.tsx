@@ -3,7 +3,7 @@ import Stack from '@mui/material/Stack';
 import AppTheme from '../../components/ui/template/shared-theme/AppTheme';
 import SignInCard from '../../components/ui/template/SignInCard';
 import Content from '../../components/ui/template/Content';
-import NavBar from '../../components/ui/navigation/navbar';
+import NavBar from '../../components/ui/navigation/NavBar';
 
 export default function SignInSide(props: { disableCustomTheme?: boolean }) {
   return (
