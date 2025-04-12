@@ -14,6 +14,25 @@ resource "aws_security_group" "db_sg" {
   description = "Security group for database instances"
   vpc_id      = aws_vpc.vpc.id
 
+  # Allow PostgreSQL access from RDS proxies
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.db_proxy_sg.id]
+    description     = "Allow PostgreSQL access from RDS Proxies"
+  }
+
+  tags = {
+    Name = "database-security-group"
+  }
+}
+
+resource "aws_security_group" "db_proxy_sg" {
+  name        = "db-proxy-sg"
+  description = "Security group for database proxies"
+  vpc_id      = aws_vpc.vpc.id
+
   # Allow PostgreSQL access from ECS application containers
   ingress {
     from_port       = 5432
@@ -32,17 +51,18 @@ resource "aws_security_group" "db_sg" {
     description     = "Allow PostgreSQL access from Lambda functions"
   }
 
-  # Uncomment to allow PostgreSQL access from anywhere
-  # ingress {
-  #   from_port   = 5432
-  #   to_port     = 5432
-  #   protocol    = "tcp"
-  #   cidr_blocks = ["0.0.0.0/0"]
-  #   description = "Allow PostgreSQL access from anywhere"
-  # }
+  # Allow egress to RDS instances
+  # General outbound rule is used on purpose to resolve circular dependency
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic from RDS Proxy"
+  }
 
   tags = {
-    Name = "database-security-group"
+    Name = "database-proxy-security-group"
   }
 }
 

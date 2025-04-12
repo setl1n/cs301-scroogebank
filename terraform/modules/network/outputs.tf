@@ -47,6 +47,11 @@ output "db_sg_id" {
   description = "Security group ID for database"
 }
 
+output "db_proxy_sg_id" {
+  value       = aws_security_group.db_proxy_sg.id
+  description = "Security group ID for database proxy"
+}
+
 output "lambda_sg_id" {
   value       = aws_security_group.lambda_sg.id
   description = "Security group ID for Lambda functions"

@@ -40,8 +40,9 @@ module "dynamodb" {
 # Manages PostgreSQL database instances for persistent data storage
 #--------------------------------------------------------------
 module "rds" {
-  source            = "./modules/rds"
-  security_group_id = module.network.db_sg_id
+  source                  = "./modules/rds"
+  db_security_group_id    = module.network.db_sg_id
+  proxy_security_group_id = module.network.db_proxy_sg_id
   # db_subnet_group_name = module.network.public_db_subnet_group_name
   db_subnet_group_name = module.network.db_subnet_group_name
   db_subnet_group_ids  = module.network.db_subnet_group_ids

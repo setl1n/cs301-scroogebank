@@ -15,7 +15,7 @@ resource "aws_rds_cluster" "aurora_cluster" {
   master_password        = var.database_password
   storage_encrypted      = true
   skip_final_snapshot    = true
-  vpc_security_group_ids = [var.security_group_id]
+  vpc_security_group_ids = [var.db_security_group_id]
 }
 
 #----------------------------------------
@@ -129,7 +129,7 @@ resource "aws_db_proxy" "aurora_proxy" {
   idle_client_timeout    = 1800
   require_tls            = true
   role_arn               = aws_iam_role.rds_proxy_role.arn
-  vpc_security_group_ids = [var.security_group_id]
+  vpc_security_group_ids = [var.proxy_security_group_id]
   vpc_subnet_ids         = var.db_subnet_group_ids
   debug_logging          = false
 
