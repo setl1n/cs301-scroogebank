@@ -1,3 +1,4 @@
+// please note this entire file is not in used since we are using lambda
 package com.cs301g2t1.user.security;
 
 import java.net.URI;
@@ -23,7 +24,7 @@ public class CognitoLogoutHandler extends SimpleUrlLogoutSuccessHandler {
     /**
      * An allowed callback URL. Change this eventually to whatever screen to redirect them to!!
      */
-    private String logoutRedirectUrl = "/logout";
+    private String logoutRedirectUrl = "/login";
 
     /**
      * The ID of your User Pool Client.

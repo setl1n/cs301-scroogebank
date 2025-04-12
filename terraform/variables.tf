@@ -35,6 +35,12 @@ variable "CUSTOM_DOMAIN" {
   default     = "alb.itsag2t1.com"
 }
 
+variable "FRONTEND_DOMAIN" {
+  description = "Main frontend domain for the application (if configured)"
+  type        = string
+  default     = "main-frontend.itsag2t1.com"
+}
+
 #--------------------------------------------------------------
 # Database Configuration
 # These credentials will be used for RDS instance setup
@@ -129,6 +135,12 @@ variable "LOCAL_DEVELOPMENT_PORTS" {
   description = "List of localhost ports to allow for local development"
   type        = list(number)
   default     = [3000, 8080, 4200, 5173] # Common ports for React, Node, Angular development
+}
+
+variable "mfa_configuration" {
+  description = "MFA configuration for the application (e.g., OFF, ON, OPTIONAL)"
+  type        = string
+  default     = "OFF" # Set a default value as needed
 }
 
 #--------------------------------------------------------------

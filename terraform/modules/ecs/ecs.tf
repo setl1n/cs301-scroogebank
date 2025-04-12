@@ -38,6 +38,7 @@ resource "aws_ecs_task_definition" "app" {
     REDIS_PORT        = each.value.redis_port
     SQS_QUEUE_NAME    = "application-logs-queue"
     SQS_REGION        = var.aws_region
+    CLIENT_SERVICE_URL = "http://client.${aws_service_discovery_private_dns_namespace.ecs_namespace.name}:${lookup(var.services["client"], "app_port", 8080)}/api/v1/clients"
   })
 }
 
@@ -51,6 +52,7 @@ resource "aws_ecs_service" "app" {
   task_definition = aws_ecs_task_definition.app[each.key].arn
   desired_count   = var.app_count
   launch_type     = "FARGATE"
+  health_check_grace_period_seconds = 120
 
   # Network configuration for the Fargate tasks
   network_configuration {
