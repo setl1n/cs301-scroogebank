@@ -5,12 +5,6 @@
 resource "aws_ecs_cluster" "service_cluster" {
   for_each = var.services
   name     = each.value.cluster_name
-
-  # Enable Container Insights for enhanced monitoring and diagnostics
-  setting {
-    name  = "containerInsights"
-    value = "enabled"
-  }
 }
 
 # Task definitions specify container configurations including CPU, memory, and environment variables
@@ -20,7 +14,7 @@ resource "aws_ecs_task_definition" "app" {
 
   family                   = "${each.key}-task"
   execution_role_arn       = aws_iam_role.ecs_execution_role.arn
-  task_role_arn            = aws_iam_role.ecs_tasks_role[each.key].arn
+  task_role_arn            = aws_iam_role.ecs_tasks_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.fargate_cpu
@@ -61,8 +55,8 @@ resource "aws_ecs_service" "app" {
   # Network configuration for the Fargate tasks
   network_configuration {
     security_groups  = var.ecs_tasks_sg_ids
-    subnets          = var.subnet_ids
-    assign_public_ip = false
+    subnets          = var.public_subnet_ids
+    assign_public_ip = true
   }
 
   # Register the service with the load balancer

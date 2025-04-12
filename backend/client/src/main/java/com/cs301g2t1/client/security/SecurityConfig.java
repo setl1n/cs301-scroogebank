@@ -5,6 +5,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 public class SecurityConfig {
@@ -26,10 +31,25 @@ public class SecurityConfig {
         // (3) Allow H2 console to be displayed in a frame
         http.headers(headers -> headers.frameOptions().sameOrigin());
 
-        // (4) Choose HTTP Basic or Form login (or both)
+        // (4) Enable CORS
+        http.cors(Customizer.withDefaults());
+
+        // (5) Choose HTTP Basic or Form login (or both)
         http.httpBasic(Customizer.withDefaults());
         http.formLogin(Customizer.withDefaults());
 
         return http.build();
+    }
+    
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("https://main-frontend.itsag2t1.com/", "http://localhost:5173"));  // Allow all origins
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
