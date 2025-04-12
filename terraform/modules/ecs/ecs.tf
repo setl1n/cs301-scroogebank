@@ -57,6 +57,7 @@ resource "aws_ecs_service" "app" {
   task_definition = aws_ecs_task_definition.app[each.key].arn
   desired_count   = var.app_count
   launch_type     = "FARGATE"
+  health_check_grace_period_seconds = 120
 
   # Network configuration for the Fargate tasks
   network_configuration {

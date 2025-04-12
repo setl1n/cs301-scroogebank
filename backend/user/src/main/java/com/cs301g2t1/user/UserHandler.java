@@ -1,16 +1,19 @@
 package com.cs301g2t1.user;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.cs301g2t1.user.model.User;
 import com.cs301g2t1.user.model.Response;
+import com.cs301g2t1.user.model.User;
 import com.cs301g2t1.user.service.UserService;
 import com.cs301g2t1.user.service.UserServiceImpl;
 
 /**
  * Lambda handler for processing user operations
  */
-public class UserHandler implements RequestHandler<UserHandler.Request, Response> {
+public class UserHandler implements RequestHandler<Object, Object> {
 
     private final UserService userService = new UserServiceImpl();
 
@@ -21,7 +24,56 @@ public class UserHandler implements RequestHandler<UserHandler.Request, Response
     }
 
     @Override
-    public Response handleRequest(Request request, Context context) {
+    public Object handleRequest(Object input, Context context) {
+        // Check if this is an API Gateway request with path information
+        if (input instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> requestMap = (Map<String, Object>) input;
+            
+            // Check if this is a health check request to /api/v1/health
+            if (requestMap.containsKey("path")) {
+                String path = (String) requestMap.get("path");
+                if ("/api/v1/health".equals(path)) {
+                    context.getLogger().log("Processing health check request");
+                    return handleHealthCheck(new HashMap<>());
+                }
+            }
+            
+            // Convert Map to Request if it has operation
+            if (requestMap.containsKey("operation")) {
+                Request request = new Request();
+                request.operation = (String) requestMap.get("operation");
+                
+                if (requestMap.containsKey("userId")) {
+                    // Handle different number types safely
+                    Object userIdObj = requestMap.get("userId");
+                    if (userIdObj instanceof Number) {
+                        request.userId = ((Number) userIdObj).longValue();
+                    } else if (userIdObj != null) {
+                        try {
+                            request.userId = Long.valueOf(userIdObj.toString());
+                        } catch (NumberFormatException e) {
+                            context.getLogger().log("Invalid userId format: " + userIdObj);
+                        }
+                    }
+                }
+                
+                if (requestMap.containsKey("user")) {
+                    // This should be properly deserialized into a User object
+                    request.user = (User) requestMap.get("user");
+                }
+                
+                return processRequest(request, context);
+            }
+        } else if (input instanceof Request) {
+            // If it's already a Request object, process it directly
+            return processRequest((Request) input, context);
+        }
+        
+        return new Response(false, "Invalid request format", null);
+    }
+    
+    private Response processRequest(Request request, Context context) {
         try {
             switch (request.operation) {
                 case "CREATE":
@@ -76,5 +128,11 @@ public class UserHandler implements RequestHandler<UserHandler.Request, Response
             context.getLogger().log("Failed to process request: " + e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+    
+    private Map<String, Object> handleHealthCheck(Map<String, Object> response) {
+        response.put("statusCode", 200);
+        response.put("body", "{\"status\":\"healthy\"}");
+        return response;
     }
 }

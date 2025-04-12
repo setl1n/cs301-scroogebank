@@ -188,7 +188,8 @@ public class UserHandlerTest {
         request.user = testUser;
 
         // Call handler
-        Response response = handler.handleRequest(request, context);
+        Object result = handler.handleRequest(request, context);
+        Response response = (Response)result;
 
         // Validate successful response
         assertTrue(response.isResult(), "User creation should be successful");
@@ -210,7 +211,8 @@ public class UserHandlerTest {
         request.userId = 999L;
 
         // Call handler
-        Response response = handler.handleRequest(request, context);
+        Object result = handler.handleRequest(request, context);
+        Response response = (Response)result;
 
         // Validate that the user is not found
         assertFalse(response.isResult(), "Reading non-existent user should fail");
@@ -244,7 +246,8 @@ public class UserHandlerTest {
         request.user = updatedUser;
 
         // Call handler
-        Response response = handler.handleRequest(request, context);
+        Object result = handler.handleRequest(request, context);
+        Response response = (Response)result;
 
         // Validate update
         assertTrue(response.isResult(), "Update operation should be successful");
@@ -273,7 +276,8 @@ public class UserHandlerTest {
         request.userId = userId;
 
         // Call handler
-        Response response = handler.handleRequest(request, context);
+        Object result = handler.handleRequest(request, context);
+        Response response = (Response)result;
 
         // Validate deletion
         assertTrue(response.isResult(), "User deletion should be successful");
