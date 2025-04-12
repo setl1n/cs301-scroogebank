@@ -10,6 +10,19 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 #----------------------------------------
+# Logging Configuration
+# Enable access logging for all buckets
+#----------------------------------------
+resource "aws_s3_bucket_logging" "bucket_logging" {
+  for_each = var.buckets
+
+  bucket = aws_s3_bucket.bucket[each.key].id
+
+  target_bucket = aws_s3_bucket.logging_bucket.id
+  target_prefix = "${each.value.name}/"
+}
+
+#----------------------------------------
 # Website Configuration
 # Only applied to buckets where is_website = true
 #----------------------------------------
@@ -106,4 +119,47 @@ resource "aws_s3_bucket_public_access_block" "private_buckets" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+
+#----------------------------------------
+# Logging Bucket for S3 Access Logs
+# Central bucket to store all access logs from other buckets
+#----------------------------------------
+resource "aws_s3_bucket" "logging_bucket" {
+  bucket        = "cs301g2t1-s3-access-logs-bucket"
+  force_destroy = true
+}
+
+# Ensure the logging bucket itself has appropriate security settings
+resource "aws_s3_bucket_public_access_block" "logging_bucket_access" {
+  bucket = aws_s3_bucket.logging_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Set ownership controls for logging bucket
+resource "aws_s3_bucket_ownership_controls" "logging_bucket_ownership" {
+  bucket = aws_s3_bucket.logging_bucket.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+# Implement lifecycle policy for log rotation
+resource "aws_s3_bucket_lifecycle_configuration" "logging_bucket_lifecycle" {
+  bucket = aws_s3_bucket.logging_bucket.id
+
+  rule {
+    id     = "log-rotation"
+    status = "Enabled"
+
+    expiration {
+      days = 90 # Keep logs for 90 days
+    }
+  }
 }

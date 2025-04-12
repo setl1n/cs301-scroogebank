@@ -14,6 +14,7 @@ resource "aws_rds_cluster" "aurora_cluster" {
   master_username        = var.database_username
   master_password        = var.database_password
   storage_encrypted      = true
+  kms_key_id             = aws_kms_key.rds_encryption_key.arn
   skip_final_snapshot    = true
   vpc_security_group_ids = [var.db_security_group_id]
 }
@@ -34,6 +35,10 @@ resource "aws_rds_cluster_instance" "aurora_writer" {
   publicly_accessible = false
   availability_zone   = "ap-southeast-1a"
   promotion_tier      = 0 # Primary instance with highest priority for promotion
+
+  # Enable Performance Insights with default 7-day retention (free tier)
+  performance_insights_enabled    = true
+  performance_insights_kms_key_id = aws_kms_key.rds_encryption_key.arn
 }
 
 #----------------------------------------
@@ -53,6 +58,10 @@ resource "aws_rds_cluster_instance" "aurora_readers" {
   publicly_accessible = false
   availability_zone   = "ap-southeast-1b"
   promotion_tier      = 1
+
+  # Enable Performance Insights with default 7-day retention (free tier)
+  performance_insights_enabled    = true
+  performance_insights_kms_key_id = aws_kms_key.rds_encryption_key.arn
 }
 
 #----------------------------------------

@@ -37,6 +37,12 @@ resource "aws_elasticache_replication_group" "valkey" {
 
   # Enable encryption
   at_rest_encryption_enabled = true
+
+  # Enable in-transit encryption
+  transit_encryption_enabled = true
+
+  # Use auth token from Secrets Manager
+  auth_token = random_password.elasticache_auth_token[each.key].result
 }
 
 #--------------------------------------------------------------

@@ -5,6 +5,12 @@
 resource "aws_ecs_cluster" "service_cluster" {
   for_each = var.services
   name     = each.value.cluster_name
+
+  # Enable Container Insights for enhanced monitoring and diagnostics
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
 }
 
 # Task definitions specify container configurations including CPU, memory, and environment variables
