@@ -45,7 +45,7 @@ resource "aws_alb_listener" "alb_https_listener" {
 
   routing_http_response_access_control_allow_origin_header_value = "http://localhost:5173"
   routing_http_response_access_control_allow_methods_header_value = "HEAD, POST, PATCH, DELETE, PUT, GET, OPTIONS"
-  routing_http_response_access_control_allow_headers_header_value = "Content-Type"
+  routing_http_response_access_control_allow_headers_header_value = "Authorization,Content-Type,X-Amz-Date,X-Api-Key,X-Requested-With"
   routing_http_response_access_control_allow_credentials_header_value = true
 
 

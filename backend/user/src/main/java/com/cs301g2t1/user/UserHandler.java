@@ -25,22 +25,30 @@ public class UserHandler implements RequestHandler<Object, Object> {
 
     @Override
     public Object handleRequest(Object input, Context context) {
+        context.getLogger().log("inside handleRequest method");
+        context.getLogger().log("USER_POOL_ID: " + System.getenv("COGNITO_USER_POOL_ID"));
+        context.getLogger().log("APP_CLIENT_ID: " + System.getenv("COGNITO_APP_CLIENT_ID"));
+        
         // Check if this is an API Gateway request with path information
         if (input instanceof Map) {
+            context.getLogger().log("Received input: " + input.toString());
             @SuppressWarnings("unchecked")
             Map<String, Object> requestMap = (Map<String, Object>) input;
             
             // Check if this is a health check request to /api/v1/health
             if (requestMap.containsKey("path")) {
                 String path = (String) requestMap.get("path");
+                context.getLogger().log("Request path: " + path);
                 if ("/api/v1/health".equals(path)) {
                     context.getLogger().log("Processing health check request");
                     return handleHealthCheck(new HashMap<>());
                 }
+                context.getLogger().log("not health check: " + path);
             }
             
             // Convert Map to Request if it has operation
             if (requestMap.containsKey("operation")) {
+                context.getLogger().log("Processing request with operation: " + requestMap.get("operation"));
                 Request request = new Request();
                 request.operation = (String) requestMap.get("operation");
                 
