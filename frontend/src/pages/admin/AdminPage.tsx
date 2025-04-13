@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { Box, CssBaseline } from '@mui/material';
 import AppTheme from '../../components/ui/template/shared-theme/AppTheme';
-import NavBar from '../../components/ui/navigation/NavBar';
+import NavBar from '../../components/ui/navigation/navbar';
 import DashboardTab from './components/DashboardTab';
 import AccountsTab from './components/AccountsTab';
 import TransactionsTab from './components/TransactionsTab';
