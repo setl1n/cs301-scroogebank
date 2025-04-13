@@ -21,7 +21,7 @@ resource "aws_cognito_user_pool" "user_pool" {
   }
 
   mfa_configuration = var.mfa_configuration
-  
+
   # # Enable TOTP MFA (authenticator apps like Google Authenticator)
   # software_token_mfa_configuration {
   #   enabled = true
