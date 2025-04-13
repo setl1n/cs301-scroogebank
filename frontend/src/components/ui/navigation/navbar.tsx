@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { alpha, styled } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -18,25 +18,12 @@ import ColorModeIconDropdown from '../template/shared-theme/ColorModeIconDropdow
 import { useAuth } from 'react-oidc-context';
 import { hasGroupAccess } from '../../../utils/auth';
 
-const StyledToolbar = styled(Toolbar)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  flexShrink: 0,
-  borderRadius: `calc(${theme.shape.borderRadius}px + 8px)`,
-  backdropFilter: 'blur(24px)',
-  border: '1px solid',
-  borderColor: theme.palette.divider,
-  backgroundColor: theme.palette.background.default,
-  boxShadow: theme.shadows[1],
-  padding: '8px 12px',
-}));
-
 export default function NavBar() {
   const [open, setOpen] = React.useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const auth = useAuth();
+  const theme = useTheme();
   const isAdmin = auth.isAuthenticated && hasGroupAccess(auth, ['ADMIN']);
   const isAgent = auth.isAuthenticated && hasGroupAccess(auth, ['AGENT']);
   const username = "John Doe"; // Replace with actual username from auth context
@@ -76,7 +63,23 @@ export default function NavBar() {
       }}
     >
       <Container maxWidth="lg">
-        <StyledToolbar variant="dense" disableGutters>
+        <Toolbar
+          variant="dense"
+          disableGutters
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexShrink: 0,
+            borderRadius: `calc(${theme.shape.borderRadius}px + 8px)`,
+            backdropFilter: 'blur(24px)',
+            border: '1px solid',
+            borderColor: theme.palette.divider,
+            backgroundColor: alpha(theme.palette.background.default, 0.4),
+            boxShadow: theme.shadows[1],
+            padding: '8px 12px',
+          }}
+        >
           <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 0 }}>
             {/* Button */}
             <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
@@ -97,8 +100,12 @@ export default function NavBar() {
                       borderRadius: 1,
                       pb: 0.5,
                       px: 1.5,
-                      color: isActive('admin-dashboard') ? '#000000 !important' : 'info.main',
-                      bgcolor: isActive('admin-dashboard') ? 'common.white' : 'transparent',
+                      color: isActive('admin-dashboard') 
+                        ? `${theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.common.black} !important` 
+                        : 'info.main',
+                      bgcolor: isActive('admin-dashboard') 
+                        ? theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'common.white' 
+                        : 'transparent',
                       boxShadow: isActive('admin-dashboard') ? 1 : 0,
                       fontWeight: isActive('admin-dashboard') ? 'bold' : 'normal'
                     }}
@@ -113,8 +120,12 @@ export default function NavBar() {
                       borderRadius: 1,
                       pb: 0.5,
                       px: 1.5,
-                      color: isActive('admin/accounts') ? '#000000 !important' : 'info.main',
-                      bgcolor: isActive('admin/accounts') ? 'common.white' : 'transparent',
+                      color: isActive('admin/accounts') 
+                        ? `${theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.common.black} !important` 
+                        : 'info.main',
+                      bgcolor: isActive('admin/accounts') 
+                        ? theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'common.white' 
+                        : 'transparent',
                       boxShadow: isActive('admin/accounts') ? 1 : 0,
                       fontWeight: isActive('admin/accounts') ? 'bold' : 'normal'
                     }}
@@ -129,10 +140,14 @@ export default function NavBar() {
                       borderRadius: 1,
                       pb: 0.5,
                       px: 1.5,
-                      color: isActive('admin/transactions') ? '#000000 !important' : 'info.main',
-                      bgcolor: isActive('admin/transactions') ? 'common.white' : 'transparent',
+                      color: isActive('admin/transactions') 
+                        ? `${theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.common.black} !important` 
+                        : 'info.main',
+                      bgcolor: isActive('admin/transactions') 
+                        ? theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'common.white' 
+                        : 'transparent',
                       boxShadow: isActive('admin/transactions') ? 1 : 0,
-                      fontWeight: isActive('admin/transactions') ? 'bold' : 'normal',
+                      fontWeight: isActive('admin/transactions') ? 'bold' : 'normal'
                     }}
                   >
                     Transactions
@@ -151,8 +166,12 @@ export default function NavBar() {
                       borderRadius: 1,
                       pb: 0.5,
                       px: 1.5,
-                      color: isActive('agent-dashboard') ? '#000000 !important' : 'info.main',
-                      bgcolor: isActive('agent-dashboard') ? 'common.white' : 'transparent',
+                      color: isActive('agent-dashboard') 
+                        ? `${theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.common.black} !important` 
+                        : 'info.main',
+                      bgcolor: isActive('agent-dashboard') 
+                        ? theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'common.white' 
+                        : 'transparent',
                       boxShadow: isActive('agent-dashboard') ? 1 : 0,
                       fontWeight: isActive('agent-dashboard') ? 'bold' : 'normal'
                     }}
@@ -167,8 +186,12 @@ export default function NavBar() {
                       borderRadius: 1,
                       pb: 0.5,
                       px: 1.5,
-                      color: isActive('agent/clients') ? '#000000 !important' : 'info.main',
-                      bgcolor: isActive('agent/clients') ? 'common.white' : 'transparent',
+                      color: isActive('agent/clients') 
+                        ? `${theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.common.black} !important` 
+                        : 'info.main',
+                      bgcolor: isActive('agent/clients') 
+                        ? theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'common.white' 
+                        : 'transparent',
                       boxShadow: isActive('agent/clients') ? 1 : 0,
                       fontWeight: isActive('agent/clients') ? 'bold' : 'normal'
                     }}
@@ -183,10 +206,14 @@ export default function NavBar() {
                       borderRadius: 1,
                       pb: 0.5,
                       px: 1.5,
-                      color: isActive('agent/transactions') ? '#000000 !important' : 'info.main',
-                      bgcolor: isActive('agent/transactions') ? 'common.white' : 'transparent',
+                      color: isActive('agent/transactions') 
+                        ? `${theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.common.black} !important` 
+                        : 'info.main',
+                      bgcolor: isActive('agent/transactions') 
+                        ? theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'common.white' 
+                        : 'transparent',
                       boxShadow: isActive('agent/transactions') ? 1 : 0,
-                      fontWeight: isActive('agent/transactions') ? 'bold' : 'normal',
+                      fontWeight: isActive('agent/transactions') ? 'bold' : 'normal'
                     }}
                   >
                     Transactions
@@ -265,7 +292,9 @@ export default function NavBar() {
                         toggleDrawer(false)();
                       }}
                       sx={{
-                        backgroundColor: isActive('admin-dashboard') ? alpha('#3f51b5', 0.1) : 'transparent',
+                        backgroundColor: isActive('admin-dashboard') 
+                          ? alpha(theme.palette.primary.main, 0.1) 
+                          : 'transparent',
                         fontWeight: isActive('admin-dashboard') ? 'bold' : 'normal',
                         borderLeft: isActive('admin-dashboard') ? '4px solid' : 'none',
                         borderColor: 'primary.main',
@@ -280,7 +309,9 @@ export default function NavBar() {
                         toggleDrawer(false)();
                       }}
                       sx={{
-                        backgroundColor: isActive('admin/accounts') ? alpha('#3f51b5', 0.1) : 'transparent',
+                        backgroundColor: isActive('admin/accounts') 
+                          ? alpha(theme.palette.primary.main, 0.1) 
+                          : 'transparent',
                         fontWeight: isActive('admin/accounts') ? 'bold' : 'normal',
                         borderLeft: isActive('admin/accounts') ? '4px solid' : 'none',
                         borderColor: 'primary.main',
@@ -295,7 +326,9 @@ export default function NavBar() {
                         toggleDrawer(false)();
                       }}
                       sx={{
-                        backgroundColor: isActive('admin/transactions') ? alpha('#3f51b5', 0.1) : 'transparent',
+                        backgroundColor: isActive('admin/transactions') 
+                          ? alpha(theme.palette.primary.main, 0.1) 
+                          : 'transparent',
                         fontWeight: isActive('admin/transactions') ? 'bold' : 'normal',
                         borderLeft: isActive('admin/transactions') ? '4px solid' : 'none',
                         borderColor: 'primary.main',
@@ -316,7 +349,9 @@ export default function NavBar() {
                         toggleDrawer(false)();
                       }}
                       sx={{
-                        backgroundColor: isActive('agent-dashboard') ? alpha('#3f51b5', 0.1) : 'transparent',
+                        backgroundColor: isActive('agent-dashboard') 
+                          ? alpha(theme.palette.primary.main, 0.1) 
+                          : 'transparent',
                         fontWeight: isActive('agent-dashboard') ? 'bold' : 'normal',
                         borderLeft: isActive('agent-dashboard') ? '4px solid' : 'none',
                         borderColor: 'primary.main',
@@ -331,7 +366,9 @@ export default function NavBar() {
                         toggleDrawer(false)();
                       }}
                       sx={{
-                        backgroundColor: isActive('agent/clients') ? alpha('#3f51b5', 0.1) : 'transparent',
+                        backgroundColor: isActive('agent/clients') 
+                          ? alpha(theme.palette.primary.main, 0.1) 
+                          : 'transparent',
                         fontWeight: isActive('agent/clients') ? 'bold' : 'normal',
                         borderLeft: isActive('agent/clients') ? '4px solid' : 'none',
                         borderColor: 'primary.main',
@@ -346,7 +383,9 @@ export default function NavBar() {
                         toggleDrawer(false)();
                       }}
                       sx={{
-                        backgroundColor: isActive('agent/transactions') ? alpha('#3f51b5', 0.1) : 'transparent',
+                        backgroundColor: isActive('agent/transactions') 
+                          ? alpha(theme.palette.primary.main, 0.1) 
+                          : 'transparent',
                         fontWeight: isActive('agent/transactions') ? 'bold' : 'normal',
                         borderLeft: isActive('agent/transactions') ? '4px solid' : 'none',
                         borderColor: 'primary.main',
@@ -367,7 +406,7 @@ export default function NavBar() {
               </Box>
             </Drawer>
           </Box>
-        </StyledToolbar>
+        </Toolbar>
       </Container>
     </AppBar>
   );

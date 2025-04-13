@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Alert, Snackbar, Paper } from '@mui/material';
+import { Box, Typography, Alert, Snackbar, Paper, useTheme } from '@mui/material';
 import ClientGrid from '../../../components/ui/client/ClientGrid';
 import SearchBar from '../../../components/ui/navigation/SearchBar';
 import { clientService } from '../../../services/clientService';
@@ -13,6 +13,7 @@ export default function ClientsTab() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const auth = useAuth();
+  const theme = useTheme();
   
   // Fetch clients on component mount
   useEffect(() => {
@@ -153,7 +154,9 @@ export default function ClientsTab() {
           overflow: 'hidden',
           height: 'auto',
           minHeight: 500,
-          bgcolor: 'transparent'
+          bgcolor: 'transparent',
+          border: `1px solid ${theme.palette.divider}`,
+          boxShadow: theme.shadows[1]
         }}
       >
         <ClientGrid 
