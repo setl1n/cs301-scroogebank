@@ -1,3 +1,4 @@
+import { log } from 'console';
 import config from '../config';
 
 // Default request options
@@ -10,11 +11,22 @@ const defaultOptions = {
 // Core API functions
 export const api = {
   // GET request
-  async get(endpoint: string) {
+  async get(endpoint: string, useAlbAuth: boolean = false) {
+    console.log('Cookies before request:', document.cookie);
+    const headers = new Headers(defaultOptions.headers);
+    
+    // Add Authorization header for ALB-protected endpoints
+    if (useAlbAuth) {
+      const token = getCognitoToken();
+      if (token) {
+        headers.append('Authorization', `Bearer ${token}`);
+      }
+    }
+    
     const response = await fetch(`${config.apiBaseUrl}${endpoint}`, {
       method: 'GET',
-      headers: new Headers(defaultOptions.headers),
-      credentials: 'include', // Explicitly include credentials for cookies
+      headers,
+      credentials: 'include',
     });
     
     if (!response.ok) {
@@ -25,11 +37,21 @@ export const api = {
   },
   
   // POST request
-  async post(endpoint: string, data: any) {
+  async post(endpoint: string, data: any, useAlbAuth: boolean = false) {
+    const headers = new Headers(defaultOptions.headers);
+    
+    // Add Authorization header for ALB-protected endpoints
+    if (useAlbAuth) {
+      const token = getCognitoToken();
+      if (token) {
+        headers.append('Authorization', `Bearer ${token}`);
+      }
+    }
+    
     const response = await fetch(`${config.apiBaseUrl}${endpoint}`, {
       method: 'POST',
-      headers: new Headers(defaultOptions.headers),
-      credentials: 'include', // Explicitly include credentials for cookies
+      headers,
+      credentials: 'include',
       body: JSON.stringify(data),
     });
     
@@ -41,11 +63,21 @@ export const api = {
   },
   
   // PUT request
-  async put(endpoint: string, data: any) {
+  async put(endpoint: string, data: any, useAlbAuth: boolean = false) {
+    const headers = new Headers(defaultOptions.headers);
+    
+    // Add Authorization header for ALB-protected endpoints
+    if (useAlbAuth) {
+      const token = getCognitoToken();
+      if (token) {
+        headers.append('Authorization', `Bearer ${token}`);
+      }
+    }
+    
     const response = await fetch(`${config.apiBaseUrl}${endpoint}`, {
       method: 'PUT',
-      headers: new Headers(defaultOptions.headers),
-      credentials: 'include', // Explicitly include credentials for cookies
+      headers,
+      credentials: 'include',
       body: JSON.stringify(data),
     });
     
@@ -57,11 +89,21 @@ export const api = {
   },
   
   // DELETE request
-  async delete(endpoint: string) {
+  async delete(endpoint: string, useAlbAuth: boolean = false) {
+    const headers = new Headers(defaultOptions.headers);
+    
+    // Add Authorization header for ALB-protected endpoints
+    if (useAlbAuth) {
+      const token = getCognitoToken();
+      if (token) {
+        headers.append('Authorization', `Bearer ${token}`);
+      }
+    }
+    
     const response = await fetch(`${config.apiBaseUrl}${endpoint}`, {
       method: 'DELETE',
-      headers: new Headers(defaultOptions.headers),
-      credentials: 'include', // Explicitly include credentials for cookies
+      headers,
+      credentials: 'include',
     });
     
     if (!response.ok) {

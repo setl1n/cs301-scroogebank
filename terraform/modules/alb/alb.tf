@@ -43,6 +43,12 @@ resource "aws_alb_listener" "alb_https_listener" {
   ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
   certificate_arn   = var.certificate_arn
 
+  routing_http_response_access_control_allow_origin_header_value = "http://localhost:5173"
+  routing_http_response_access_control_allow_methods_header_value = "HEAD, POST, PATCH, DELETE, PUT, GET, OPTIONS"
+  routing_http_response_access_control_allow_headers_header_value = "Content-Type"
+  routing_http_response_access_control_allow_credentials_header_value = true
+
+
   default_action {
     type = "fixed-response"
     fixed_response {
@@ -67,9 +73,9 @@ resource "aws_alb_listener_rule" "options_preflight" {
       message_body = ""
       status_code  = "200"
 
-      
+
     }
-    
+
   }
 
   condition {
@@ -78,3 +84,4 @@ resource "aws_alb_listener_rule" "options_preflight" {
     }
   }
 }
+
