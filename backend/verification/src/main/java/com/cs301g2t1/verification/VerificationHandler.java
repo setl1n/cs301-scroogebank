@@ -13,15 +13,32 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class VerificationHandler implements RequestHandler<Map<String, Object>, Map<String, Object>> {
 
     private final AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
     private final String bucketName = System.getenv("S3_BUCKET_NAME");
+    
+    private static final Set<String> ALLOWED_EXTENSIONS = new HashSet<>(Arrays.asList("png", "jpg", "jpeg", "pdf"));
+    
+    // Magic number signatures
+    private static final Map<String, byte[]> FILE_SIGNATURES = new HashMap<>();
+    
+    static {
+        // PNG signature
+        FILE_SIGNATURES.put("png", new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A});
+        // JPEG signatures
+        FILE_SIGNATURES.put("jpg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
+        // PDF signature
+        FILE_SIGNATURES.put("pdf", new byte[]{0x25, 0x50, 0x44, 0x46});
+    }
 
     @Override
     public Map<String, Object> handleRequest(Map<String, Object> request, Context context) {
@@ -87,14 +104,12 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             boolean isFileBase64Encoded = false;
             
             if (isMultipart) {
-                // For multipart/form-data request
                 Map<String, Object> multipartData = parseMultipartFormData(request, context);
                 
                 if (multipartData == null) {
                     return createErrorResponse(response, 400, "Failed to parse multipart/form-data");
                 }
                 
-                // Extract file data
                 if (multipartData.containsKey("file")) {
                     Map<String, Object> fileData = (Map<String, Object>) multipartData.get("file");
                     fileContent = (String) fileData.get("content");
@@ -105,14 +120,12 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                     return createErrorResponse(response, 400, "Missing 'file' field in multipart/form-data");
                 }
                 
-                // Extract token and email
                 token = (String) multipartData.getOrDefault("token", "");
                 email = (String) multipartData.getOrDefault("email", "");
                 
                 context.getLogger().log("Token: " + token);
                 context.getLogger().log("Email: " + email);
             } else {
-                // Fall back to regular body parsing if not multipart
                 String body = request.containsKey("body") ? (String) request.get("body") : null;
                 boolean isBase64Encoded = request.containsKey("isBase64Encoded") && (boolean) request.get("isBase64Encoded");
                 
@@ -124,13 +137,34 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                 isFileBase64Encoded = isBase64Encoded;
             }
             
-            // Validate token and email if provided
+            // Validate file type BEFORE token validation
+            if (filename != null && !filename.isEmpty()) {
+                byte[] contentBytes;
+                
+                if (isFileBase64Encoded) {
+                    try {
+                        contentBytes = Base64.getDecoder().decode(fileContent);
+                    } catch (IllegalArgumentException e) {
+                        context.getLogger().log("Error decoding base64 content: " + e.getMessage());
+                        contentBytes = fileContent.getBytes();
+                    }
+                } else {
+                    contentBytes = fileContent.getBytes();
+                }
+                
+                String determinedContentType = determineContentType(filename);
+                if (!isValidFileType(filename, determinedContentType, contentBytes)) {
+                    context.getLogger().log("Invalid file type or format detected: " + filename);
+                    return createErrorResponse(response, 400, "Invalid file type or format. Only PNG, JPEG, and PDF files up to 10MB are allowed.");
+                }
+            }
+            
+            // Now validate token and email if provided
             if ((token == null || token.isEmpty()) && (email == null || email.isEmpty())) {
                 context.getLogger().log("Warning: Token and email not provided");
             } else if (token != null && !token.isEmpty() && email != null && !email.isEmpty()) {
                 context.getLogger().log("Validating token and email...");
                 
-                // Call the validateToken method to check if the token is valid
                 boolean isTokenValid = validateToken(token, email, context);
                 if (!isTokenValid) {
                     context.getLogger().log("Token validation failed for email: " + email);
@@ -140,16 +174,13 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                 context.getLogger().log("Token validated successfully for email: " + email);
             }
             
-            // Generate a unique key for the S3 object
             String fileExtension = "";
             if (filename != null && filename.contains(".")) {
                 fileExtension = filename.substring(filename.lastIndexOf("."));
             }
             
-            // Use email as filename if available, otherwise use UUID
             String baseFilename;
             if (email != null && !email.isEmpty()) {
-                // Sanitize email for use as a filename
                 baseFilename = sanitizeFilename(email);
                 context.getLogger().log("Using email as base filename: " + baseFilename);
             } else {
@@ -159,10 +190,8 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             
             String key = "uploads/" + baseFilename + fileExtension;
             
-            // Upload the content to S3 - pass the correct base64 encoding flag
             String fileUrl = uploadToS3(fileContent, isFileBase64Encoded, key, context, filename);
             
-            // Return success response
             Map<String, String> responseBody = new HashMap<>();
             responseBody.put("message", "File uploaded successfully");
             responseBody.put("fileUrl", fileUrl);
@@ -188,7 +217,6 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                 return null;
             }
             
-            // If body is base64 encoded, decode it
             byte[] bodyBytes;
             if (isBase64Encoded) {
                 bodyBytes = Base64.getDecoder().decode(body);
@@ -199,7 +227,6 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             
             Map<String, Object> result = new HashMap<>();
             
-            // Extract the boundary from Content-Type header
             String contentType = (String) ((Map)request.get("headers")).get("content-type");
             String boundary = extractBoundary(contentType);
             
@@ -208,25 +235,21 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                 return null;
             }
             
-            // Split the body by boundary
             String[] parts = body.split("--" + boundary);
             
-            // Process each part
             for (String part : parts) {
                 if (part.trim().isEmpty() || part.equals("--")) {
                     continue;
                 }
                 
-                // Split headers and content
                 int headerEnd = part.indexOf("\r\n\r\n");
                 if (headerEnd == -1) {
                     continue;
                 }
                 
                 String headers = part.substring(0, headerEnd);
-                String content = part.substring(headerEnd + 4); // Skip \r\n\r\n
+                String content = part.substring(headerEnd + 4);
                 
-                // Extract field name and filename from Content-Disposition header
                 String contentDisposition = extractHeader(headers, "Content-Disposition");
                 if (contentDisposition == null) {
                     continue;
@@ -240,48 +263,37 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                 }
                 
                 if (filename != null) {
-                    // This is a file - handle it as binary data
                     Map<String, Object> fileData = new HashMap<>();
                     fileData.put("filename", filename);
                     
-                    // For binary files like images, don't manipulate as a string
-                    // Instead convert directly to Base64 for safe handling
-                    // Find the start and end positions in the original byte array
                     int startPos = body.indexOf(content);
                     if (content.endsWith("\r\n")) {
                         content = content.substring(0, content.length() - 2);
                     }
                     
-                    // For binary files (images, pdfs, etc.), encode to Base64
                     if (isBinaryFile(filename)) {
                         String headersPart = part.substring(0, headerEnd + 4);
                         int contentStart = body.indexOf(headersPart) + headersPart.length();
                         int contentLength = content.length();
                         
-                        // Extract the raw binary content from the original byte array
                         byte[] fileBytes;
                         if (contentLength > 0 && contentStart + contentLength <= bodyBytes.length) {
                             fileBytes = new byte[contentLength];
                             System.arraycopy(bodyBytes, contentStart, fileBytes, 0, contentLength);
                             
-                            // Convert to Base64 for safe handling
                             fileData.put("content", Base64.getEncoder().encodeToString(fileBytes));
                             fileData.put("isBase64Encoded", true);
                         } else {
-                            // Fallback if byte extraction fails
                             fileData.put("content", content);
                             fileData.put("isBase64Encoded", false);
                         }
                     } else {
-                        // For text files, just use the content string
                         fileData.put("content", content);
                         fileData.put("isBase64Encoded", false);
                     }
                     
                     result.put(fieldName, fileData);
                 } else {
-                    // This is a regular field
-                    // Remove trailing \r\n if present
                     if (content.endsWith("\r\n")) {
                         content = content.substring(0, content.length() - 2);
                     }
@@ -323,9 +335,8 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             return null;
         }
         
-        String boundary = contentType.substring(boundaryIndex + 9); // "boundary=".length() = 9
+        String boundary = contentType.substring(boundaryIndex + 9);
         
-        // If boundary is wrapped in quotes, remove them
         if (boundary.startsWith("\"") && boundary.endsWith("\"")) {
             boundary = boundary.substring(1, boundary.length() - 1);
         }
@@ -351,7 +362,7 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             return null;
         }
         
-        int nameStart = nameIndex + 6; // "name=\"".length() = 6
+        int nameStart = nameIndex + 6;
         int nameEnd = contentDisposition.indexOf("\"", nameStart);
         
         if (nameEnd == -1) {
@@ -367,7 +378,7 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             return null;
         }
         
-        int filenameStart = filenameIndex + 10; // "filename=\"".length() = 10
+        int filenameStart = filenameIndex + 10;
         int filenameEnd = contentDisposition.indexOf("\"", filenameStart);
         
         if (filenameEnd == -1) {
@@ -394,7 +405,6 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                 contentBytes = content.getBytes();
             }
             
-            // Log the first few bytes for debugging
             if (contentBytes.length > 0) {
                 StringBuilder hexString = new StringBuilder();
                 for (int i = 0; i < Math.min(20, contentBytes.length); i++) {
@@ -408,7 +418,6 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(contentBytes.length);
             
-            // Set content type based on filename if available
             if (filename != null && !filename.isEmpty()) {
                 String contentType = determineContentType(filename);
                 if (contentType != null) {
@@ -418,12 +427,48 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             
             s3Client.putObject(bucketName, key, inputStream, metadata);
             
-            // Return the S3 URL of the uploaded file
             return s3Client.getUrl(bucketName, key).toString();
         } catch (Exception e) {
             context.getLogger().log("Error uploading to S3: " + e.getMessage());
-            throw new RuntimeException("Failed to upload to S3", e);
+            throw new RuntimeException("Failed to upload to S3: " + e.getMessage(), e);
         }
+    }
+    
+    private boolean isValidFileType(String fileName, String contentType, byte[] content) {
+        if (fileName == null || contentType == null || content == null || content.length == 0) {
+            return false;
+        }
+        
+        String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+            return false;
+        }
+        
+        boolean validContentType = switch (extension) {
+            case "png" -> contentType.equals("image/png");
+            case "jpg", "jpeg" -> contentType.equals("image/jpeg");
+            case "pdf" -> contentType.equals("application/pdf");
+            default -> false;
+        };
+        
+        if (!validContentType) {
+            return false;
+        }
+        
+        byte[] signature = FILE_SIGNATURES.get(extension);
+        if (signature != null && content.length >= signature.length) {
+            for (int i = 0; i < signature.length; i++) {
+                if (content[i] != signature[i]) {
+                    return false;
+                }
+            }
+        }
+        
+        if (content.length > 10 * 1024 * 1024) {
+            return false;
+        }
+        
+        return true;
     }
     
     private String determineContentType(String filename) {
@@ -456,7 +501,6 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
 
     private Map<String, Object> callExternalService(Map<String, Object> request, Map<String, Object> response, Context context) {
         try {
-            // Extract the URL from request parameters
             String serviceUrl = "";
             if (request.containsKey("queryStringParameters") && 
                 ((Map)request.get("queryStringParameters")) != null &&
@@ -468,12 +512,10 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             
             context.getLogger().log("Making GET request to: " + serviceUrl);
             
-            // Create and configure HttpClient
             HttpClient client = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(10))
                     .build();
                     
-            // Build the request
             HttpRequest httpRequest = HttpRequest.newBuilder()
                     .uri(URI.create(serviceUrl))
                     .GET()
@@ -481,19 +523,15 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                     .header("Accept", "application/json")
                     .build();
                     
-            // Send the request and get response
             HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             
-            // Process the response
             int statusCode = httpResponse.statusCode();
             String body = httpResponse.body();
             
             if (statusCode >= 200 && statusCode < 300) {
-                // Success response
                 response.put("statusCode", 200);
                 response.put("body", body);
             } else {
-                // Error response
                 return createErrorResponse(response, statusCode, "External service error: " + body);
             }
             
@@ -508,13 +546,6 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
         return email.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
     }
 
-    /**
-     * Validates a token by calling the client service validation endpoint
-     * @param token The token to validate
-     * @param email The email associated with the token
-     * @param context The Lambda context for logging
-     * @return true if the token is valid, false otherwise
-     */
     private boolean validateToken(String token, String email, Context context) {
         try {
             String validationUrl = "http://client.ecs.internal:8080/api/v1/clients/validate-upload-token?token=" 
@@ -522,12 +553,10 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             
             context.getLogger().log("Validating token at URL: " + validationUrl);
             
-            // Create and configure HttpClient
             HttpClient client = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(5))
                     .build();
                     
-            // Build the request
             HttpRequest httpRequest = HttpRequest.newBuilder()
                     .uri(URI.create(validationUrl))
                     .GET()
@@ -535,10 +564,8 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                     .header("Accept", "application/json")
                     .build();
                     
-            // Send the request and get response
             HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             
-            // Process the response
             int statusCode = httpResponse.statusCode();
             String body = httpResponse.body();
             
@@ -546,7 +573,6 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             context.getLogger().log("Token validation response body: " + body);
             
             if (statusCode >= 200 && statusCode < 300) {
-                // Parse the boolean response
                 boolean isValid = Boolean.parseBoolean(body);
                 return isValid;
             } else {
