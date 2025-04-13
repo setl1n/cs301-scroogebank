@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRenderCellParams, GridRowModel, GridOverlay } from '@mui/x-data-grid';
 import { columns as baseColumns, rows as defaultRows } from './AdminData';
 import { 
   useTheme, 
@@ -24,6 +24,7 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import InboxIcon from '@mui/icons-material/Inbox';
 
 // Define the Account interface
 interface Account {
@@ -35,12 +36,11 @@ interface Account {
 }
 
 interface AdminGridProps {
-  rows?: readonly any[]; // Accept custom rows prop with readonly
+  rows?: readonly GridRowModel[]; // Use GridRowModel which is compatible with DataGrid
 }
 
 export default function AdminGrid({ rows = defaultRows }: AdminGridProps) {
   const theme = useTheme();
-  const isDarkMode = theme.palette.mode === 'dark';
   
   // State for the edit dialog
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -124,28 +124,57 @@ export default function AdminGrid({ rows = defaultRows }: AdminGridProps) {
       field: 'accountType',
       headerName: 'Account Type',
       width: 150,
-      renderCell: (params: GridRenderCellParams) => (
-        <Chip 
-          label={params.value as string}
-          size="small"
-          color={getAccountTypeColor(params.value as string)}
-          sx={{ fontWeight: 600 }}
-        />
-      )
+      renderCell: (params: GridRenderCellParams) => {
+        const accountType = params.value as string;
+        const chipColor = getAccountTypeColor(accountType);
+        return (
+          <Chip 
+            label={accountType}
+            size="small"
+            color={chipColor}
+            sx={{ 
+              fontWeight: 600,
+              color: theme.palette.mode === 'dark' && chipColor === 'default' 
+                ? theme.palette.common.white 
+                : undefined,
+              py: 0.5, // Add vertical padding
+              px: 0.25, // Add horizontal padding
+              height: 'auto', // Allow chip to grow based on content
+              '& .MuiChip-label': {
+                px: 1.5, // More padding for the label
+              }
+            }}
+          />
+        );
+      }
     },
     // Override status column to show colored chips
     {
       field: 'status',
       headerName: 'Status',
       width: 120,
-      renderCell: (params: GridRenderCellParams) => (
-        <Chip 
-          label={params.value as string}
-          size="small"
-          color={getStatusColor(params.value as string)}
-          variant="outlined"
-        />
-      )
+      renderCell: (params: GridRenderCellParams) => {
+        const status = params.value as string;
+        const chipColor = getStatusColor(status);
+        return (
+          <Chip 
+            label={status}
+            size="small"
+            color={chipColor}
+            variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
+            sx={{ 
+              borderColor: theme.palette.mode === 'dark' ? 'transparent' : undefined,
+              py: 0.5, // Add vertical padding
+              px: 0.25, // Add horizontal padding
+              height: 'auto', // Allow chip to grow based on content
+              '& .MuiChip-label': {
+                px: 1.5, // More padding for the label
+                fontWeight: 500,
+              }
+            }}
+          />
+        );
+      }
     },
     // Actions column
     {
@@ -166,6 +195,17 @@ export default function AdminGrid({ rows = defaultRows }: AdminGridProps) {
                 e.stopPropagation();
                 handleEdit(params.row.id.toString());
               }}
+              sx={{ 
+                color: theme.palette.mode === 'dark' ? 'rgb(161, 161, 170)' : theme.palette.text.secondary,
+                '&:hover': {
+                  backgroundColor: theme.palette.mode === 'dark' 
+                    ? 'rgba(63, 63, 70, 0.5)' 
+                    : alpha(theme.palette.primary.main, 0.08),
+                  color: theme.palette.mode === 'dark' 
+                    ? 'rgb(244, 244, 245)' 
+                    : theme.palette.text.primary,
+                }
+              }}
             >
               <EditIcon fontSize="small" />
             </IconButton>
@@ -177,6 +217,17 @@ export default function AdminGrid({ rows = defaultRows }: AdminGridProps) {
                 e.stopPropagation();
                 handleDelete(params.row.id.toString());
               }}
+              sx={{ 
+                color: theme.palette.mode === 'dark' ? 'rgb(161, 161, 170)' : theme.palette.text.secondary,
+                '&:hover': {
+                  backgroundColor: theme.palette.mode === 'dark' 
+                    ? 'rgba(239, 68, 68, 0.2)' 
+                    : alpha(theme.palette.error.main, 0.08),
+                  color: theme.palette.mode === 'dark' 
+                    ? 'rgb(239, 68, 68)' 
+                    : theme.palette.error.main,
+                }
+              }}
             >
               <DeleteIcon fontSize="small" />
             </IconButton>
@@ -185,6 +236,36 @@ export default function AdminGrid({ rows = defaultRows }: AdminGridProps) {
       ),
     }
   ];
+  
+  // Custom No Rows Overlay
+  function CustomNoRowsOverlay() {
+    return (
+      <GridOverlay
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          '& .ant-empty-img-1': {
+            fill: theme.palette.mode === 'dark' ? '#262626' : '#f5f5f5',
+          },
+        }}
+      >
+        <Box sx={{ mt: 1, mb: 2 }}>
+          <InboxIcon 
+            sx={{ 
+              fontSize: '3rem', 
+              color: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'
+            }} 
+          />
+        </Box>
+        <Typography variant="h6" color="text.secondary">
+          No accounts to display
+        </Typography>
+      </GridOverlay>
+    );
+  }
   
   return (
     <>
@@ -200,34 +281,110 @@ export default function AdminGrid({ rows = defaultRows }: AdminGridProps) {
         }}
         pageSizeOptions={[5, 10, 25]}
         disableColumnResize
-        density="compact"
+        density="standard"
+        rowHeight={52}
+        columnHeaderHeight={56}
+        disableRowSelectionOnClick
+        slots={{
+          noRowsOverlay: CustomNoRowsOverlay,
+        }}
         sx={{
-          border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.1)',
-          borderRadius: 1,
-          bgcolor: isDarkMode ? '#121212' : theme.palette.background.paper,
-          color: isDarkMode ? 'white' : 'inherit',
+          // Border styling - matching dashboard zinc/slate styling
+          border: 'none',
+          borderRadius: 0,
+          bgcolor: theme.palette.mode === 'dark' ? 'rgba(24, 24, 27, 0.9)' : '#fff',
+          color: theme.palette.mode === 'dark' ? 'rgb(244, 244, 245)' : theme.palette.text.primary,
           
           // Cell styling
           '& .MuiDataGrid-cell': {
-            color: isDarkMode ? 'white' : 'inherit',
-            borderBottom: isDarkMode
-              ? '1px solid rgba(255, 255, 255, 0.1)'
+            color: theme.palette.mode === 'dark' ? 'rgb(244, 244, 245)' : theme.palette.text.primary,
+            borderBottom: theme.palette.mode === 'dark' 
+              ? '1px solid rgba(63, 63, 70, 0.5)' 
               : `1px solid ${theme.palette.divider}`,
+            padding: '12px 16px',
+            fontSize: '0.9rem',
           },
           
           // Row styling
           '& .MuiDataGrid-row': {
-            backgroundColor: isDarkMode 
-              ? 'rgba(18, 18, 18, 0.4)'
-              : 'inherit',
+            backgroundColor: theme.palette.mode === 'dark' 
+              ? 'rgba(24, 24, 27, 0.9)'
+              : '#fff',
+            '&:hover': {
+              backgroundColor: theme.palette.mode === 'dark'
+                ? 'rgba(39, 39, 42, 0.7)'
+                : alpha(theme.palette.primary.main, 0.04),
+            },
+            '&.even': {
+              backgroundColor: theme.palette.mode === 'dark' 
+                ? 'rgba(39, 39, 42, 0.5)'
+                : alpha(theme.palette.common.black, 0.02),
+            },
+            // Increase row height and spacing
+            minHeight: '52px !important',
+            '&.MuiDataGrid-row--lastVisible': {
+              borderBottom: theme.palette.mode === 'dark'
+                ? '1px solid rgba(63, 63, 70, 0.9)'
+                : `1px solid ${theme.palette.divider}`,
+            },
+            // Better text rendering
+            '& .MuiTypography-root, & .MuiChip-label': {
+              color: theme.palette.mode === 'dark' ? 'rgb(244, 244, 245)' : 'inherit',
+            }
           },
           
           // Header styling
           '& .MuiDataGrid-columnHeaders': {
-            backgroundColor: isDarkMode
-              ? '#1e1e1e'
-              : alpha(theme.palette.background.default, 0.4),
-            color: isDarkMode ? 'white' : 'inherit',
+            backgroundColor: theme.palette.mode === 'dark'
+              ? 'rgba(39, 39, 42, 0.6)'
+              : alpha(theme.palette.common.black, 0.02),
+            color: theme.palette.mode === 'dark' ? 'rgb(161, 161, 170)' : theme.palette.text.secondary,
+            borderBottom: theme.palette.mode === 'dark'
+              ? '1px solid rgba(63, 63, 70, 0.9)'
+              : `1px solid ${theme.palette.divider}`,
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            fontSize: '0.75rem',
+            letterSpacing: '0.05em',
+          },
+          
+          // Footer/pagination styling
+          '& .MuiDataGrid-footerContainer': {
+            borderTop: theme.palette.mode === 'dark'
+              ? '1px solid rgba(63, 63, 70, 0.9)'
+              : `1px solid ${theme.palette.divider}`,
+            backgroundColor: theme.palette.mode === 'dark'
+              ? 'rgba(39, 39, 42, 0.6)'
+              : alpha(theme.palette.common.black, 0.02),
+          },
+          
+          // Checkbox styling
+          '& .MuiCheckbox-root': {
+            color: theme.palette.mode === 'dark' ? 'rgb(161, 161, 170)' : undefined,
+            '&.Mui-checked': {
+              color: theme.palette.mode === 'dark' ? theme.palette.primary.light : undefined,
+            }
+          },
+          
+          // Column separator styling
+          '& .MuiDataGrid-columnSeparator': {
+            color: theme.palette.mode === 'dark' ? 'rgba(63, 63, 70, 0.5)' : theme.palette.divider,
+          },
+          
+          // Selection styling
+          '& .MuiDataGrid-selectedRowCount': {
+            color: theme.palette.mode === 'dark' ? 'rgb(161, 161, 170)' : theme.palette.text.secondary,
+          },
+          
+          // Pagination styling
+          '& .MuiTablePagination-root': {
+            color: theme.palette.mode === 'dark' ? 'rgb(161, 161, 170)' : theme.palette.text.secondary,
+          },
+
+          // No rows overlay
+          '& .MuiDataGrid-overlay': {
+            backgroundColor: 'transparent',
+            color: theme.palette.mode === 'dark' ? 'rgb(161, 161, 170)' : theme.palette.text.secondary,
           }
         }}
       />
@@ -238,8 +395,8 @@ export default function AdminGrid({ rows = defaultRows }: AdminGridProps) {
         onClose={handleCloseEditDialog}
         PaperProps={{
           sx: {
-            bgcolor: theme.palette.mode === 'dark' ? '#1e1e1e' : 'background.paper',
-            boxShadow: 24,
+            bgcolor: theme.palette.background.paper,
+            boxShadow: theme.shadows[4],
             minWidth: { xs: '80%', sm: 400 }
           }
         }}

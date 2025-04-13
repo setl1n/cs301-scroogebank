@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Paper, Alert, CircularProgress, Typography, Snackbar } from '@mui/material';
+import { Box, Paper, Alert, CircularProgress, Typography, Snackbar, useTheme } from '@mui/material';
 import TransactionGrid from '../../../components/ui/common/TransactionGrid';
 import SearchBar from '../../../components/ui/navigation/SearchBar';
 import { transactionService } from '../../../services/transactionService';
@@ -13,6 +13,7 @@ export default function TransactionsTab() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const auth = useAuth();
+  const theme = useTheme();
 
   // Fetch transactions on component mount
   useEffect(() => {
@@ -122,8 +123,11 @@ export default function TransactionsTab() {
           sx={{ 
             borderRadius: 2,
             overflow: 'hidden',
-            height: 600, // Taller than other grids to show more transactions
-            bgcolor: 'transparent'
+            height: 'auto',
+            minHeight: 500,
+            bgcolor: 'transparent',
+            border: `1px solid ${theme.palette.divider}`,
+            boxShadow: theme.shadows[1]
           }}
         >
           <TransactionGrid
