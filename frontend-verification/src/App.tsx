@@ -72,8 +72,8 @@ const App: React.FC = () => {
       formData.append("token", params.token)
       formData.append("email", params.email)
 
-      // Replace with your actual endpoint
-      const response = await fetch("https://your-api-endpoint.com/verify", {
+      // Use the correct endpoint for verification uploads
+      const response = await fetch("https://alb.itsag2t1.com/api/v1/verification/upload", {
         method: "POST",
         body: formData,
       })
