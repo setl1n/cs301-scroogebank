@@ -102,8 +102,8 @@ public class UserHandlerTest {
 
     // Mock repository implementation for testing, overrides the og repo's methods but stores in a hashmap
     private static class MockUserRepository implements UserRepository {
-        private final Map<Long, User> users = new HashMap<>();
-        private long nextId = 1;
+        private final Map<String, User> users = new HashMap<>();
+        private int nextIdCounter = 1;
 
         @Override
         public List<User> findAll() {
@@ -111,7 +111,7 @@ public class UserHandlerTest {
         }
 
         @Override
-        public Optional<User> findById(Long userId) {
+        public Optional<User> findById(String userId) {
             return Optional.ofNullable(users.get(userId));
         }
 
@@ -125,8 +125,8 @@ public class UserHandlerTest {
         @Override
         public User save(User user) {
             if (user.getUserId() == null) {
-                // Create new user
-                user.setUserId(nextId++);
+                // Create new user with string ID
+                user.setUserId("user-" + nextIdCounter++);
                 users.put(user.getUserId(), user);
             } else {
                 // Update existing user
@@ -139,7 +139,7 @@ public class UserHandlerTest {
         }
 
         @Override
-        public void deleteById(Long userId) {
+        public void deleteById(String userId) {
             if (!users.containsKey(userId)) {
                 throw new IllegalArgumentException("User not found with ID: " + userId);
             }
@@ -147,7 +147,7 @@ public class UserHandlerTest {
         }
 
         @Override
-        public boolean existsById(Long userId) {
+        public boolean existsById(String userId) {
             return users.containsKey(userId);
         }
     }
@@ -208,7 +208,7 @@ public class UserHandlerTest {
         // Prepare request for READ operation for a non-existent user
         UserHandler.Request request = new UserHandler.Request();
         request.operation = "READ";
-        request.userId = 999L;
+        request.userId = "999"; // Changed from 999L to "999"
 
         // Call handler
         Object result = handler.handleRequest(request, context);
@@ -231,7 +231,7 @@ public class UserHandlerTest {
         
         // Save the user to get an ID assigned
         User savedUser = mockRepository.save(testUser);
-        Long userId = savedUser.getUserId();
+        String userId = savedUser.getUserId(); // Changed from Long to String
         
         // Now prepare the update
         User updatedUser = new User();
@@ -269,7 +269,7 @@ public class UserHandlerTest {
         
         // Save the user to get an ID assigned
         User savedUser = mockRepository.save(testUser);
-        Long userId = savedUser.getUserId();
+        String userId = savedUser.getUserId(); // Changed from Long to String
 
         UserHandler.Request request = new UserHandler.Request();
         request.operation = "DELETE";

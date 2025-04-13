@@ -9,8 +9,8 @@ import com.cs301g2t1.user.model.Response;
 import com.cs301g2t1.user.model.User;
 import com.cs301g2t1.user.service.UserService;
 import com.cs301g2t1.user.service.UserServiceImpl;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Lambda handler for processing user operations
  */
@@ -20,7 +20,7 @@ public class UserHandler implements RequestHandler<Object, Object> {
 
     public static class Request {
         public String operation;
-        public Long userId;
+        public String userId;
         public User user;
     }
 
@@ -82,17 +82,7 @@ public class UserHandler implements RequestHandler<Object, Object> {
                 request.operation = (String) requestBody.get("operation");
                 
                 if (requestBody.containsKey("userId")) {
-                    // Handle different number types safely
-                    Object userIdObj = requestBody.get("userId");
-                    if (userIdObj instanceof Number) {
-                        request.userId = ((Number) userIdObj).longValue();
-                    } else if (userIdObj != null) {
-                        try {
-                            request.userId = Long.valueOf(userIdObj.toString());
-                        } catch (NumberFormatException e) {
-                            context.getLogger().log("Invalid userId format: " + userIdObj);
-                        }
-                    }
+                    request.userId = (String) requestBody.get("userId");
                 }
                 
                 if (requestBody.containsKey("user")) {

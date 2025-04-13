@@ -66,7 +66,7 @@ public class UserRepositoryImpl implements UserRepository {
 
     // ok this method MIGHT NOT WORK
     @Override
-    public Optional<User> findById(Long userId) {
+    public Optional<User> findById(String userId) {
         try {
             ListUsersRequest listRequest = ListUsersRequest.builder()
                 .userPoolId(USER_POOL_ID)
@@ -152,7 +152,7 @@ public class UserRepositoryImpl implements UserRepository {
                     .orElse(null);
             
             if (sub != null) {
-                user.setUserId(Long.parseLong(sub));
+                user.setUserId(sub);
             }
             
             AdminAddUserToGroupRequest groupRequest = AdminAddUserToGroupRequest.builder()
@@ -227,7 +227,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void deleteById(Long userId) {
+    public void deleteById(String userId) {
         try {
             Optional<User> userOptional = findById(userId);
             if (!userOptional.isPresent()) {
@@ -250,7 +250,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public boolean existsById(Long userId) {
+    public boolean existsById(String userId) {
         try {
             Optional<User> userOptional = findById(userId);
             if (!userOptional.isPresent()) {
@@ -292,9 +292,9 @@ public class UserRepositoryImpl implements UserRepository {
         String sub = attributes.get("sub");
         if (sub != null) {
             try {
-                user.setUserId(Long.parseLong(sub));
+                user.setUserId(sub);
             } catch (NumberFormatException e) {
-                // Handle case where sub isn't a valid Long
+                // Handle case where sub isn't a valid String
                 user.setUserId(null);
             }
         }
@@ -345,7 +345,7 @@ public class UserRepositoryImpl implements UserRepository {
     //     String sub = attributes.get("sub");
     //     if (sub != null) {
     //         try {
-    //             user.setUserId(Long.parseLong(sub));
+    //             user.setUserId(sub);
     //         } catch (NumberFormatException e) {
     //             user.setUserId(null);
     //         }
