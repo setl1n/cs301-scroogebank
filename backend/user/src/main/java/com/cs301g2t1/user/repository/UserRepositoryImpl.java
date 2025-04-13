@@ -16,7 +16,8 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreate
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserResponse;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDeleteUserRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserRequest;
-import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListGroupsForUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListGroupsForUserResponse;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRequest;
@@ -63,18 +64,25 @@ public class UserRepositoryImpl implements UserRepository {
         }
     }
 
+    // ok this method MIGHT NOT WORK
     @Override
     public Optional<User> findById(Long userId) {
         try {
-            // In Cognito, we typically use username or sub as the unique identifier, here we assume userId is mapped to the username in Cognito
-            // Can change ltr
-            AdminGetUserRequest request = AdminGetUserRequest.builder()
-                    .userPoolId(USER_POOL_ID)
-                    .username(userId.toString())
-                    .build();
+            ListUsersRequest listRequest = ListUsersRequest.builder()
+                .userPoolId(USER_POOL_ID)
+                .filter("sub = \"" + userId.toString() + "\"")
+                .limit(1)
+                .build();
             
-            AdminGetUserResponse response = cognitoClient.adminGetUser(request);
-            return Optional.of(mapAdminResponseToUser(response));
+            ListUsersResponse response = cognitoClient.listUsers(listRequest);
+            
+            if (response.users().isEmpty()) {
+                return Optional.empty();
+            }
+            
+            // Map the first (and should be only) result to our User model
+            User user = mapToUser(response.users().get(0));
+            return Optional.of(user);
         } catch (UserNotFoundException e) {
             return Optional.empty();
         } catch (Exception e) {
@@ -121,7 +129,7 @@ public class UserRepositoryImpl implements UserRepository {
             attributes.add(AttributeType.builder().name("email").value(user.getEmail()).build());
             attributes.add(AttributeType.builder().name("given_name").value(user.getFirstName()).build());
             attributes.add(AttributeType.builder().name("family_name").value(user.getLastName()).build());
-            attributes.add(AttributeType.builder().name("custom:role").value(user.getRole().toString()).build());
+            // attributes.add(AttributeType.builder().name("custom:role").value(user.getRole().toString()).build());
             
             // Generate a temporary password
             String temporaryPassword = generateRandomPassword();
@@ -170,11 +178,11 @@ public class UserRepositoryImpl implements UserRepository {
             attributes.add(AttributeType.builder().name("email").value(user.getEmail()).build());
             attributes.add(AttributeType.builder().name("given_name").value(user.getFirstName()).build());
             attributes.add(AttributeType.builder().name("family_name").value(user.getLastName()).build());
-            attributes.add(AttributeType.builder().name("custom:role").value(user.getRole().toString()).build());
+            // attributes.add(AttributeType.builder().name("custom:role").value(user.getRole().toString()).build());
             
             AdminUpdateUserAttributesRequest updateRequest = AdminUpdateUserAttributesRequest.builder()
                     .userPoolId(USER_POOL_ID)
-                    .username(user.getUserId().toString()) // Assuming ID is username in Cognito
+                    .username(user.getEmail())
                     .userAttributes(attributes)
                     .build();
             
@@ -183,7 +191,7 @@ public class UserRepositoryImpl implements UserRepository {
             // UNCOMMENT THESE CODE IF YOU WANT TO ALLOW UPDATE USER TO CHANGE A USER'S ROLE
             // AdminGetUserResponse currentUserResponse = cognitoClient.adminGetUser(AdminGetUserRequest.builder()
             // .userPoolId(USER_POOL_ID)
-            // .username(user.getUserId().toString())
+            // .username(user.getEmail())
             // .build());
 
             // // Extract current role from custom:role attribute
@@ -198,14 +206,14 @@ public class UserRepositoryImpl implements UserRepository {
             //     // Remove from old group
             //     cognitoClient.adminRemoveUserFromGroup(AdminRemoveUserFromGroupRequest.builder()
             //             .userPoolId(USER_POOL_ID)
-            //             .username(user.getUserId().toString())
+            //             .username(user.getEmail())
             //             .groupName(currentRoleStr)
             //             .build());
                         
             //     // Add to new group
             //     cognitoClient.adminAddUserToGroup(AdminAddUserToGroupRequest.builder()
             //             .userPoolId(USER_POOL_ID)
-            //             .username(user.getUserId().toString())
+            //             .username(user.getEmail())
             //             .groupName(user.getRole().toString())
             //             .build());
             // }
@@ -221,9 +229,16 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public void deleteById(Long userId) {
         try {
+            Optional<User> userOptional = findById(userId);
+            if (!userOptional.isPresent()) {
+                throw new IllegalArgumentException("User not found with ID: " + userId);
+            }
+            
+            String userEmail = userOptional.get().getEmail();
+            
             AdminDeleteUserRequest deleteRequest = AdminDeleteUserRequest.builder()
                     .userPoolId(USER_POOL_ID)
-                    .username(userId.toString())
+                    .username(userEmail) // Use the email from the found user
                     .build();
             
             cognitoClient.adminDeleteUser(deleteRequest);
@@ -237,9 +252,16 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public boolean existsById(Long userId) {
         try {
+            Optional<User> userOptional = findById(userId);
+            if (!userOptional.isPresent()) {
+                return false;
+            }
+            
+            String userEmail = userOptional.get().getEmail();
+            
             AdminGetUserRequest request = AdminGetUserRequest.builder()
                     .userPoolId(USER_POOL_ID)
-                    .username(userId.toString())
+                    .username(userEmail) // Use the email from the found user
                     .build();
             
             cognitoClient.adminGetUser(request);
@@ -262,6 +284,10 @@ public class UserRepositoryImpl implements UserRepository {
                         AttributeType::value
                 ));
         
+        user.setEmail(attributes.getOrDefault("email", ""));
+        user.setFirstName(attributes.getOrDefault("given_name", ""));
+        user.setLastName(attributes.getOrDefault("family_name", ""));
+
         // Set user properties from attributes
         String sub = attributes.get("sub");
         if (sub != null) {
@@ -273,54 +299,72 @@ public class UserRepositoryImpl implements UserRepository {
             }
         }
         
-        user.setEmail(attributes.get("email"));
-        user.setFirstName(attributes.get("given_name"));
-        user.setLastName(attributes.get("family_name"));
-        // Map roles here -- might hv some capitalisation issue
-        String roleStr = attributes.getOrDefault("custom:role", "AGENT");
+        // determine role from cognito group
         try {
-            user.setRole(UserRole.valueOf(roleStr));
-        } catch (IllegalArgumentException e) {
-            // Default to AGENT if the string doesn't match any enum
+            String username = user.getEmail();
+            
+            // Get user's groups
+            AdminListGroupsForUserRequest groupsRequest = AdminListGroupsForUserRequest.builder()
+                    .userPoolId(USER_POOL_ID)
+                    .username(username)
+                    .build();
+                    
+            AdminListGroupsForUserResponse groupsResponse = cognitoClient.adminListGroupsForUser(groupsRequest);
+            
+            // Default to AGENT if no groups or error
+            UserRole role = UserRole.AGENT;
+            
+            // Check if user is in ADMIN group
+            boolean isAdmin = groupsResponse.groups().stream()
+                    .anyMatch(group -> "ADMIN".equals(group.groupName()));
+                    
+            if (isAdmin) {
+                role = UserRole.ADMIN;
+            }
+            
+            user.setRole(role);
+        } catch (Exception e) {
+            // Default to AGENT on error
             user.setRole(UserRole.AGENT);
+            // Log error
         }
         
         return user;
     }
     
-    private User mapAdminResponseToUser(AdminGetUserResponse response) {
-        User user = new User();
+    // private User mapAdminResponseToUser(AdminGetUserResponse response) {
+    //     User user = new User();
         
-        // Extract attributes
-        Map<String, String> attributes = response.userAttributes().stream()
-                .collect(Collectors.toMap(
-                        AttributeType::name,
-                        AttributeType::value
-                ));
+    //     // Extract attributes
+    //     Map<String, String> attributes = response.userAttributes().stream()
+    //             .collect(Collectors.toMap(
+    //                     AttributeType::name,
+    //                     AttributeType::value
+    //             ));
         
-        String sub = attributes.get("sub");
-        if (sub != null) {
-            try {
-                user.setUserId(Long.parseLong(sub));
-            } catch (NumberFormatException e) {
-                user.setUserId(null);
-            }
-        }
+    //     String sub = attributes.get("sub");
+    //     if (sub != null) {
+    //         try {
+    //             user.setUserId(Long.parseLong(sub));
+    //         } catch (NumberFormatException e) {
+    //             user.setUserId(null);
+    //         }
+    //     }
         
-        user.setEmail(attributes.get("email"));
-        user.setFirstName(attributes.get("given_name"));
-        user.setLastName(attributes.get("family_name"));
-        // Map roles here -- might hv some capitalisation issue
-        String roleStr = attributes.getOrDefault("custom:role", "AGENT");
-        try {
-            user.setRole(UserRole.valueOf(roleStr));
-        } catch (IllegalArgumentException e) {
-            // Default to AGENT if the string doesn't match any enum
-            user.setRole(UserRole.AGENT);
-        }
+    //     user.setEmail(attributes.get("email"));
+    //     user.setFirstName(attributes.get("given_name"));
+    //     user.setLastName(attributes.get("family_name"));
+    //     // Map roles here -- might hv some capitalisation issue
+    //     String roleStr = attributes.getOrDefault("custom:role", "AGENT");
+    //     try {
+    //         user.setRole(UserRole.valueOf(roleStr));
+    //     } catch (IllegalArgumentException e) {
+    //         // Default to AGENT if the string doesn't match any enum
+    //         user.setRole(UserRole.AGENT);
+    //     }
         
-        return user;
-    }
+    //     return user;
+    // }
     
     private String generateRandomPassword() {
         // Generate a random password that meets Cognito requirements -- find more secure method later

@@ -12,6 +12,21 @@ resource "aws_cognito_user_pool" "user_pool" {
     allow_admin_create_user_only = true
   }
 
+  # // to map to user schema role...
+  # schema {
+  #   name                = "role"
+  #   attribute_data_type = "String"
+  #   developer_only_attribute = false
+  #   mutable             = false
+  #   required            = false
+
+  #   // have to specify for some reason -- found on forum
+  #   string_attribute_constraints {
+  #     min_length = 0
+  #     max_length = 2048
+  #   }
+  # }
+
   password_policy {
     minimum_length    = var.password_min_length
     require_lowercase = var.password_require_lowercase
