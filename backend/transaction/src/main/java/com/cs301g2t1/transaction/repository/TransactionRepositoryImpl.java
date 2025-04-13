@@ -182,6 +182,25 @@ public class TransactionRepositoryImpl implements TransactionRepository {
         }
     }
 
+    @Override
+    public List<Transaction> findAllByClientId(Long clientId) {
+        List<Transaction> transactions = new ArrayList<>();
+        try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
+             PreparedStatement statement = connection.prepareStatement("SELECT * FROM transactions WHERE client_id = ?")) {
+
+            statement.setLong(1, clientId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    Transaction transaction = mapRowToTransaction(resultSet);
+                    transactions.add(transaction);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to fetch transactions for client", e);
+        }
+        return transactions;
+    }
+
     private Transaction mapRowToTransaction(ResultSet resultSet) throws SQLException {
         Transaction transaction = new Transaction();
         transaction.setId(resultSet.getLong("id"));
