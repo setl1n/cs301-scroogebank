@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.cs301g2t1.transaction.model.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Lambda handler for processing transactions
@@ -23,6 +24,14 @@ import com.cs301g2t1.transaction.model.*;
 public class TransactionHandler implements RequestHandler<Object, Object> {
 
     private final TransactionService transactionService = new TransactionServiceImpl();
+    private final ObjectMapper objectMapper;
+
+    public TransactionHandler() {
+        // Initialize and configure the ObjectMapper
+        this.objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+        objectMapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    }
 
     public static class Request {
         public String operation;
@@ -34,7 +43,7 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
     public Object handleRequest(Object input, Context context) {
         context.getLogger().log("Received request: " + input);
 
-        // Check if this is an API Gateway request with path information
+        // Check if this is an API Gateway/ALB request with path information
         if (input instanceof Map requestMap) {            
             // Check if this is a health check request to /api/v1/health
             if (requestMap.containsKey("path")) {
@@ -42,6 +51,68 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
                 if ("/api/v1/health".equals(path)) {
                     context.getLogger().log("Processing health check request");
                     return handleHealthCheck(new HashMap<>());
+                }
+            }
+            
+            // Handle ALB/API Gateway request format (where operation is in the body)
+            if (requestMap.containsKey("body")) {
+                try {
+                    // Get the body content which may be a string or a map
+                    Object bodyObj = requestMap.get("body");
+                    Map<String, Object> bodyMap;
+                    
+                    if (bodyObj instanceof String) {
+                        // Parse the body string as JSON
+                        context.getLogger().log("Parsing body string: " + bodyObj);
+                        bodyMap = objectMapper.readValue((String) bodyObj, Map.class);
+                    } else if (bodyObj instanceof Map) {
+                        // Body is already a map
+                        bodyMap = (Map<String, Object>) bodyObj;
+                    } else {
+                        context.getLogger().log("Unexpected body format: " + (bodyObj != null ? bodyObj.getClass() : "null"));
+                        return createErrorResponse(400, "Invalid request format");
+                    }
+                    
+                    context.getLogger().log("Parsed body: " + bodyMap);
+                    
+                    // Now extract operation and other fields from the bodyMap
+                    if (bodyMap.containsKey("operation")) {
+                        Request request = new Request();
+                        request.operation = (String) bodyMap.get("operation");
+                        
+                        if (bodyMap.containsKey("transactionId")) {
+                            // Handle different number types safely
+                            Object transactionIdObj = bodyMap.get("transactionId");
+                            if (transactionIdObj instanceof Number) {
+                                request.transactionId = ((Number) transactionIdObj).longValue();
+                            } else if (transactionIdObj != null) {
+                                try {
+                                    request.transactionId = Long.valueOf(transactionIdObj.toString());
+                                } catch (NumberFormatException e) {
+                                    context.getLogger().log("Invalid transactionId format: " + transactionIdObj);
+                                }
+                            }
+                        }
+                        
+                        if (bodyMap.containsKey("transaction")) {
+                            Object transactionObj = bodyMap.get("transaction");
+                            if (transactionObj != null) {
+                                if (transactionObj instanceof Transaction) {
+                                    request.transaction = Optional.of((Transaction) transactionObj);
+                                } else if (transactionObj instanceof Map mapTransactionObj) {
+                                    // Convert the Map to a Transaction object
+                                    Transaction transaction = mapToTransaction(mapTransactionObj);
+                                    request.transaction = Optional.of(transaction);
+                                }
+                            }
+                        }
+                        
+                        return handleRegularRequest(request, context);
+                    }
+                } catch (Exception e) {
+                    context.getLogger().log("Error parsing request body: " + e.getMessage());
+                    e.printStackTrace();
+                    return createErrorResponse(400, "Error parsing request: " + e.getMessage());
                 }
             }
             
@@ -86,9 +157,19 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
             return handleRegularRequest((Request) input, context);
         }
 
-        return new Response<>(false, "Invalid request format", null);
+        context.getLogger().log("Could not process request format");
+        return createErrorResponse(400, "Invalid request format");
     }
     
+    // Helper method to create error response
+    private Map<String, Object> createErrorResponse(int statusCode, String errorMessage) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("statusCode", statusCode);
+        response.put("headers", createCorsHeaders());
+        response.put("body", "{\"result\":false,\"errorMessage\":\"" + errorMessage.replace("\"", "\\\"") + "\",\"data\":null}");
+        return response;
+    }
+
     private Transaction mapToTransaction(Map<String, Object> map) {
         Transaction transaction = new Transaction();
         
@@ -249,90 +330,221 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
         }
     }
 
-    private Response handleCreate(Request request, Context context) {
+    private Object handleCreate(Request request, Context context) {
         try {
             if (!request.transaction.isPresent()) {
-                return new Response(false, "Transaction data is missing", null);
+                Map<String, Object> response = new HashMap<>();
+                response.put("statusCode", 400);
+                response.put("headers", createCorsHeaders());
+                response.put("body", "{\"result\":false,\"errorMessage\":\"Transaction data is missing\",\"data\":null}");
+                return response;
             }
 
             Transaction transaction = request.transaction.get();
             context.getLogger().log("Creating transaction: " + transaction);
 
-            transactionService.createTransaction(transaction);
-            return new Response(true, "Transaction created successfully", transaction);
+            Transaction createdTransaction = transactionService.createTransaction(transaction);
+            
+            // Create ALB-compatible response
+            Map<String, Object> response = new HashMap<>();
+            response.put("statusCode", 201); // 201 Created
+            response.put("headers", createCorsHeaders());
+            
+            // Create a Response object and convert it to JSON for the body
+            Response<Transaction> responseObj = new Response<>(true, "Transaction created successfully", createdTransaction);
+            String responseBody = convertToJson(responseObj);
+            response.put("body", responseBody);
+            
+            return response;
         } catch (Exception e) {
             context.getLogger().log("Error creating transaction: " + e.getMessage());
-            return new Response(false, "Failed to create transaction: " + e.getMessage(), null);
+            
+            // Create error response
+            Map<String, Object> response = new HashMap<>();
+            response.put("statusCode", 500);
+            response.put("headers", createCorsHeaders());
+            response.put("body", "{\"result\":false,\"errorMessage\":\"Failed to create transaction: " 
+                    + e.getMessage().replace("\"", "\\\"") + "\",\"data\":null}");
+            return response;
         }
     }
 
-    private Response handleRead(Request request, Context context) {
+    private Object handleRead(Request request, Context context) {
         try {
             if (request.transactionId == null) {
-                return new Response(false, "Transaction ID is missing", null);
+                Map<String, Object> response = new HashMap<>();
+                response.put("statusCode", 400);
+                response.put("headers", createCorsHeaders());
+                response.put("body", "{\"result\":false,\"errorMessage\":\"Transaction ID is missing\",\"data\":null}");
+                return response;
             }
 
             Transaction transaction = transactionService.getTransactionById(request.transactionId);
-            return new Response(true, "Transaction retrieved successfully", transaction);
+            // Create ALB-compatible response
+            Map<String, Object> response = new HashMap<>();
+            response.put("statusCode", 200);
+            response.put("headers", createCorsHeaders());
+            
+            // Create a Response object and convert it to JSON for the body
+            Response<Transaction> responseObj = new Response<>(true, "Transaction retrieved successfully", transaction);
+            String responseBody = convertToJson(responseObj);
+            response.put("body", responseBody);
+            
+            return response;
         } catch (Exception e) {
             context.getLogger().log("Error reading transaction: " + e.getMessage());
-            return new Response(false, "Failed to read transaction: " + e.getMessage(), null);
+            
+            // Create error response
+            Map<String, Object> response = new HashMap<>();
+            response.put("statusCode", 500);
+            response.put("headers", createCorsHeaders());
+            response.put("body", "{\"result\":false,\"errorMessage\":\"Failed to read transaction: " 
+                    + e.getMessage().replace("\"", "\\\"") + "\",\"data\":null}");
+            return response;
         }
     }
 
-    private Response<List<Transaction>> handleReadAll(Request request, Context context) {
+    private Object handleReadAll(Request request, Context context) {
         try {
             List<Transaction> transactions = transactionService.getAllTransactions();
-            return new Response<>(true, "All transactions retrieved successfully", transactions);
+            
+            // Create ALB-compatible response
+            Map<String, Object> response = new HashMap<>();
+            response.put("statusCode", 200);
+            response.put("headers", createCorsHeaders());
+            
+            // Create a Response object and convert it to JSON for the body
+            Response<List<Transaction>> responseObj = new Response<>(true, "All transactions retrieved successfully", transactions);
+            String responseBody = convertToJson(responseObj);
+            response.put("body", responseBody);
+            
+            return response;
         } catch (Exception e) {
             context.getLogger().log("Error retrieving all transactions: " + e.getMessage());
-            return new Response<>(false, "Failed to retrieve all transactions: " + e.getMessage(), null);
+            
+            // Create error response
+            Map<String, Object> response = new HashMap<>();
+            response.put("statusCode", 500);
+            response.put("headers", createCorsHeaders());
+            response.put("body", "{\"result\":false,\"errorMessage\":\"Failed to retrieve all transactions: " 
+                    + e.getMessage().replace("\"", "\\\"") + "\",\"data\":null}");
+            return response;
         }
     }
 
-    private Response<List<Transaction>> handleReadByClient(Request request, Context context) {
+    private Object handleReadByClient(Request request, Context context) {
         try {
             if (request.transactionId == null) {
-                return new Response<>(false, "Client ID is missing", null);
+                Map<String, Object> response = new HashMap<>();
+                response.put("statusCode", 400);
+                response.put("headers", createCorsHeaders());
+                response.put("body", "{\"result\":false,\"errorMessage\":\"Client ID is missing\",\"data\":null}");
+                return response;
             }
 
             List<Transaction> transactions = transactionService.getTransactionsByClientId(request.transactionId);
-            return new Response<>(true, "Transactions for client retrieved successfully", transactions);
+            
+            // Create ALB-compatible response
+            Map<String, Object> response = new HashMap<>();
+            response.put("statusCode", 200);
+            response.put("headers", createCorsHeaders());
+            
+            // Create a Response object and convert it to JSON for the body
+            Response<List<Transaction>> responseObj = new Response<>(true, "Transactions for client retrieved successfully", transactions);
+            String responseBody = convertToJson(responseObj);
+            response.put("body", responseBody);
+            
+            return response;
         } catch (Exception e) {
             context.getLogger().log("Error retrieving transactions for client: " + e.getMessage());
-            return new Response<>(false, "Failed to retrieve transactions for client: " + e.getMessage(), null);
+            
+            // Create error response
+            Map<String, Object> response = new HashMap<>();
+            response.put("statusCode", 500);
+            response.put("headers", createCorsHeaders());
+            response.put("body", "{\"result\":false,\"errorMessage\":\"Failed to retrieve transactions for client: " 
+                    + e.getMessage().replace("\"", "\\\"") + "\",\"data\":null}");
+            return response;
         }
     }
-
-    private Response handleUpdate(Request request, Context context) {
+    
+    private Object handleUpdate(Request request, Context context) {
         try {
             if (request.transactionId == null) {
-                return new Response(false, "Transaction ID is missing", null);
+                Map<String, Object> response = new HashMap<>();
+                response.put("statusCode", 400);
+                response.put("headers", createCorsHeaders());
+                response.put("body", "{\"result\":false,\"errorMessage\":\"Transaction ID is missing\",\"data\":null}");
+                return response;
             }
 
             if (!request.transaction.isPresent()) {
-                return new Response(false, "Transaction data is missing", null);
+                Map<String, Object> response = new HashMap<>();
+                response.put("statusCode", 400);
+                response.put("headers", createCorsHeaders());
+                response.put("body", "{\"result\":false,\"errorMessage\":\"Transaction data is missing\",\"data\":null}");
+                return response;
             }
 
             Transaction updatedTransaction = transactionService.updateTransaction(request.transactionId, request.transaction.get());
-            return new Response(true, "Transaction updated successfully", updatedTransaction);
+            
+            // Create ALB-compatible response
+            Map<String, Object> response = new HashMap<>();
+            response.put("statusCode", 200);
+            response.put("headers", createCorsHeaders());
+            
+            // Create a Response object and convert it to JSON for the body
+            Response<Transaction> responseObj = new Response<>(true, "Transaction updated successfully", updatedTransaction);
+            String responseBody = convertToJson(responseObj);
+            response.put("body", responseBody);
+            
+            return response;
         } catch (Exception e) {
             context.getLogger().log("Error updating transaction: " + e.getMessage());
-            return new Response(false, "Failed to update transaction: " + e.getMessage(), null);
+            
+            // Create error response
+            Map<String, Object> response = new HashMap<>();
+            response.put("statusCode", 500);
+            response.put("headers", createCorsHeaders());
+            response.put("body", "{\"result\":false,\"errorMessage\":\"Failed to update transaction: " 
+                    + e.getMessage().replace("\"", "\\\"") + "\",\"data\":null}");
+            return response;
         }
     }
 
-    private Response handleDelete(Request request, Context context) {
+    private Object handleDelete(Request request, Context context) {
         try {
             if (request.transactionId == null) {
-                return new Response(false, "Transaction ID is missing", null);
+                Map<String, Object> response = new HashMap<>();
+                response.put("statusCode", 400);
+                response.put("headers", createCorsHeaders());
+                response.put("body", "{\"result\":false,\"errorMessage\":\"Transaction ID is missing\",\"data\":null}");
+                return response;
             }
 
             transactionService.deleteTransaction(request.transactionId);
-            return new Response(true, "Transaction deleted successfully", null);
+            
+            // Create ALB-compatible response
+            Map<String, Object> response = new HashMap<>();
+            response.put("statusCode", 200);
+            response.put("headers", createCorsHeaders());
+            
+            // Create a Response object and convert it to JSON for the body
+            Response<Object> responseObj = new Response<>(true, "Transaction deleted successfully", null);
+            String responseBody = convertToJson(responseObj);
+            response.put("body", responseBody);
+            
+            return response;
         } catch (Exception e) {
             context.getLogger().log("Error deleting transaction: " + e.getMessage());
-            return new Response(false, "Failed to delete transaction: " + e.getMessage(), null);
+            
+            // Create error response
+            Map<String, Object> response = new HashMap<>();
+            response.put("statusCode", 500);
+            response.put("headers", createCorsHeaders());
+            response.put("body", "{\"result\":false,\"errorMessage\":\"Failed to delete transaction: " 
+                    + e.getMessage().replace("\"", "\\\"") + "\",\"data\":null}");
+            return response;
         }
     }
 
@@ -365,6 +577,43 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
             context.getLogger().log("SFTP connection failed: " + e.getMessage());
             e.printStackTrace();
             return new Response(false, "SFTP connection failed: " + e.getMessage(), null);
+        }
+    }
+    
+    // Helper method to create CORS headers
+    private Map<String, String> createCorsHeaders() {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Access-Control-Allow-Origin", "*");
+        headers.put("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key");
+        headers.put("Access-Control-Allow-Methods", "OPTIONS,POST,GET,PUT,DELETE");
+        headers.put("Content-Type", "application/json");
+        return headers;
+    }
+    
+    // Helper method to convert object to JSON string
+    private String convertToJson(Object obj) {
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+            mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+            return mapper.writeValueAsString(obj);
+        } catch (Exception e) {
+            // Fallback to basic JSON if Jackson fails
+            if (obj instanceof Response) {
+                Response<?> resp = (Response<?>) obj;
+                String dataJson = "null";
+                if (resp.getData() != null) {
+                    if (resp.getData() instanceof List) {
+                        dataJson = "[]"; // Simplified - in a real scenario we'd need proper serialization
+                    } else {
+                        dataJson = "{}"; // Simplified
+                    }
+                }
+                return "{\"result\":" + resp.isResult() + 
+                       ",\"errorMessage\":\"" + (resp.getErrorMessage() != null ? resp.getErrorMessage().replace("\"", "\\\"") : "") + "\"," +
+                       "\"data\":" + dataJson + "}";
+            }
+            return "{}";
         }
     }
 }
