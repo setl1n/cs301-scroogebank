@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { signOutWithCognito } from '@/utils/auth';
+import { signOutWithCognito, signInWithCognito } from '@/utils/auth';
 
 const LoginPage = () => {
   const auth = useAuth();
@@ -13,9 +13,10 @@ const LoginPage = () => {
   // Handler for login button click
   const handleLoginClick = () => {
     console.log('Attempting to sign in with config:', config.cognitoConfig);
-    auth.signinRedirect().catch(error => {
-      console.error('Login redirect error:', error);
-    });
+    signInWithCognito(auth)
+    // auth.signinRedirect().catch(error => {
+    //   console.error('Login redirect error:', error);
+    // });
   };
 
   // Log auth state changes for debugging
