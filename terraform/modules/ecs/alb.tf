@@ -61,9 +61,6 @@ resource "aws_lb_listener_rule" "app" {
         session_cookie_name = "AWSELBAuthSessionCookie"
         session_timeout     = 604800
         scope               = "openid email"
-        authentication_request_extra_params = {
-          "prompt" = "login"
-        }
 
         on_unauthenticated_request = "authenticate"
       }

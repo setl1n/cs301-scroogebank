@@ -11,6 +11,7 @@ import com.cs301g2t1.user.model.UserRole;
 
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminAddUserToGroupRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserResponse;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDeleteUserRequest;
@@ -112,6 +113,9 @@ public class UserRepositoryImpl implements UserRepository {
 
     private User createUser(User user) {
         try {
+            // Make sure role correct first
+            validateUserRole(user.getRole());
+
             // Convert user attributes
             List<AttributeType> attributes = new ArrayList<>();
             attributes.add(AttributeType.builder().name("email").value(user.getEmail()).build());
@@ -143,6 +147,14 @@ public class UserRepositoryImpl implements UserRepository {
                 user.setUserId(Long.parseLong(sub));
             }
             
+            AdminAddUserToGroupRequest groupRequest = AdminAddUserToGroupRequest.builder()
+            .userPoolId(USER_POOL_ID)
+            .username(user.getEmail()) // Using email as username
+            .groupName(user.getRole().toString()) // ADMIN or AGENT matching Cognito group names
+            .build();
+            
+            cognitoClient.adminAddUserToGroup(groupRequest);
+
             return user;
         } catch (Exception e) {
             throw new RuntimeException("Failed to create user in Cognito: " + e.getMessage(), e);
@@ -151,6 +163,9 @@ public class UserRepositoryImpl implements UserRepository {
 
     private User updateUser(User user) {
         try {
+            // Make sure role correct first
+            validateUserRole(user.getRole());
+
             List<AttributeType> attributes = new ArrayList<>();
             attributes.add(AttributeType.builder().name("email").value(user.getEmail()).build());
             attributes.add(AttributeType.builder().name("given_name").value(user.getFirstName()).build());
@@ -164,6 +179,37 @@ public class UserRepositoryImpl implements UserRepository {
                     .build();
             
             cognitoClient.adminUpdateUserAttributes(updateRequest);
+
+            // UNCOMMENT THESE CODE IF YOU WANT TO ALLOW UPDATE USER TO CHANGE A USER'S ROLE
+            // AdminGetUserResponse currentUserResponse = cognitoClient.adminGetUser(AdminGetUserRequest.builder()
+            // .userPoolId(USER_POOL_ID)
+            // .username(user.getUserId().toString())
+            // .build());
+
+            // // Extract current role from custom:role attribute
+            // String currentRoleStr = currentUserResponse.userAttributes().stream()
+            //         .filter(attr -> "custom:role".equals(attr.name()))
+            //         .findFirst()
+            //         .map(AttributeType::value)
+            //         .orElse("AGENT");
+
+            // // If role has changed, update group membership
+            // if (!currentRoleStr.equals(user.getRole().toString())) {
+            //     // Remove from old group
+            //     cognitoClient.adminRemoveUserFromGroup(AdminRemoveUserFromGroupRequest.builder()
+            //             .userPoolId(USER_POOL_ID)
+            //             .username(user.getUserId().toString())
+            //             .groupName(currentRoleStr)
+            //             .build());
+                        
+            //     // Add to new group
+            //     cognitoClient.adminAddUserToGroup(AdminAddUserToGroupRequest.builder()
+            //             .userPoolId(USER_POOL_ID)
+            //             .username(user.getUserId().toString())
+            //             .groupName(user.getRole().toString())
+            //             .build());
+            // }
+
             return user;
         } catch (UserNotFoundException e) {
             throw new IllegalArgumentException("User not found with ID: " + user.getUserId());
@@ -279,5 +325,12 @@ public class UserRepositoryImpl implements UserRepository {
     private String generateRandomPassword() {
         // Generate a random password that meets Cognito requirements -- find more secure method later
         return "Temp" + System.currentTimeMillis() + "!";
+    }
+
+    private void validateUserRole(UserRole role) {
+        // Ensure role matches one of Cognito groups
+        if (role != UserRole.ADMIN && role != UserRole.AGENT) {
+            throw new IllegalArgumentException("Invalid role: " + role);
+        }
     }
 }
