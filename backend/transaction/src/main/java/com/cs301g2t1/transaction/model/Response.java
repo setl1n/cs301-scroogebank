@@ -1,14 +1,14 @@
 package com.cs301g2t1.transaction.model;
 
-public class Response {
+public class Response<T> {
     private boolean result;
     private String errorMessage;
-    private Transaction data;
+    private T data;
 
     public Response() {
     }
 
-    public Response(boolean result, String errorMessage, Transaction data) {
+    public Response(boolean result, String errorMessage, T data) {
         this.result = result;
         this.errorMessage = errorMessage;
         this.data = data;
@@ -30,11 +30,11 @@ public class Response {
         this.errorMessage = errorMessage;
     }
 
-    public Transaction getData() {
+    public T getData() {
         return data;
     }
 
-    public void setData(Transaction data) {
+    public void setData(T data) {
         this.data = data;
     }
 }

@@ -7,6 +7,7 @@ import java.util.Optional;
 public interface TransactionRepository {
     List<Transaction> findAll();
     Optional<Transaction> findById(Long id);
+    List<Transaction> findAllByClientId(Long clientId);
     Transaction save(Transaction transaction);
     void deleteById(Long id);
     boolean existsById(Long id);

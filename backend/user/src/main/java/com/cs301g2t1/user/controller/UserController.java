@@ -38,7 +38,7 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')") // This line only allows all of these endpoints to be accessed by Admin users
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable("id") Long id) {
+    public ResponseEntity<User> getUserById(@PathVariable("id") String id) {
         return userService.getUserById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -57,7 +57,7 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')") // This line only allows all of these endpoints to be accessed by Admin users
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable("id") Long id, @Valid @RequestBody User updatedUser) {
+    public ResponseEntity<?> updateUser(@PathVariable("id") String id, @Valid @RequestBody User updatedUser) {
         try {
             User updated = userService.updateUser(id, updatedUser);
             return ResponseEntity.ok(updated);
@@ -68,7 +68,7 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')") // This line only allows all of these endpoints to be accessed by Admin users
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") String id) {
         try {
             userService.deleteUser(id);
             return ResponseEntity.noContent().build();
