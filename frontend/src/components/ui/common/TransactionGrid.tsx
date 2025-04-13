@@ -1,15 +1,23 @@
-import { useState, useEffect } from 'react';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { useTheme, alpha, Chip } from '@mui/material';
-import { Transaction, formatTransactionType, formatTransactionStatus } from '../../../types/Transaction';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
 
-// Define column structure based on our Transaction model
+// API transaction interface that matches our data structure
+interface ApiTransaction {
+  id: string;
+  amount: number;
+  type: string;
+  status: string;
+  date: string;
+  clientName: string;
+  clientId: string;
+}
+
+// Define column structure based on the API transaction model
 const columns: GridColDef[] = [
   { 
     field: 'id', 
     headerName: 'Transaction ID', 
     width: 180,
-    valueGetter: (params) => `TRX-${params.value}`
   },
   { 
     field: 'amount', 
@@ -18,20 +26,19 @@ const columns: GridColDef[] = [
     type: 'number',
     valueFormatter: (params) => {
       if (params.value == null) return '';
-      return `$${params.value.toFixed(2)}`;
+      return `$${Number(params.value).toFixed(2)}`;
     }
   },
   { 
-    field: 'transactionType', 
+    field: 'type', 
     headerName: 'Type', 
     width: 150,
-    valueFormatter: (params) => formatTransactionType(params.value), 
     renderCell: (params) => {
-      const type = params.value;
+      const type = String(params.value);
       return (
         <Chip 
-          label={formatTransactionType(type)} 
-          color={type === 'D' ? 'primary' : 'secondary'} 
+          label={type} 
+          color={type === 'Deposit' ? 'primary' : 'secondary'} 
           variant="outlined" 
           size="small" 
         />
@@ -42,27 +49,22 @@ const columns: GridColDef[] = [
     field: 'status', 
     headerName: 'Status', 
     width: 150,
-    valueFormatter: (params) => formatTransactionStatus(params.value),
     renderCell: (params) => {
-      const status = params.value;
-      let color = 'default';
+      const status = String(params.value);
+      let color: 'success' | 'warning' | 'error' | 'default' = 'default';
       
-      switch (status) {
-        case 'COMPLETED':
-          color = 'success';
-          break;
-        case 'PENDING':
-          color = 'warning';
-          break;
-        case 'FAILED':
-          color = 'error';
-          break;
+      if (status === 'Completed') {
+        color = 'success';
+      } else if (status === 'Pending') {
+        color = 'warning';
+      } else if (status === 'Failed') {
+        color = 'error';
       }
       
       return (
         <Chip 
-          label={formatTransactionStatus(status)} 
-          color={color as any} 
+          label={status} 
+          color={color} 
           size="small" 
         />
       );
@@ -91,14 +93,12 @@ const columns: GridColDef[] = [
 ];
 
 interface TransactionGridProps {
-  rows: Transaction[];
-  agentId?: string; // Agent ID for filtering
+  rows: ApiTransaction[];
   loading?: boolean;
 }
 
 export default function TransactionGrid({ 
   rows,
-  agentId,
   loading = false
 }: TransactionGridProps) {
   const theme = useTheme();

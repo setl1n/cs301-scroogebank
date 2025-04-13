@@ -10,9 +10,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import { hasGroupAccess } from './utils/auth'
 import ClientsTab from './pages/agent/components/ClientsTab'
 import TransactionsTab from './pages/agent/components/TransactionsTab'
-import NewAdmin from './pages/other/NewAdmin'
-import NewAdminAccounts from './pages/other/NewAdminAccounts'
-import NewAdminTransactions from './pages/other/NewAdminTransactions'
+import AccountsTab from './pages/admin/components/AccountsTab'
+import TransactionsTabAdmin from './pages/admin/components/TransactionsTab'
 
 function App() {
   const auth = useAuth();
@@ -53,11 +52,18 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/login/oauth2/code/cognito" element={<OAuthRedirectHandler />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            
+            {/* Admin routes */}
             <Route path="/admin" element={
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <AdminPage />
               </ProtectedRoute>
-            } />
+            }>
+              <Route path="accounts" element={<AccountsTab />} />
+              <Route path="transactions" element={<TransactionsTabAdmin />} />
+            </Route>
+            
+            {/* Agent routes */}
             <Route path="/agent/*" element={
               <ProtectedRoute requiredRoles={['AGENT']}>
                 <AgentPage />
@@ -66,15 +72,14 @@ function App() {
               <Route path="clients" element={<ClientsTab />} />
               <Route path="transactions" element={<TransactionsTab />} />
             </Route>
+            
             <Route path="/" element={<HomePage />} />
             
-            {/* Legacy routes */}
+            {/* Legacy routes - redirect handled in components */}
             <Route path="/newagent/accounts" element={<ClientsTab/>} />
             <Route path="/newagent/transactions" element={<TransactionsTab/>} />
-
-            <Route path="/newadmin" element={<NewAdmin/>} />
-            <Route path="/newadmin/accounts" element={<NewAdminAccounts/>} />
-            <Route path="/newadmin/transactions" element={<NewAdminTransactions/>} />
+            <Route path="/newadmin/accounts" element={<AccountsTab/>} />
+            <Route path="/newadmin/transactions" element={<TransactionsTabAdmin/>} />
           </Routes>
         </main>
       </div>
