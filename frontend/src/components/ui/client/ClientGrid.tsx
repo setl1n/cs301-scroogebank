@@ -2,7 +2,8 @@ import {
   DataGrid, 
   GridColDef, 
   GridRenderCellParams,
-  GridToolbar
+  GridToolbar,
+  GridValueGetter
 } from '@mui/x-data-grid';
 import { Client } from '../../../types/Client';
 import { IconButton, Box, Typography, Tooltip } from '@mui/material';
@@ -16,10 +17,6 @@ interface ClientGridProps {
   onDelete?: (clientId: number) => void;
   onRequestImageUpload?: (clientId: number) => void;
   loading?: boolean;
-}
-
-interface GridValueGetterParams {
-  row: any;
 }
 
 export default function ClientGrid({ 
@@ -46,15 +43,12 @@ export default function ClientGrid({
       field: 'fullName', 
       headerName: 'Full Name', 
       width: 200,
-      valueGetter: (params: GridValueGetterParams) => {
-        if (!params || !params.row) return '';
-        
-        // Get the row with proper typing
-        const row = params.row as { firstName?: string; lastName?: string };
+      valueGetter: (_, row) => {
+        const client = row as Client;
         
         // Capitalize first letter of first name and last name
-        const firstName = row.firstName ? row.firstName.charAt(0).toUpperCase() + row.firstName.slice(1) : '';
-        const lastName = row.lastName ? row.lastName.charAt(0).toUpperCase() + row.lastName.slice(1) : '';
+        const firstName = client.firstName ? client.firstName.charAt(0).toUpperCase() + client.firstName.slice(1) : '';
+        const lastName = client.lastName ? client.lastName.charAt(0).toUpperCase() + client.lastName.slice(1) : '';
         
         return `${firstName} ${lastName}`.trim();
       },
