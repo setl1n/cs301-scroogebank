@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Alert, Snackbar, Paper, useTheme } from '@mui/material';
+import { Box, Typography, Alert, Snackbar, Paper, useTheme, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import ClientGrid from '../../../components/ui/client/ClientGrid';
 import SearchBar from '../../../components/ui/navigation/SearchBar';
 import { clientService } from '../../../services/clientService';
 import { Client } from '../../../types/Client';
 import { useAuth } from 'react-oidc-context';
+import ClientForm from './ClientForm';
 
 export default function ClientsTab() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -12,6 +13,7 @@ export default function ClientsTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [openClientForm, setOpenClientForm] = useState(false);
   const auth = useAuth();
   const theme = useTheme();
   
@@ -77,8 +79,28 @@ export default function ClientsTab() {
   };
   
   const handleCreateClient = () => {
-    console.log('Create client clicked');
-    // Implement client creation logic - typically would show a modal or navigate to a form
+    setOpenClientForm(true);
+  };
+
+  const handleCloseClientForm = () => {
+    setOpenClientForm(false);
+  };
+
+  const handleSaveClient = async (client: Omit<Client, 'clientId'>) => {
+    try {
+      if (auth.isAuthenticated) {
+        const newClient = await clientService.createClient(client, auth);
+        setClients([...clients, newClient]);
+        setFilteredClients([...filteredClients, newClient]);
+        setSuccessMessage('Client created successfully');
+        setOpenClientForm(false);
+      } else {
+        setError('Authentication required to create clients.');
+      }
+    } catch (err) {
+      console.error('Error creating client:', err);
+      setError('Failed to create client. Please try again.');
+    }
   };
 
   const handleEditClient = (client: Client) => {
@@ -167,6 +189,22 @@ export default function ClientsTab() {
           loading={loading}
         />
       </Paper>
+
+      {/* Client Form Dialog */}
+      <Dialog 
+        open={openClientForm} 
+        onClose={handleCloseClientForm}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Add New Client</DialogTitle>
+        <DialogContent>
+          <ClientForm onSubmit={handleSaveClient} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseClientForm}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Success message snackbar */}
       <Snackbar 
