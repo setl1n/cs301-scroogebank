@@ -74,12 +74,6 @@ function App() {
             </Route>
             
             <Route path="/" element={<HomePage />} />
-            
-            {/* Legacy routes - redirect handled in components */}
-            <Route path="/newagent/accounts" element={<ClientsTab/>} />
-            <Route path="/newagent/transactions" element={<TransactionsTab/>} />
-            <Route path="/newadmin/accounts" element={<AccountsTab/>} />
-            <Route path="/newadmin/transactions" element={<TransactionsTabAdmin/>} />
           </Routes>
         </main>
       </div>

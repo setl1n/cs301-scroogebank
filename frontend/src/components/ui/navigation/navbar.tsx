@@ -15,6 +15,8 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import PersonIcon from '@mui/icons-material/Person';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ColorModeIconDropdown from '../template/shared-theme/ColorModeIconDropdown';
+import { useAuth } from 'react-oidc-context';
+import { hasGroupAccess } from '../../../utils/auth';
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
@@ -35,19 +37,26 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
 export default function NavBar() {
   const [open, setOpen] = React.useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const auth = useAuth();
+  const isAdmin = auth.isAuthenticated && hasGroupAccess(auth, ['ADMIN']);
+  const isAgent = auth.isAuthenticated && hasGroupAccess(auth, ['AGENT']);
   const username = "John Doe"; // Replace with actual username from auth context
 
   const isActive = (path: string) => {
-    // For dashboard, only active when exactly at /newagent
-    if (path === 'newagent') {
-      return location.pathname === '/newagent';
+    // For admin dashboard, active when exactly at /admin
+    if (path === 'admin-dashboard') {
+      return location.pathname === '/admin';
+    }
+    
+    // For agent dashboard, active when exactly at /agent
+    if (path === 'agent-dashboard') {
+      return location.pathname === '/agent';
     }
     
     // For other routes, check if the path segment is present
     return location.pathname.includes(`/${path}`);
   };
-
-
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -78,54 +87,114 @@ export default function NavBar() {
                     alt="Logo" 
                     style={{ height: 24, width: 24, marginRight: 6 }} 
                 />
-              <Button 
-                variant="text" 
-                size="small"
-                onClick={() => navigate('/newagent')}
-                sx={{
-                  borderRadius: 1,
-                  pb: 0.5,
-                  px: 1.5,
-                  color: isActive('newagent') ? '#000000 !important' : 'info.main',
-                  bgcolor: isActive('newagent') ? 'common.white' : 'transparent',
-                  boxShadow: isActive('newagent') ? 1 : 0,
-                  fontWeight: isActive('newagent') ? 'bold' : 'normal'
-                }}
-              >
-                Dashboard
-              </Button>
-              <Button 
-                variant="text" 
-                size="small"
-                onClick={() => navigate('/newagent/accounts')}
-                sx={{
-                  borderRadius: 1,
-                  pb: 0.5,
-                  px: 1.5,
-                  color: isActive('accounts') ? '#000000 !important' : 'info.main',
-                  bgcolor: isActive('accounts') ? 'common.white' : 'transparent',
-                  boxShadow: isActive('accounts') ? 1 : 0,
-                  fontWeight: isActive('accounts') ? 'bold' : 'normal'
-                }}
-              >
-                Accounts
-              </Button>
-              <Button 
-                variant="text" 
-                size="small"
-                onClick={() => navigate('/newagent/transactions')}
-                sx={{
-                  borderRadius: 1,
-                  pb: 0.5,
-                  px: 1.5,
-                  color: isActive('transactions') ? '#000000 !important' : 'info.main',
-                  bgcolor: isActive('transactions') ? 'common.white' : 'transparent',
-                  boxShadow: isActive('transactions') ? 1 : 0,
-                  fontWeight: isActive('transactions') ? 'bold' : 'normal',
-                }}
-              >
-                Transactions
-              </Button>
+              
+              {/* Admin Navigation */}
+              {isAdmin && (
+                <>
+                  <Button 
+                    variant="text" 
+                    size="small"
+                    onClick={() => navigate('/admin')}
+                    sx={{
+                      borderRadius: 1,
+                      pb: 0.5,
+                      px: 1.5,
+                      color: isActive('admin-dashboard') ? '#000000 !important' : 'info.main',
+                      bgcolor: isActive('admin-dashboard') ? 'common.white' : 'transparent',
+                      boxShadow: isActive('admin-dashboard') ? 1 : 0,
+                      fontWeight: isActive('admin-dashboard') ? 'bold' : 'normal'
+                    }}
+                  >
+                    Dashboard
+                  </Button>
+                  <Button 
+                    variant="text" 
+                    size="small"
+                    onClick={() => navigate('/admin/accounts')}
+                    sx={{
+                      borderRadius: 1,
+                      pb: 0.5,
+                      px: 1.5,
+                      color: isActive('admin/accounts') ? '#000000 !important' : 'info.main',
+                      bgcolor: isActive('admin/accounts') ? 'common.white' : 'transparent',
+                      boxShadow: isActive('admin/accounts') ? 1 : 0,
+                      fontWeight: isActive('admin/accounts') ? 'bold' : 'normal'
+                    }}
+                  >
+                    Accounts
+                  </Button>
+                  <Button 
+                    variant="text" 
+                    size="small"
+                    onClick={() => navigate('/admin/transactions')}
+                    sx={{
+                      borderRadius: 1,
+                      pb: 0.5,
+                      px: 1.5,
+                      color: isActive('admin/transactions') ? '#000000 !important' : 'info.main',
+                      bgcolor: isActive('admin/transactions') ? 'common.white' : 'transparent',
+                      boxShadow: isActive('admin/transactions') ? 1 : 0,
+                      fontWeight: isActive('admin/transactions') ? 'bold' : 'normal',
+                    }}
+                  >
+                    Transactions
+                  </Button>
+                </>
+              )}
+
+              {/* Agent Navigation */}
+              {isAgent && (
+                <>
+                  <Button 
+                    variant="text" 
+                    size="small"
+                    onClick={() => navigate('/agent')}
+                    sx={{
+                      borderRadius: 1,
+                      pb: 0.5,
+                      px: 1.5,
+                      color: isActive('agent-dashboard') ? '#000000 !important' : 'info.main',
+                      bgcolor: isActive('agent-dashboard') ? 'common.white' : 'transparent',
+                      boxShadow: isActive('agent-dashboard') ? 1 : 0,
+                      fontWeight: isActive('agent-dashboard') ? 'bold' : 'normal'
+                    }}
+                  >
+                    Dashboard
+                  </Button>
+                  <Button 
+                    variant="text" 
+                    size="small"
+                    onClick={() => navigate('/agent/clients')}
+                    sx={{
+                      borderRadius: 1,
+                      pb: 0.5,
+                      px: 1.5,
+                      color: isActive('agent/clients') ? '#000000 !important' : 'info.main',
+                      bgcolor: isActive('agent/clients') ? 'common.white' : 'transparent',
+                      boxShadow: isActive('agent/clients') ? 1 : 0,
+                      fontWeight: isActive('agent/clients') ? 'bold' : 'normal'
+                    }}
+                  >
+                    Clients
+                  </Button>
+                  <Button 
+                    variant="text" 
+                    size="small"
+                    onClick={() => navigate('/agent/transactions')}
+                    sx={{
+                      borderRadius: 1,
+                      pb: 0.5,
+                      px: 1.5,
+                      color: isActive('agent/transactions') ? '#000000 !important' : 'info.main',
+                      bgcolor: isActive('agent/transactions') ? 'common.white' : 'transparent',
+                      boxShadow: isActive('agent/transactions') ? 1 : 0,
+                      fontWeight: isActive('agent/transactions') ? 'bold' : 'normal',
+                    }}
+                  >
+                    Transactions
+                  </Button>
+                </>
+              )}
             </Box>
           </Box>
           
@@ -188,36 +257,109 @@ export default function NavBar() {
                     <CloseRoundedIcon />
                   </IconButton>
                 </Box>
-                <MenuItem 
-                  onClick={() => {
-                    navigate('/newagent');
-                    toggleDrawer(false)();
-                  }}
-                  sx={{
-                    backgroundColor: isActive('newagent') ? alpha('#3f51b5', 0.1) : 'transparent',
-                    fontWeight: isActive('newagent') ? 'bold' : 'normal',
-                    borderLeft: isActive('newagent') ? '4px solid' : 'none',
-                    borderColor: 'primary.main',
-                    pl: isActive('newagent') ? 1.5 : 2,
-                  }}
-                >
-                  Accounts
-                </MenuItem>
-                <MenuItem 
-                  onClick={() => {
-                    navigate('/newagentransactions');
-                    toggleDrawer(false)();
-                  }}
-                  sx={{
-                    backgroundColor: isActive('transactions') ? alpha('#3f51b5', 0.1) : 'transparent',
-                    fontWeight: isActive('transactions') ? 'bold' : 'normal',
-                    borderLeft: isActive('transactions') ? '4px solid' : 'none',
-                    borderColor: 'primary.main',
-                    pl: isActive('transactions') ? 1.5 : 2,
-                  }}
-                >
-                  Transactions
-                </MenuItem>
+
+                {/* Admin Mobile Menu */}
+                {isAdmin && (
+                  <>
+                    <MenuItem 
+                      onClick={() => {
+                        navigate('/admin');
+                        toggleDrawer(false)();
+                      }}
+                      sx={{
+                        backgroundColor: isActive('admin-dashboard') ? alpha('#3f51b5', 0.1) : 'transparent',
+                        fontWeight: isActive('admin-dashboard') ? 'bold' : 'normal',
+                        borderLeft: isActive('admin-dashboard') ? '4px solid' : 'none',
+                        borderColor: 'primary.main',
+                        pl: isActive('admin-dashboard') ? 1.5 : 2,
+                      }}
+                    >
+                      Dashboard
+                    </MenuItem>
+                    <MenuItem 
+                      onClick={() => {
+                        navigate('/admin/accounts');
+                        toggleDrawer(false)();
+                      }}
+                      sx={{
+                        backgroundColor: isActive('admin/accounts') ? alpha('#3f51b5', 0.1) : 'transparent',
+                        fontWeight: isActive('admin/accounts') ? 'bold' : 'normal',
+                        borderLeft: isActive('admin/accounts') ? '4px solid' : 'none',
+                        borderColor: 'primary.main',
+                        pl: isActive('admin/accounts') ? 1.5 : 2,
+                      }}
+                    >
+                      Accounts
+                    </MenuItem>
+                    <MenuItem 
+                      onClick={() => {
+                        navigate('/admin/transactions');
+                        toggleDrawer(false)();
+                      }}
+                      sx={{
+                        backgroundColor: isActive('admin/transactions') ? alpha('#3f51b5', 0.1) : 'transparent',
+                        fontWeight: isActive('admin/transactions') ? 'bold' : 'normal',
+                        borderLeft: isActive('admin/transactions') ? '4px solid' : 'none',
+                        borderColor: 'primary.main',
+                        pl: isActive('admin/transactions') ? 1.5 : 2,
+                      }}
+                    >
+                      Transactions
+                    </MenuItem>
+                  </>
+                )}
+
+                {/* Agent Mobile Menu */}
+                {isAgent && (
+                  <>
+                    <MenuItem 
+                      onClick={() => {
+                        navigate('/agent');
+                        toggleDrawer(false)();
+                      }}
+                      sx={{
+                        backgroundColor: isActive('agent-dashboard') ? alpha('#3f51b5', 0.1) : 'transparent',
+                        fontWeight: isActive('agent-dashboard') ? 'bold' : 'normal',
+                        borderLeft: isActive('agent-dashboard') ? '4px solid' : 'none',
+                        borderColor: 'primary.main',
+                        pl: isActive('agent-dashboard') ? 1.5 : 2,
+                      }}
+                    >
+                      Dashboard
+                    </MenuItem>
+                    <MenuItem 
+                      onClick={() => {
+                        navigate('/agent/clients');
+                        toggleDrawer(false)();
+                      }}
+                      sx={{
+                        backgroundColor: isActive('agent/clients') ? alpha('#3f51b5', 0.1) : 'transparent',
+                        fontWeight: isActive('agent/clients') ? 'bold' : 'normal',
+                        borderLeft: isActive('agent/clients') ? '4px solid' : 'none',
+                        borderColor: 'primary.main',
+                        pl: isActive('agent/clients') ? 1.5 : 2,
+                      }}
+                    >
+                      Clients
+                    </MenuItem>
+                    <MenuItem 
+                      onClick={() => {
+                        navigate('/agent/transactions');
+                        toggleDrawer(false)();
+                      }}
+                      sx={{
+                        backgroundColor: isActive('agent/transactions') ? alpha('#3f51b5', 0.1) : 'transparent',
+                        fontWeight: isActive('agent/transactions') ? 'bold' : 'normal',
+                        borderLeft: isActive('agent/transactions') ? '4px solid' : 'none',
+                        borderColor: 'primary.main',
+                        pl: isActive('agent/transactions') ? 1.5 : 2,
+                      }}
+                    >
+                      Transactions
+                    </MenuItem>
+                  </>
+                )}
+
                 <Divider sx={{ my: 2 }} />
                 <MenuItem>
                   <Button color="primary" variant="contained" fullWidth onClick={handleLoginClick}>
