@@ -1,16 +1,13 @@
-import { useState } from 'react';
 import { 
   DataGrid, 
   GridColDef, 
-  GridValueGetterParams,
   GridRenderCellParams,
   GridToolbar
 } from '@mui/x-data-grid';
-import { Client, formatClientName } from '../../../types/Client';
-import { IconButton, Box, Chip, Typography, Tooltip } from '@mui/material';
+import { Client } from '../../../types/Client';
+import { IconButton, Box, Typography, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import EmailIcon from '@mui/icons-material/Email';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 
 interface ClientGridProps {
@@ -28,7 +25,7 @@ export default function ClientGrid({
   onRequestImageUpload,
   loading = false 
 }: ClientGridProps) {
-  const [pageSize, setPageSize] = useState<number>(10);
+  const pageSize = 10;
 
   const columns: GridColDef[] = [
     { 
@@ -45,7 +42,15 @@ export default function ClientGrid({
       field: 'fullName', 
       headerName: 'Full Name', 
       width: 200,
-      valueGetter: (params: GridValueGetterParams) => formatClientName(params.row),
+      valueGetter: (value, row) => {
+        if (!row) return '';
+        
+        // Capitalize first letter of first name and last name
+        const firstName = row.firstName ? row.firstName.charAt(0).toUpperCase() + row.firstName.slice(1) : '';
+        const lastName = row.lastName ? row.lastName.charAt(0).toUpperCase() + row.lastName.slice(1) : '';
+        
+        return `${firstName} ${lastName}`.trim();
+      },
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant="body2" fontWeight="medium">
           {params.value}
@@ -73,13 +78,18 @@ export default function ClientGrid({
       field: 'address', 
       headerName: 'Address', 
       width: 250,
-      renderCell: (params: GridRenderCellParams) => (
-        <Tooltip title={`${params.row.address}, ${params.row.city}, ${params.row.state} ${params.row.postalCode}, ${params.row.country}`}>
-          <Typography variant="body2" noWrap>
-            {params.row.address}, {params.row.city}
-          </Typography>
-        </Tooltip>
-      )
+      renderCell: (params: GridRenderCellParams) => {
+        const row = params.row as Client | undefined;
+        if (!row) return null;
+        
+        return (
+          <Tooltip title={`${row.address}, ${row.city}, ${row.state} ${row.postalCode}, ${row.country}`}>
+            <Typography variant="body2" noWrap>
+              {row.address}, {row.city}
+            </Typography>
+          </Tooltip>
+        );
+      }
     },
     { 
       field: 'actions', 
@@ -87,45 +97,50 @@ export default function ClientGrid({
       width: 180,
       sortable: false,
       filterable: false,
-      renderCell: (params: GridRenderCellParams) => (
-        <Box>
-          {onEdit && (
-            <Tooltip title="Edit Client">
-              <IconButton 
-                color="primary" 
-                size="small"
-                onClick={() => onEdit(params.row)}
-              >
-                <EditIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
-          
-          {onRequestImageUpload && (
-            <Tooltip title="Request ID Upload">
-              <IconButton 
-                color="secondary" 
-                size="small"
-                onClick={() => onRequestImageUpload(params.row.clientId)}
-              >
-                <PhotoCameraIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
-          
-          {onDelete && (
-            <Tooltip title="Delete Client">
-              <IconButton 
-                color="error" 
-                size="small"
-                onClick={() => onDelete(params.row.clientId)}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Box>
-      )
+      renderCell: (params: GridRenderCellParams) => {
+        const row = params.row as Client | undefined;
+        if (!row) return null;
+        
+        return (
+          <Box>
+            {onEdit && (
+              <Tooltip title="Edit Client">
+                <IconButton 
+                  color="primary" 
+                  size="small"
+                  onClick={() => onEdit(row)}
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+            
+            {onRequestImageUpload && (
+              <Tooltip title="Request ID Upload">
+                <IconButton 
+                  color="secondary" 
+                  size="small"
+                  onClick={() => onRequestImageUpload(row.clientId)}
+                >
+                  <PhotoCameraIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+            
+            {onDelete && (
+              <Tooltip title="Delete Client">
+                <IconButton 
+                  color="error" 
+                  size="small"
+                  onClick={() => onDelete(row.clientId)}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+        );
+      }
     }
   ];
 
@@ -135,16 +150,19 @@ export default function ClientGrid({
       columns={columns}
       getRowId={(row) => row.clientId}
       pagination
-      pageSize={pageSize}
-      onPageSizeChange={setPageSize}
-      rowsPerPageOptions={[5, 10, 20, 50]}
-      disableSelectionOnClick
+      initialState={{
+        pagination: {
+          paginationModel: { pageSize, page: 0 },
+        },
+      }}
+      pageSizeOptions={[5, 10, 20, 50]}
+      disableRowSelectionOnClick
       autoHeight
       loading={loading}
-      components={{
-        Toolbar: GridToolbar,
+      slots={{
+        toolbar: GridToolbar,
       }}
-      componentsProps={{
+      slotProps={{
         toolbar: {
           showQuickFilter: true,
           quickFilterProps: { debounceMs: 500 },

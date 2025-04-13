@@ -1,5 +1,5 @@
-import { log } from 'console';
 import config from '../config';
+import { AuthContextProps } from 'react-oidc-context';
 
 // Default request options
 const defaultOptions = {
@@ -8,20 +8,29 @@ const defaultOptions = {
   },
 };
 
+// Helper function to get token from auth context
+const getToken = (auth: AuthContextProps | null): string | null => {
+  if (!auth || !auth.isAuthenticated || !auth.user) {
+    return null;
+  }
+  return auth.user.access_token;
+};
+
 // Core API functions
 export const api = {
   // GET request
-  async get(endpoint: string, useAlbAuth: boolean = false) {
-    console.log('Cookies before request:', document.cookie);
+  async get<T>(endpoint: string, auth: AuthContextProps | null = null): Promise<T> {
     const headers = new Headers(defaultOptions.headers);
     
-    // Add Authorization header for ALB-protected endpoints
-    if (useAlbAuth) {
-      const token = getCognitoToken();
+    // Add Authorization header if auth is provided
+    if (auth) {
+      const token = getToken(auth);
       if (token) {
         headers.append('Authorization', `Bearer ${token}`);
       }
     }
+    
+    console.log('Request headers:', headers.get('Authorization'));
     
     const response = await fetch(`${config.apiBaseUrl}${endpoint}`, {
       method: 'GET',
@@ -37,12 +46,12 @@ export const api = {
   },
   
   // POST request
-  async post(endpoint: string, data: any, useAlbAuth: boolean = false) {
+  async post<T>(endpoint: string, data: Record<string, unknown>, auth: AuthContextProps | null = null): Promise<T> {
     const headers = new Headers(defaultOptions.headers);
     
-    // Add Authorization header for ALB-protected endpoints
-    if (useAlbAuth) {
-      const token = getCognitoToken();
+    // Add Authorization header if auth is provided
+    if (auth) {
+      const token = getToken(auth);
       if (token) {
         headers.append('Authorization', `Bearer ${token}`);
       }
@@ -63,12 +72,12 @@ export const api = {
   },
   
   // PUT request
-  async put(endpoint: string, data: any, useAlbAuth: boolean = false) {
+  async put<T>(endpoint: string, data: Record<string, unknown>, auth: AuthContextProps | null = null): Promise<T> {
     const headers = new Headers(defaultOptions.headers);
     
-    // Add Authorization header for ALB-protected endpoints
-    if (useAlbAuth) {
-      const token = getCognitoToken();
+    // Add Authorization header if auth is provided
+    if (auth) {
+      const token = getToken(auth);
       if (token) {
         headers.append('Authorization', `Bearer ${token}`);
       }
@@ -89,12 +98,12 @@ export const api = {
   },
   
   // DELETE request
-  async delete(endpoint: string, useAlbAuth: boolean = false) {
+  async delete<T>(endpoint: string, auth: AuthContextProps | null = null): Promise<T | null> {
     const headers = new Headers(defaultOptions.headers);
     
-    // Add Authorization header for ALB-protected endpoints
-    if (useAlbAuth) {
-      const token = getCognitoToken();
+    // Add Authorization header if auth is provided
+    if (auth) {
+      const token = getToken(auth);
       if (token) {
         headers.append('Authorization', `Bearer ${token}`);
       }
