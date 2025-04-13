@@ -418,3 +418,34 @@ resource "aws_iam_role_policy_attachment" "ec2_network_access" {
   role       = aws_iam_role.lambda_role[each.key].name
   policy_arn = aws_iam_policy.ec2_network_access[each.key].arn
 }
+
+# SES policy document allowing sending emails via SES
+resource "aws_iam_policy" "lambda_ses_send_email_policy" {
+  name        = "lambda-ses-send-email-policy"
+  description = "Policy to allow sending emails via Amazon SES"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ses:SendEmail",
+          "ses:SendRawEmail"
+        ]
+        Resource = "*" # You may want to restrict this to specific SES resources/identities
+      }
+    ]
+  })
+}
+
+# Conditionally attach the SES policy to the ECS task roles for services with ses_enabled
+resource "aws_iam_role_policy_attachment" "lambda_ses_send_email_policy_attachment" {
+  for_each = {
+    for key, service in var.lambda_functions : key => service
+    if lookup(service, "ses_enabled", false)
+  }
+
+  role       = aws_iam_role.lambda_role[each.key].name
+  policy_arn = aws_iam_policy.lambda_ses_send_email_policy.arn
+}

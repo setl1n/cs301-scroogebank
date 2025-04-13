@@ -213,6 +213,7 @@ variable "lambda_functions" {
       memory_size     = 256
       cognito_enabled = true
       public_facing   = true
+      ses_enabled     = true
     },
     log = {
       name                = "log_lambda_function"

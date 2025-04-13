@@ -1,12 +1,12 @@
 package com.cs301g2t1.user;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.cs301g2t1.user.model.Response;
 import com.cs301g2t1.user.model.User;
 import com.cs301g2t1.user.service.UserService;
 import com.cs301g2t1.user.service.UserServiceImpl;
@@ -152,7 +152,7 @@ public class UserHandler implements RequestHandler<Object, Object> {
                         response.put("body", "{\"error\":\"Failed to create user: " + e.getMessage() + "\"}");
                         return response;
                     }
-                case "READ":
+                case "READUSER": // read 1 user detail
                     try {
                         Optional<User> userOptional = userService.getUserById(request.userId);
                         if (userOptional.isPresent()) {
@@ -168,6 +168,22 @@ public class UserHandler implements RequestHandler<Object, Object> {
                         return response;
                     } catch (Exception e) {
                         context.getLogger().log("Error retrieving user: " + e.getMessage());
+                        response.put("statusCode", 500);
+                        response.put("body", "{\"error\":\"" + e.getMessage() + "\"}");
+                        return response;
+                    }
+                case "LIST": // list all users
+                    try {
+                        List<User> users = userService.getAllUsers();
+                        // Convert to JSON string with ObjectMapper
+                        ObjectMapper mapper = new ObjectMapper();
+                        String usersJson = mapper.writeValueAsString(users);
+                        System.out.println("usersJson: " + usersJson);
+                        response.put("statusCode", 200);
+                        response.put("body", usersJson);
+                        return response;
+                    } catch (Exception e) {
+                        context.getLogger().log("Error retrieving all users: " + e.getMessage());
                         response.put("statusCode", 500);
                         response.put("body", "{\"error\":\"" + e.getMessage() + "\"}");
                         return response;

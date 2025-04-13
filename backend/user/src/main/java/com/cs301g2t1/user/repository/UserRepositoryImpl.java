@@ -6,8 +6,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.cs301g2t1.user.model.User;
 import com.cs301g2t1.user.model.UserRole;
+import com.cs301g2t1.user.service.EmailService;
 
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
@@ -22,6 +25,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdate
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.MessageActionType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserNotFoundException;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType;
 
@@ -33,11 +37,14 @@ public class UserRepositoryImpl implements UserRepository {
         
     private final CognitoIdentityProviderClient cognitoClient;
     private static UserRepositoryImpl instance;
+
+    private EmailService emailService;
     
     private UserRepositoryImpl() {
         this.cognitoClient = CognitoIdentityProviderClient.builder()
                 .region(REGION)
                 .build();
+        this.emailService = new EmailService(); // Initialize email service here or inject it
     }
     
     public static synchronized UserRepositoryImpl getInstance() {
@@ -47,18 +54,54 @@ public class UserRepositoryImpl implements UserRepository {
         return instance;
     }
 
+    // @Override
+    // public List<User> findAll() {
+    //     try {
+    //         ListUsersRequest request = ListUsersRequest.builder()
+    //                 .userPoolId(USER_POOL_ID)
+    //                 .limit(60) // Adjust based on how many we wanna display
+    //                 .build();
+            
+    //         ListUsersResponse response = cognitoClient.listUsers(request);
+    //         return response.users().stream()
+    //                 .map(this::mapToUser)
+    //                 .collect(Collectors.toList());
+    //     } catch (Exception e) {
+    //         throw new RuntimeException("Failed to list users from Cognito: " + e.getMessage(), e);
+    //     }
+    // }
     @Override
     public List<User> findAll() {
         try {
-            ListUsersRequest request = ListUsersRequest.builder()
-                    .userPoolId(USER_POOL_ID)
-                    .limit(60) // Adjust based on how many we wanna display
-                    .build();
+            List<User> allUsers = new ArrayList<>();
+            String paginationToken = null;
             
-            ListUsersResponse response = cognitoClient.listUsers(request);
-            return response.users().stream()
-                    .map(this::mapToUser)
-                    .collect(Collectors.toList());
+            do {
+                // Create request builder
+                ListUsersRequest.Builder requestBuilder = ListUsersRequest.builder()
+                        .userPoolId(USER_POOL_ID);
+                
+                // Add pagination token if available from previous request
+                if (paginationToken != null) {
+                    requestBuilder.paginationToken(paginationToken);
+                }
+                
+                // Execute request
+                ListUsersResponse response = cognitoClient.listUsers(requestBuilder.build());
+                
+                // Process current page of users
+                List<User> pageUsers = response.users().stream()
+                        .map(this::mapToUser)
+                        .collect(Collectors.toList());
+                
+                allUsers.addAll(pageUsers);
+                
+                // Get token for next page
+                paginationToken = response.paginationToken();
+                
+            } while (paginationToken != null); // Continue until no more pages
+            
+            return allUsers;
         } catch (Exception e) {
             throw new RuntimeException("Failed to list users from Cognito: " + e.getMessage(), e);
         }
@@ -147,6 +190,7 @@ public class UserRepositoryImpl implements UserRepository {
                     .username(user.getEmail()) // Using email as username
                     .temporaryPassword(temporaryPassword)
                     .userAttributes(attributes)
+                    .messageAction(MessageActionType.SUPPRESS) // Suppress sending the welcome email
                     .build();
             
             AdminCreateUserResponse createResponse = cognitoClient.adminCreateUser(createRequest);
@@ -172,7 +216,7 @@ public class UserRepositoryImpl implements UserRepository {
             .build();
             
             cognitoClient.adminAddUserToGroup(groupRequest);
-
+            // emailService.sendLoginCredentials(user.getEmail(), temporaryPassword);
             return user;
         } catch (Exception e) {
             throw new RuntimeException("Failed to create user in Cognito: " + e.getMessage(), e);
