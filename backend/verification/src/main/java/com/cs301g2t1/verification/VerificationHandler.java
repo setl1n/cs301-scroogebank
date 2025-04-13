@@ -129,6 +129,15 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                 context.getLogger().log("Warning: Token and email not provided");
             } else if (token != null && !token.isEmpty() && email != null && !email.isEmpty()) {
                 context.getLogger().log("Validating token and email...");
+                
+                // Call the validateToken method to check if the token is valid
+                boolean isTokenValid = validateToken(token, email, context);
+                if (!isTokenValid) {
+                    context.getLogger().log("Token validation failed for email: " + email);
+                    return createErrorResponse(response, 401, "Invalid token. Upload not authorized.");
+                }
+                
+                context.getLogger().log("Token validated successfully for email: " + email);
             }
             
             // Generate a unique key for the S3 object
@@ -497,5 +506,56 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
 
     private String sanitizeFilename(String email) {
         return email.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
+    }
+
+    /**
+     * Validates a token by calling the client service validation endpoint
+     * @param token The token to validate
+     * @param email The email associated with the token
+     * @param context The Lambda context for logging
+     * @return true if the token is valid, false otherwise
+     */
+    private boolean validateToken(String token, String email, Context context) {
+        try {
+            String validationUrl = "http://client.ecs.internal:8080/api/v1/clients/validate-upload-token?token=" 
+                + token + "&email=" + email;
+            
+            context.getLogger().log("Validating token at URL: " + validationUrl);
+            
+            // Create and configure HttpClient
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(5))
+                    .build();
+                    
+            // Build the request
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(validationUrl))
+                    .GET()
+                    .timeout(Duration.ofSeconds(5))
+                    .header("Accept", "application/json")
+                    .build();
+                    
+            // Send the request and get response
+            HttpResponse<String> httpResponse = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            
+            // Process the response
+            int statusCode = httpResponse.statusCode();
+            String body = httpResponse.body();
+            
+            context.getLogger().log("Token validation response code: " + statusCode);
+            context.getLogger().log("Token validation response body: " + body);
+            
+            if (statusCode >= 200 && statusCode < 300) {
+                // Parse the boolean response
+                boolean isValid = Boolean.parseBoolean(body);
+                return isValid;
+            } else {
+                context.getLogger().log("Token validation failed with status code: " + statusCode);
+                return false;
+            }
+        } catch (Exception e) {
+            context.getLogger().log("Error validating token: " + e.getMessage());
+            return false;
+        }
     }
 }
