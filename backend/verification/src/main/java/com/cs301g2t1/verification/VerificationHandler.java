@@ -137,7 +137,18 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                 fileExtension = filename.substring(filename.lastIndexOf("."));
             }
             
-            String key = "uploads/" + UUID.randomUUID().toString() + fileExtension;
+            // Use email as filename if available, otherwise use UUID
+            String baseFilename;
+            if (email != null && !email.isEmpty()) {
+                // Sanitize email for use as a filename
+                baseFilename = sanitizeFilename(email);
+                context.getLogger().log("Using email as base filename: " + baseFilename);
+            } else {
+                baseFilename = UUID.randomUUID().toString();
+                context.getLogger().log("No email provided, using UUID as filename");
+            }
+            
+            String key = "uploads/" + baseFilename + fileExtension;
             
             // Upload the content to S3 - pass the correct base64 encoding flag
             String fileUrl = uploadToS3(fileContent, isFileBase64Encoded, key, context, filename);
@@ -482,5 +493,9 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             context.getLogger().log("Error making GET request: " + e.getMessage());
             return createErrorResponse(response, 500, "Error making GET request: " + e.getMessage());
         }
+    }
+
+    private String sanitizeFilename(String email) {
+        return email.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
     }
 }
