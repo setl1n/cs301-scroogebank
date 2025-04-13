@@ -6,7 +6,7 @@ import { clientService } from './clientService';
 // Enhanced service that adds business logic on top of API calls
 export const transactionService = {
   // Get all transactions with associated client names
-  getAllTransactions: async (auth: AuthContextProps | null = null): Promise<Transaction[]> => {
+  getAllTransactions: async (auth: AuthContextProps | undefined = undefined): Promise<Transaction[]> => {
     const transactions = await transactionApi.getAllTransactions(auth);
     
     // If transactions are found, enrich them with client names
@@ -18,14 +18,14 @@ export const transactionService = {
   },
   
   // Get transactions for a specific client
-  getTransactionsByClientId: async (clientId: number, auth: AuthContextProps | null = null): Promise<Transaction[]> => {
+  getTransactionsByClientId: async (clientId: number, auth: AuthContextProps | undefined = undefined): Promise<Transaction[]> => {
     const transactions = await transactionApi.getTransactionsByClientId(clientId, auth);
     
     // If we have transactions and we have authentication, get client info
     if (transactions && transactions.length > 0 && auth) {
       try {
         const client = await clientService.getClientById(clientId, auth);
-        return transactions.map(transaction => ({
+        return transactions.map((transaction: Transaction) => ({
           ...transaction,
           clientName: `${client.firstName} ${client.lastName}`
         }));
@@ -38,7 +38,7 @@ export const transactionService = {
   },
   
   // Get transaction by ID with client name
-  getTransactionById: async (id: number, auth: AuthContextProps | null = null): Promise<Transaction> => {
+  getTransactionById: async (id: number, auth: AuthContextProps | undefined = undefined): Promise<Transaction> => {
     const transaction = await transactionApi.getTransactionById(id, auth);
     
     // If we have a transaction and we have authentication, get client info
@@ -58,22 +58,22 @@ export const transactionService = {
   },
   
   // Create a new transaction
-  createTransaction: (transaction: TransactionPayload, auth: AuthContextProps | null = null) => {
+  createTransaction: (transaction: TransactionPayload, auth: AuthContextProps | undefined = undefined) => {
     return transactionApi.createTransaction(transaction, auth);
   },
   
   // Update an existing transaction
-  updateTransaction: (id: number, transaction: Partial<Transaction>, auth: AuthContextProps | null = null) => {
+  updateTransaction: (id: number, transaction: Partial<Transaction>, auth: AuthContextProps | undefined = undefined) => {
     return transactionApi.updateTransaction(id, transaction, auth);
   },
   
   // Delete a transaction
-  deleteTransaction: (id: number, auth: AuthContextProps | null = null) => {
+  deleteTransaction: (id: number, auth: AuthContextProps | undefined = undefined) => {
     return transactionApi.deleteTransaction(id, auth);
   },
   
   // Get transactions by date range with client names
-  getTransactionsByDateRange: async (startDate: string, endDate: string, auth: AuthContextProps | null = null): Promise<Transaction[]> => {
+  getTransactionsByDateRange: async (startDate: string, endDate: string, auth: AuthContextProps | undefined = undefined): Promise<Transaction[]> => {
     const transactions = await transactionApi.getTransactionsByDateRange(startDate, endDate, auth);
     
     if (transactions && transactions.length > 0) {
@@ -84,7 +84,7 @@ export const transactionService = {
   },
   
   // Get transactions by status with client names
-  getTransactionsByStatus: async (status: TransactionStatus, auth: AuthContextProps | null = null): Promise<Transaction[]> => {
+  getTransactionsByStatus: async (status: TransactionStatus, auth: AuthContextProps | undefined = undefined): Promise<Transaction[]> => {
     const transactions = await transactionApi.getTransactionsByStatus(status, auth);
     
     if (transactions && transactions.length > 0) {
@@ -98,7 +98,7 @@ export const transactionService = {
 // Helper function to enrich transactions with client names
 async function enrichTransactionsWithClientNames(
   transactions: Transaction[], 
-  auth: AuthContextProps | null
+  auth: AuthContextProps | undefined
 ): Promise<Transaction[]> {
   // If no auth, return transactions as-is
   if (!auth) return transactions;

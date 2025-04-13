@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
-import { hasGroupAccess, getUserGroups } from "@/utils/auth";
+import { getUserGroups, hasGroupAccess } from "@/utils/auth";
 import { Loader2 } from "lucide-react";
 import config from "@/config";
 
@@ -23,25 +23,25 @@ const OAuthRedirectHandler = () => {
           });
         }
         
-        // // Check user roles and redirect
-        // if (hasGroupAccess(auth, ['ADMIN'])) {
-        //   console.log("Redirecting to ADMIN dashboard");
-        //   navigate('/admin');
-        // } else if (hasGroupAccess(auth, ['AGENT'])) {
-        //   console.log("Redirecting to AGENT dashboard");
-        //   navigate('/agent');
-        // } else {
-        //   // If no specific role is found, redirect to a default page
-        //   console.log("No specific role found for user, available groups:", userGroups);
-        //   navigate('/login');
-        // }
+        // Check user roles and redirect
+        if (hasGroupAccess(auth, ['ADMIN'])) {
+          console.log("Redirecting to ADMIN dashboard");
+          navigate('/admin');
+        } else if (hasGroupAccess(auth, ['AGENT'])) {
+          console.log("Redirecting to AGENT dashboard");
+          navigate('/agent');
+        } else {
+          // If no specific role is found, redirect to a default page
+          console.log("No specific role found for user, available groups:", userGroups);
+          navigate('/login');
+        }
       } else {
         // If authentication failed, redirect to login
         console.log("Authentication failed or incomplete");
         if (auth.error) {
           console.error("Auth error:", auth.error);
         }
-        // navigate('/login');
+        navigate('/login');
       }
     }
   }, [auth.isLoading, auth.isAuthenticated, auth.user, auth.error, navigate]);
