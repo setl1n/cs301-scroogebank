@@ -19,7 +19,8 @@ import {
   Select,
   FormControl,
   InputLabel,
-  Chip
+  Chip,
+  SelectChangeEvent
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -34,7 +35,7 @@ interface Account {
 }
 
 interface AdminGridProps {
-  rows?: any[]; // Accept custom rows prop
+  rows?: readonly any[]; // Accept custom rows prop with readonly
 }
 
 export default function AdminGrid({ rows = defaultRows }: AdminGridProps) {
@@ -86,7 +87,7 @@ export default function AdminGrid({ rows = defaultRows }: AdminGridProps) {
   };
 
   // Handle form field changes
-  const handleAccountChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
+  const handleAccountChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }> | SelectChangeEvent<string>) => {
     if (!currentAccount) return;
     
     setCurrentAccount({
@@ -203,10 +204,9 @@ export default function AdminGrid({ rows = defaultRows }: AdminGridProps) {
         sx={{
           border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.1)',
           borderRadius: 1,
-          bgcolor: isDarkMode ? '#121212' : theme.vars
-            ? `rgba(${theme.vars.palette.background.defaultChannel})`
-            : alpha(theme.palette.background.default, 0.4),
-            
+          bgcolor: isDarkMode ? '#121212' : theme.palette.background.paper,
+          color: isDarkMode ? 'white' : 'inherit',
+          
           // Cell styling
           '& .MuiDataGrid-cell': {
             color: isDarkMode ? 'white' : 'inherit',
@@ -217,7 +217,9 @@ export default function AdminGrid({ rows = defaultRows }: AdminGridProps) {
           
           // Row styling
           '& .MuiDataGrid-row': {
-            color: isDarkMode ? 'white' : 'inherit',
+            backgroundColor: isDarkMode 
+              ? 'rgba(18, 18, 18, 0.4)'
+              : 'inherit',
           },
           
           // Header styling

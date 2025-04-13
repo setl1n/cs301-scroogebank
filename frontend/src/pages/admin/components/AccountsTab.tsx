@@ -1,17 +1,14 @@
 import { useState } from 'react';
-import { Box, Container, Paper } from '@mui/material';
+import { Container, Paper } from '@mui/material';
 import AdminGrid from '../../../components/ui/admin/AdminGrid';
 import SearchBar from '../../../components/ui/navigation/SearchBar';
 import { rows as adminData } from '../../../components/ui/admin/AdminData';
 
 export default function AccountsTab() {
-  const [searchTerm, setSearchTerm] = useState('');
   const [filteredAccounts, setFilteredAccounts] = useState(adminData);
   
   // Handle search across multiple columns
   const handleSearch = (term: string) => {
-    setSearchTerm(term);
-    
     if (!term.trim()) {
       // If search is empty, show all accounts
       setFilteredAccounts(adminData);

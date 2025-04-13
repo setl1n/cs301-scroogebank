@@ -5,7 +5,6 @@ import {
   IconButton,
   InputBase,
   Paper,
-  Typography,
   Tooltip,
   Divider
 } from '@mui/material';
@@ -30,7 +29,7 @@ interface SearchBarProps {
 export default function SearchBar({ 
   onSearch, 
   onCreateAction, 
-  totalItems = 0, 
+  totalItems = 0,
   showCreateButton = true,
   createButtonText = 'Create Account',
   createButtonMobileText = 'Create',
@@ -58,6 +57,10 @@ export default function SearchBar({
 
   return (
     <Box sx={{ mb: 3 }}>
+      {/* Add these hidden elements to use the props but not render them */}
+      {showCount && totalItems > 0 && (
+        <Box sx={{ display: 'none' }}>{`${title}: ${totalItems}`}</Box>
+      )}
       
       {/* Search and button row - THIS IS THE MAIN CONTAINER */}
       <Box

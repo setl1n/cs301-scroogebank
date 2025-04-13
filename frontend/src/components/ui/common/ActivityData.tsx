@@ -33,7 +33,7 @@ export const columns: GridColDef[] = [
     headerName: 'Agent ID',
     width: 120,
     // Hide this column by default, mainly used for filtering
-    hide: true,
+    headerClassName: 'hidden-column',
   },
   { 
     field: 'timestamp', 

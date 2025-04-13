@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Container, Paper, Alert, CircularProgress, Typography, Snackbar } from '@mui/material';
+import { Box, Paper, Alert, CircularProgress, Typography, Snackbar } from '@mui/material';
 import TransactionGrid from '../../../components/ui/common/TransactionGrid';
 import SearchBar from '../../../components/ui/navigation/SearchBar';
 import { transactionService } from '../../../services/transactionService';
@@ -7,7 +7,6 @@ import { Transaction } from '../../../types/Transaction';
 import { useAuth } from 'react-oidc-context';
 
 export default function TransactionsTab() {
-  const [searchTerm, setSearchTerm] = useState('');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,8 +43,6 @@ export default function TransactionsTab() {
   
   // Handle search across multiple columns
   const handleSearch = (term: string) => {
-    setSearchTerm(term);
-    
     if (!term.trim()) {
       // If search is empty, show all transactions
       setFilteredTransactions(transactions);
@@ -130,8 +127,15 @@ export default function TransactionsTab() {
           }}
         >
           <TransactionGrid
-            agentId={auth.user?.profile.sub || "unknown"}
-            rows={filteredTransactions}
+            rows={filteredTransactions.map(transaction => ({
+              id: transaction.id.toString(),
+              amount: transaction.amount,
+              type: transaction.transactionType === 'D' ? 'Deposit' : 'Withdrawal',
+              status: transaction.status.charAt(0) + transaction.status.slice(1).toLowerCase(),
+              date: transaction.date,
+              clientName: transaction.clientName || '',
+              clientId: transaction.clientId.toString()
+            }))}
           />
         </Paper>
       )}

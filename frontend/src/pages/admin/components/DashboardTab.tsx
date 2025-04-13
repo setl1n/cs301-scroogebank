@@ -5,13 +5,10 @@ import SearchBar from '../../../components/ui/navigation/SearchBar';
 import { rows as activityData } from '../../../components/ui/common/ActivityData';
 
 export default function DashboardTab() {
-  const [searchTerm, setSearchTerm] = useState('');
   const [filteredActivities, setFilteredActivities] = useState(activityData);
   
   // Handle search across multiple columns
   const handleSearch = (term: string) => {
-    setSearchTerm(term);
-    
     if (!term.trim()) {
       // If search is empty, show all activities
       setFilteredActivities(activityData);

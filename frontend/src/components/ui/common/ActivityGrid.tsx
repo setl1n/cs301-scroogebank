@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { useTheme, alpha } from '@mui/material';
 import { columns, rows as defaultRows } from './ActivityData';
 
 interface ActivityGridProps {
-  rows?: any[];
+  rows?: readonly any[];
   agentId?: string; // Add optional agentId for filtering
 }
 

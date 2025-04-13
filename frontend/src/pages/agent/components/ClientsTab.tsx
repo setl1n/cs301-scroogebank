@@ -7,7 +7,6 @@ import { Client } from '../../../types/Client';
 import { useAuth } from 'react-oidc-context';
 
 export default function ClientsTab() {
-  const [searchTerm, setSearchTerm] = useState('');
   const [clients, setClients] = useState<Client[]>([]);
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,8 +44,6 @@ export default function ClientsTab() {
   
   // Handle search across multiple columns
   const handleSearch = (term: string) => {
-    setSearchTerm(term);
-    
     if (!term.trim()) {
       // If search is empty, show all clients
       setFilteredClients(clients);

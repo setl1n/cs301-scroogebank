@@ -27,7 +27,7 @@ interface Agent {
 }
 
 interface CustomizedDataGridProps {
-  rows?: any[]; // Accept custom rows prop
+  rows?: readonly any[]; // Accept custom rows prop with readonly
 }
 
 export default function AgentGrid({ rows = defaultRows }: CustomizedDataGridProps) {
@@ -173,10 +173,8 @@ export default function AgentGrid({ rows = defaultRows }: CustomizedDataGridProp
         sx={{
           border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.1)',
           borderRadius: 1,
-          bgcolor: isDarkMode ? '#121212' : theme.vars
-            ? `rgba(${theme.vars.palette.background.defaultChannel})`
-            : alpha(theme.palette.background.default, 0.4),
-            
+          bgcolor: isDarkMode ? '#121212' : theme.palette.background.paper,
+          
           // Make buttons visible on dark mode rows
           '& .MuiDataGrid-cell': {
             color: isDarkMode ? 'white' : 'inherit',

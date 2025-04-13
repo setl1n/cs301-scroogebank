@@ -18,6 +18,10 @@ interface ClientGridProps {
   loading?: boolean;
 }
 
+interface GridValueGetterParams {
+  row: any;
+}
+
 export default function ClientGrid({ 
   rows, 
   onEdit, 
@@ -42,8 +46,11 @@ export default function ClientGrid({
       field: 'fullName', 
       headerName: 'Full Name', 
       width: 200,
-      valueGetter: (value, row) => {
-        if (!row) return '';
+      valueGetter: (params: GridValueGetterParams) => {
+        if (!params || !params.row) return '';
+        
+        // Get the row with proper typing
+        const row = params.row as { firstName?: string; lastName?: string };
         
         // Capitalize first letter of first name and last name
         const firstName = row.firstName ? row.firstName.charAt(0).toUpperCase() + row.firstName.slice(1) : '';

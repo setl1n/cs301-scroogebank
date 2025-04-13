@@ -24,7 +24,7 @@ const columns: GridColDef[] = [
     headerName: 'Amount', 
     width: 150,
     type: 'number',
-    valueFormatter: (params) => {
+    valueFormatter: (params: { value: any }) => {
       if (params.value == null) return '';
       return `$${Number(params.value).toFixed(2)}`;
     }
@@ -74,7 +74,7 @@ const columns: GridColDef[] = [
     field: 'date', 
     headerName: 'Date', 
     width: 180,
-    valueFormatter: (params) => {
+    valueFormatter: (params: { value: any }) => {
       if (!params.value) return '';
       const date = new Date(params.value);
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

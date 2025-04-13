@@ -173,7 +173,6 @@ export function Dashboard() {
                 {/* Activity Grid */}
                 <ActivityGrid 
                   agentId="G001"
-                  // @ts-expect-error - Workaround for readonly array issue
                   rows={filteredActivities} 
                 />
               </Paper>
