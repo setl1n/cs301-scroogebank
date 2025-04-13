@@ -8,10 +8,8 @@ import HomePage from './pages/HomePage'
 import OAuthRedirectHandler from './pages/login/OAuthRedirectHandler'
 import ProtectedRoute from './components/ProtectedRoute'
 import { hasGroupAccess } from './utils/auth'
-import SignInSide from './pages/other/SignInSide'
-import NewAgentAccounts from './pages/other/NewAgentAccounts'
-import NewAgent from './pages/other/NewAgent'
-import NewAgentTransactions from './pages/other/NewAgentTransactions'
+import ClientsTab from './pages/agent/components/ClientsTab'
+import TransactionsTab from './pages/agent/components/TransactionsTab'
 import NewAdmin from './pages/other/NewAdmin'
 import NewAdminAccounts from './pages/other/NewAdminAccounts'
 import NewAdminTransactions from './pages/other/NewAdminTransactions'
@@ -60,21 +58,23 @@ function App() {
                 <AdminPage />
               </ProtectedRoute>
             } />
-            <Route path="/agent" element={
+            <Route path="/agent/*" element={
               <ProtectedRoute requiredRoles={['AGENT']}>
                 <AgentPage />
               </ProtectedRoute>
-            } />
+            }>
+              <Route path="clients" element={<ClientsTab />} />
+              <Route path="transactions" element={<TransactionsTab />} />
+            </Route>
             <Route path="/" element={<HomePage />} />
-            {/* cooking */}
-            <Route path="/newagent" element={<NewAgent/>} />
-            <Route path="/newagent/accounts" element={<NewAgentAccounts/>} />
-            <Route path="/newagent/transactions" element={<NewAgentTransactions/>} />
+            
+            {/* Legacy routes */}
+            <Route path="/newagent/accounts" element={<ClientsTab/>} />
+            <Route path="/newagent/transactions" element={<TransactionsTab/>} />
 
             <Route path="/newadmin" element={<NewAdmin/>} />
             <Route path="/newadmin/accounts" element={<NewAdminAccounts/>} />
             <Route path="/newadmin/transactions" element={<NewAdminTransactions/>} />
-
           </Routes>
         </main>
       </div>

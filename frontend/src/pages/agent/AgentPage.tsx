@@ -1,13 +1,84 @@
-import AgentDashboard from './components/AgentDashboard'
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { Dashboard } from './components/Dashboard';
 
 const AgentPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState('dashboard');
+  
+  // Handle tab selection based on current path
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/agent/clients')) {
+      setActiveTab('clients');
+    } else if (path.includes('/agent/transactions')) {
+      setActiveTab('transactions');
+    } else {
+      setActiveTab('dashboard');
+    }
+  }, [location.pathname]);
+
+  const handleTabClick = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === 'dashboard') {
+      navigate('/agent');
+    } else {
+      navigate(`/agent/${tab}`);
+    }
+  };
+
+  // Handle legacy routes
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/newagent/accounts')) {
+      navigate('/agent/clients');
+    } else if (path.includes('/newagent/transactions')) {
+      navigate('/agent/transactions');
+    }
+  }, [location.pathname, navigate]);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A] p-4 dark">
-      <div className="max-w-4xl w-full h-[800px] bg-[#111214] p-8 rounded-lg border border-[#1E2023] shadow-lg">
-        <AgentDashboard />
+    <div className="container mx-auto p-4">
+      
+      <div className="flex border-b border-gray-200 mb-4">
+        <button
+          className={`py-2 px-4 ${
+            activeTab === 'dashboard' 
+              ? 'text-blue-600 border-b-2 border-blue-600 font-medium' 
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+          onClick={() => handleTabClick('dashboard')}
+        >
+          Dashboard
+        </button>
+        <button
+          className={`py-2 px-4 ${
+            activeTab === 'clients' 
+              ? 'text-blue-600 border-b-2 border-blue-600 font-medium' 
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+          onClick={() => handleTabClick('clients')}
+        >
+          Clients
+        </button>
+        <button
+          className={`py-2 px-4 ${
+            activeTab === 'transactions' 
+              ? 'text-blue-600 border-b-2 border-blue-600 font-medium' 
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+          onClick={() => handleTabClick('transactions')}
+        >
+          Transactions
+        </button>
+      </div>
+
+      <div className="mt-4">
+        {activeTab === 'dashboard' ? <Dashboard /> : <Outlet />}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AgentPage
+export default AgentPage;
