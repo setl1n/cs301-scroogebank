@@ -17,6 +17,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import ColorModeIconDropdown from '../template/shared-theme/ColorModeIconDropdown';
 import { useAuth } from 'react-oidc-context';
 import { hasGroupAccess } from '../../../utils/auth';
+import { useMemo } from 'react';
 
 export default function NavBar() {
   const [open, setOpen] = React.useState(false);
@@ -51,6 +52,26 @@ export default function NavBar() {
     navigate('/login');
   };
 
+  // Replace your getLogo function with this useMemo approach
+  // This will keep the logo path reactive to theme changes
+  const logoPath = useMemo(() => {
+    const themePrefix = theme.palette.mode === 'dark' ? 'DarkMode' : 'LightMode';
+    let roleType = 'default';
+    
+    if (isAdmin) {
+      roleType = 'Admin';
+    } else if (isAgent) {
+      roleType = 'Agent';
+    }
+    
+    console.log('Role detection:', { isAdmin, isAgent, roleType });
+    console.log('Current theme mode:', theme.palette.mode);
+    const path = `/${themePrefix}${roleType}.svg`;
+    console.log('Logo path generated:', path);
+    
+    return path;
+  }, [theme.palette.mode, isAdmin, isAgent]); // Re-compute when these change
+
   return (
     <AppBar
       position="fixed"
@@ -84,9 +105,14 @@ export default function NavBar() {
             {/* Button */}
             <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
                 <img 
-                    src="/react.svg" 
-                    alt="Logo" 
-                    style={{ height: 24, width: 24, marginRight: 6 }} 
+                    src={logoPath} 
+                    alt={`${theme.palette.mode === 'dark' ? 'Dark Mode' : 'Light Mode'} ${isAdmin ? 'Admin' : isAgent ? 'Agent' : 'Default'}`} 
+                    style={{ height: 36, width: 36, marginRight: 4 }} 
+                    onError={(e) => {
+                      console.error('Failed to load logo, falling back to default');
+                      e.currentTarget.src = '/logo.svg'; // Fallback to a generic logo
+                      e.currentTarget.onerror = null; // Prevent infinite error loop
+                    }}
                 />
               
               {/* Admin Navigation */}
@@ -270,7 +296,7 @@ export default function NavBar() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <img 
-                      src="/react.svg" 
+                      src={logoPath} 
                       alt="Logo" 
                       style={{ height: 24, width: 24, marginRight: 8 }} 
                     />
