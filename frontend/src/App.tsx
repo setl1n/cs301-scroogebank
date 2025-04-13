@@ -8,6 +8,10 @@ import HomePage from './pages/HomePage'
 import OAuthRedirectHandler from './pages/login/OAuthRedirectHandler'
 import ProtectedRoute from './components/ProtectedRoute'
 import { hasGroupAccess } from './utils/auth'
+import ClientsTab from './pages/agent/components/ClientsTab'
+import TransactionsTab from './pages/agent/components/TransactionsTab'
+import AccountsTab from './pages/admin/components/AccountsTab'
+import TransactionsTabAdmin from './pages/admin/components/TransactionsTab'
 
 function App() {
   const auth = useAuth();
@@ -48,16 +52,27 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/login/oauth2/code/cognito" element={<OAuthRedirectHandler />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            
+            {/* Admin routes */}
             <Route path="/admin" element={
               <ProtectedRoute requiredRoles={['ADMIN']}>
                 <AdminPage />
               </ProtectedRoute>
-            } />
-            <Route path="/agent" element={
+            }>
+              <Route path="accounts" element={<AccountsTab />} />
+              <Route path="transactions" element={<TransactionsTabAdmin />} />
+            </Route>
+            
+            {/* Agent routes */}
+            <Route path="/agent/*" element={
               <ProtectedRoute requiredRoles={['AGENT']}>
                 <AgentPage />
               </ProtectedRoute>
-            } />
+            }>
+              <Route path="clients" element={<ClientsTab />} />
+              <Route path="transactions" element={<TransactionsTab />} />
+            </Route>
+            
             <Route path="/" element={<HomePage />} />
           </Routes>
         </main>

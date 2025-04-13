@@ -1,13 +1,47 @@
-import AgentDashboard from './components/AgentDashboard'
-import ClientsTableSimplified from './ClientsTableSimplified'
-const AgentPage = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A] p-4 dark">
-      <div className="max-w-4xl w-full h-[800px] bg-[#111214] p-8 rounded-lg border border-[#1E2023] shadow-lg">
-        <ClientsTableSimplified />
-      </div>
-    </div>
-  )
-}
+import { useEffect } from 'react';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { Box, CssBaseline } from '@mui/material';
+import AppTheme from '../../components/ui/template/shared-theme/AppTheme';
+import NavBar from '../../components/ui/navigation/navbar';
+import { Dashboard } from './components/Dashboard';
 
-export default AgentPage
+const AgentPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Handle legacy routes
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/newagent/accounts')) {
+      navigate('/agent/clients');
+    } else if (path.includes('/newagent/transactions')) {
+      navigate('/agent/transactions');
+    }
+  }, [location.pathname, navigate]);
+
+  return (
+    <AppTheme>
+      <CssBaseline enableColorScheme />
+      <NavBar />
+      
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          py: 8,
+          px: 2,
+          mt: 'calc(var(--template-frame-height, 0px) + 64px)',
+        }}
+      >
+        {/* Render content based on route */}
+        <div className="mt-4">
+          {location.pathname === '/agent' && <Dashboard />}
+          {/* All other routes are handled by Outlet */}
+          {location.pathname !== '/agent' && <Outlet />}
+        </div>
+      </Box>
+    </AppTheme>
+  );
+};
+
+export default AgentPage;
