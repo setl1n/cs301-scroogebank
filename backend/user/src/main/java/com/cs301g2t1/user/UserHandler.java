@@ -45,16 +45,17 @@ public class UserHandler implements RequestHandler<Object, Object> {
                 }
                 context.getLogger().log("not health check: " + path);
             }
-            
+            Map<String, Object> requestBody = (Map<String, Object>) requestMap.get("body");
+            context.getLogger().log("Request body: " + requestBody);
             // Convert Map to Request if it has operation
-            if (requestMap.containsKey("operation")) {
-                context.getLogger().log("Processing request with operation: " + requestMap.get("operation"));
+            if (requestBody.containsKey("operation")) {
+                context.getLogger().log("Processing request with operation: " + requestBody.get("operation"));
                 Request request = new Request();
-                request.operation = (String) requestMap.get("operation");
+                request.operation = (String) requestBody.get("operation");
                 
-                if (requestMap.containsKey("userId")) {
+                if (requestBody.containsKey("userId")) {
                     // Handle different number types safely
-                    Object userIdObj = requestMap.get("userId");
+                    Object userIdObj = requestBody.get("userId");
                     if (userIdObj instanceof Number) {
                         request.userId = ((Number) userIdObj).longValue();
                     } else if (userIdObj != null) {
@@ -66,9 +67,9 @@ public class UserHandler implements RequestHandler<Object, Object> {
                     }
                 }
                 
-                if (requestMap.containsKey("user")) {
+                if (requestBody.containsKey("user")) {
                     // This should be properly deserialized into a User object
-                    request.user = (User) requestMap.get("user");
+                    request.user = (User) requestBody.get("user");
                 }
                 
                 return processRequest(request, context);
