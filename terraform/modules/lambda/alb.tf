@@ -60,6 +60,8 @@ resource "aws_lb_listener_rule" "lambda_rule" {
     if lookup(v, "public_facing", false) == true
   }
 
+  priority = 20 + index(keys(var.lambda_functions), each.key)
+
   listener_arn = var.https_listener_arn
 
   action {
