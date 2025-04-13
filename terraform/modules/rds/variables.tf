@@ -1,14 +1,24 @@
 #----------------------------------------
 # Network Configuration Variables
 #----------------------------------------
-variable "security_group_id" {
+variable "db_security_group_id" {
   type        = string
   description = "Security Group ID to be used by the DB"
+}
+
+variable "proxy_security_group_id" {
+  type        = string
+  description = "Security Group ID to be used by the DB proxy"
 }
 
 variable "db_subnet_group_name" {
   type        = string
   description = "Subnet Group Name to be used by the DB"
+}
+
+variable "db_subnet_group_ids" {
+  type        = list(string)
+  description = "Subnet Group IDs to be used by the DB"
 }
 
 #----------------------------------------

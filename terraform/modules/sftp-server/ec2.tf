@@ -19,9 +19,9 @@ resource "aws_key_pair" "sftp_key_pair" {
 resource "aws_instance" "sftp_server" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
-  subnet_id              = var.public_subnet_id
+  subnet_id              = aws_subnet.sftp_public_subnet.id
   key_name               = aws_key_pair.sftp_key_pair.key_name
-  vpc_security_group_ids = [var.security_group_id]
+  vpc_security_group_ids = [aws_security_group.sftp_sg.id]
 
   tags = {
     Name = "sftp-server"

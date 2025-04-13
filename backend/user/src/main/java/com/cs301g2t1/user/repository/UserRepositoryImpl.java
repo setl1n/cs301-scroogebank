@@ -1,20 +1,30 @@
 package com.cs301g2t1.user.repository;
 
-import com.cs301g2t1.user.model.User;
-import com.cs301g2t1.user.model.UserRole;
-
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
-import software.amazon.awssdk.services.cognitoidentityprovider.model.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.cs301g2t1.user.model.User;
+import com.cs301g2t1.user.model.UserRole;
+
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDeleteUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserNotFoundException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType;
+
 public class UserRepositoryImpl implements UserRepository {
-    // references .env for now
+    // references environment variables from terraform
     private static final String USER_POOL_ID = System.getenv("COGNITO_USER_POOL_ID");
     private static final String APP_CLIENT_ID = System.getenv("COGNITO_APP_CLIENT_ID");
     private static final Region REGION = Region.of(System.getenv("COGNITO_REGION") != null ? System.getenv("COGNITO_REGION") : "ap-southeast-1");

@@ -32,6 +32,11 @@ resource "aws_lambda_function" "lambda_functions" {
   memory_size      = each.value.memory_size                 # Memory allocation in MB (affects CPU allocation too)
   role             = aws_iam_role.lambda_role[each.key].arn # IAM role with appropriate permissions
 
+  # Enable AWS X-Ray tracing for better monitoring and debugging
+  tracing_config {
+    mode = "Active" # Automatically trace all incoming requests
+  }
+
   # Configure VPC access only if Lambda needs access to VPC resources (e.g., RDS)
   # This avoids unnecessary ENI creation for functions that don't need VPC access
   # ENIs count against your VPC limits and can be a potential bottleneck

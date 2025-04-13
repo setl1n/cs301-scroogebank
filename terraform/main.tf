@@ -40,10 +40,12 @@ module "dynamodb" {
 # Manages PostgreSQL database instances for persistent data storage
 #--------------------------------------------------------------
 module "rds" {
-  source            = "./modules/rds"
-  security_group_id = module.network.db_sg_id
+  source                  = "./modules/rds"
+  db_security_group_id    = module.network.db_sg_id
+  proxy_security_group_id = module.network.db_proxy_sg_id
   # db_subnet_group_name = module.network.public_db_subnet_group_name
   db_subnet_group_name = module.network.db_subnet_group_name
+  db_subnet_group_ids  = module.network.db_subnet_group_ids
 
   # Database Connection Credentials - Passed from variables for security
   database_name     = var.DATABASE_NAME
@@ -139,11 +141,11 @@ module "alb" {
 # Container orchestration service for running microservices
 #--------------------------------------------------------------
 module "ecs" {
-  source            = "./modules/ecs"
-  lb_sg_ids         = [module.network.lb_sg_id]
-  vpc_id            = module.network.vpc_id
-  ecs_tasks_sg_ids  = [module.network.ecs_tasks_sg_id]
-  public_subnet_ids = module.network.public_subnet_ids
+  source           = "./modules/ecs"
+  lb_sg_ids        = [module.network.lb_sg_id]
+  vpc_id           = module.network.vpc_id
+  ecs_tasks_sg_ids = [module.network.ecs_tasks_sg_id]
+  subnet_ids       = module.network.private_app_subnet_ids
 
   # Database Connection Credentials - Passed from variables for security
   database_name     = var.DATABASE_NAME
@@ -195,12 +197,12 @@ module "cognito" {
   password_require_numbers   = true
   password_require_symbols   = false
 
-  mfa_configuration = "OFF"
+  mfa_configuration = var.mfa_configuration
 
-  alb_dns_name  = module.ecs.alb_dns_name
-  custom_domain = var.CUSTOM_DOMAIN # to use if have one configured
-
-  cognito_domain = var.COGNITO_DOMAIN
+  alb_dns_name    = module.ecs.alb_dns_name
+  custom_domain   = var.CUSTOM_DOMAIN # to use if have one configured
+  frontend_domain = var.FRONTEND_DOMAIN
+  cognito_domain  = var.COGNITO_DOMAIN
 
   enable_local_development = var.ENABLE_LOCAL_DEVELOPMENT
   local_development_ports  = var.LOCAL_DEVELOPMENT_PORTS
@@ -299,14 +301,11 @@ module "lambda" {
 # EC2 instance for file retrieval via SFTP
 #--------------------------------------------------------------
 module "sftp_server" {
-  source            = "./modules/sftp-server"
-  ami_id            = "ami-0aebd6a41cf6ab2eb" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
-  instance_type     = "t2.micro"
-  key_name          = "my-key-pair"
-  public_subnet_id  = module.network.public_subnet_ids[0]
-  vpc_id            = module.network.vpc_id
-  security_group_id = module.network.sftp_sg_id
-  # private_key_path  = "~/.ssh/id_rsa"  # Update this to your actual key path
+  source                       = "./modules/sftp-server"
+  ami_id                       = "ami-0aebd6a41cf6ab2eb" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type 
+  instance_type                = "t2.micro"
+  key_name                     = "my-key-pair"
+  aws_region                   = var.aws_region
   csv_file_path                = "${path.root}/../mock_transactions.csv" # Path to the CSV file
   sftp_private_key_secret_name = var.sftp_private_key_secret_name
 }

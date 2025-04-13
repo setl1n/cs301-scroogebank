@@ -2,9 +2,9 @@
 # NETWORK CONFIGURATION
 # These variables define the network infrastructure where ECS will be deployed
 # ---------------------------------------------------------------------------------------------------------------------
-variable "public_subnet_ids" {
+variable "subnet_ids" {
   type        = list(string)
-  description = "List of public subnet ids"
+  description = "List of subnet ids"
 }
 
 variable "ecs_tasks_sg_ids" {
@@ -114,6 +114,8 @@ variable "services" {
     app_port       = number
     path_pattern   = list(string)
     auth_enabled   = optional(bool, false)
+    sqs_enabled    = optional(bool, false)
+    ses_enabled    = optional(bool, false)
   }))
 }
 

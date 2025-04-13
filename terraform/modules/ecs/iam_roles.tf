@@ -31,9 +31,9 @@ resource "aws_iam_role" "ecs_execution_role" {
 }
 
 #--------------------------------------------------------------
-# ECS Task Role
+# ECS Task Roles
 # Allows containers themselves to access AWS services via
-# the AWS SDK or CLI
+# the AWS SDK or CLI - one role per service
 #--------------------------------------------------------------
 
 # Trust policy document for ECS task role
@@ -48,6 +48,14 @@ data "aws_iam_policy_document" "assume_role_tasks" {
 
     actions = ["sts:AssumeRole"]
   }
+}
+
+# Create a separate task role for each service
+resource "aws_iam_role" "ecs_tasks_role" {
+  for_each = var.services
+
+  name               = "ecs-tasks-role-${each.key}"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_tasks.json
 }
 
 # Below 2 roles are for cognito - alb integration
@@ -85,12 +93,6 @@ resource "aws_iam_role_policy" "alb_cognito_policy" {
       }
     ]
   })
-}
-
-# Task role used by containers themselves to access AWS services
-resource "aws_iam_role" "ecs_tasks_role" {
-  name               = "ecs-tasks-role"
-  assume_role_policy = data.aws_iam_policy_document.assume_role_tasks.json
 }
 
 # Attach the ECS task execution policy to the task role
@@ -132,7 +134,6 @@ resource "aws_iam_role_policy_attachment" "ecs_autoscaling_policy_attachment" {
 }
 
 # SQS policy document allowing sending messages to SQS queues
-# First, create the IAM policy for SQS send message
 resource "aws_iam_policy" "sqs_send_message_policy" {
   name        = "sqs-send-message-policy"
   description = "Policy to allow sending messages to SQS queue"
@@ -154,9 +155,14 @@ resource "aws_iam_policy" "sqs_send_message_policy" {
   })
 }
 
-# attach the sqs policy to the ECS task role
+# Conditionally attach the sqs policy to the ECS task roles for services with sqs_enabled
 resource "aws_iam_role_policy_attachment" "ecs_tasks_sqs_send_message_policy_attachment" {
-  role       = aws_iam_role.ecs_tasks_role.name
+  for_each = {
+    for key, service in var.services : key => service
+    if lookup(service, "sqs_enabled", false)
+  }
+
+  role       = aws_iam_role.ecs_tasks_role[each.key].name
   policy_arn = aws_iam_policy.sqs_send_message_policy.arn
 }
 
@@ -174,20 +180,19 @@ resource "aws_iam_policy" "ses_send_email_policy" {
           "ses:SendEmail",
           "ses:SendRawEmail"
         ]
-        Resource = "*"  # You may want to restrict this to specific SES resources/identities
+        Resource = "*" # You may want to restrict this to specific SES resources/identities
       }
     ]
   })
 }
 
-# Attach the SES policy to the ECS task role
+# Conditionally attach the SES policy to the ECS task roles for services with ses_enabled
 resource "aws_iam_role_policy_attachment" "ecs_tasks_ses_send_email_policy_attachment" {
-  role       = aws_iam_role.ecs_tasks_role.name
+  for_each = {
+    for key, service in var.services : key => service
+    if lookup(service, "ses_enabled", false)
+  }
+
+  role       = aws_iam_role.ecs_tasks_role[each.key].name
   policy_arn = aws_iam_policy.ses_send_email_policy.arn
 }
-
-# # Attach AmazonEC2ContainerRegistryReadOnly policy to the ECS execution role
-# resource "aws_iam_role_policy_attachment" "ecs_execution_role_ecr_policy_attachment" {
-#   role       = aws_iam_role.ecs_execution_role.name
-#   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-# }

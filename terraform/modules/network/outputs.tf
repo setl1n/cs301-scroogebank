@@ -17,6 +17,11 @@ output "public_subnet_ids" {
   description = "List of public subnet IDs"
 }
 
+output "private_app_subnet_ids" {
+  value       = [aws_subnet.private_app_subnet_a.id, aws_subnet.private_app_subnet_b.id]
+  description = "List of private subnet IDs"
+}
+
 output "private_app_subnet_a_id" {
   value       = aws_subnet.private_app_subnet_a.id
   description = "ID of private application subnet in availability zone A"
@@ -47,15 +52,16 @@ output "db_sg_id" {
   description = "Security group ID for database"
 }
 
+output "db_proxy_sg_id" {
+  value       = aws_security_group.db_proxy_sg.id
+  description = "Security group ID for database proxy"
+}
+
 output "lambda_sg_id" {
   value       = aws_security_group.lambda_sg.id
   description = "Security group ID for Lambda functions"
 }
 
-output "sftp_sg_id" {
-  value       = aws_security_group.sftp_sg.id
-  description = "Security group ID for SFTP server"
-}
 
 #--------------------------------------------------------------
 # Database Subnet Resources

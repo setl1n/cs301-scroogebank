@@ -216,4 +216,8 @@ public class ClientServiceImpl implements ClientService {
             throw new RuntimeException("Error sending message to SQS", e);
         }
     }
+
+    public boolean validateClientId(Long clientId) {
+        return clientRepository.existsById(clientId);
+    }
 }

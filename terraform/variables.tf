@@ -35,6 +35,12 @@ variable "CUSTOM_DOMAIN" {
   default     = "alb.itsag2t1.com"
 }
 
+variable "FRONTEND_DOMAIN" {
+  description = "Main frontend domain for the application (if configured)"
+  type        = string
+  default     = "main-frontend.itsag2t1.com"
+}
+
 #--------------------------------------------------------------
 # Database Configuration
 # These credentials will be used for RDS instance setup
@@ -131,6 +137,12 @@ variable "LOCAL_DEVELOPMENT_PORTS" {
   default     = [3000, 8080, 4200, 5173] # Common ports for React, Node, Angular development
 }
 
+variable "mfa_configuration" {
+  description = "MFA configuration for the application (e.g., OFF, ON, OPTIONAL)"
+  type        = string
+  default     = "OFF" # Set a default value as needed
+}
+
 #--------------------------------------------------------------
 # SFTP Server Configuration
 # Used for securely transferring files
@@ -178,14 +190,15 @@ variable "lambda_functions" {
 
   default = {
     transaction = {
-      name         = "transaction_lambda_function"
-      handler      = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
-      runtime      = "java21"
-      filename     = "../backend/transaction/target/transaction-1.0-SNAPSHOT.jar"
-      timeout      = 90
-      memory_size  = 256
-      rds_enabled  = true
-      sftp_enabled = true
+      name          = "transaction_lambda_function"
+      handler       = "com.cs301g2t1.transaction.TransactionHandler::handleRequest"
+      runtime       = "java21"
+      filename      = "../backend/transaction/target/transaction-1.0-SNAPSHOT.jar"
+      timeout       = 90
+      memory_size   = 256
+      rds_enabled   = true
+      sftp_enabled  = true
+      public_facing = true
       environment_variables = {
         SFTP_PORT   = "22"
         SFTP_TARGET = "/sftp/target"
@@ -199,6 +212,7 @@ variable "lambda_functions" {
       timeout         = 45
       memory_size     = 256
       cognito_enabled = true
+      public_facing   = true
     },
     log = {
       name                = "log_lambda_function"
@@ -255,7 +269,9 @@ variable "ecs_services" {
     app_image      = string
     app_port       = number
     path_pattern   = list(string)
-    auth_enabled   = bool
+    auth_enabled   = optional(bool, false)
+    sqs_enabled    = optional(bool, false)
+    ses_enabled    = optional(bool, false)
   }))
   default = {
     client = {
@@ -268,6 +284,8 @@ variable "ecs_services" {
       app_port       = 8080
       path_pattern   = ["/api/v1/clients*"]
       auth_enabled   = true
+      sqs_enabled    = true
+      ses_enabled    = true
     }
     account = {
       cluster_name   = "account-cluster"
@@ -279,6 +297,7 @@ variable "ecs_services" {
       app_port       = 8080
       path_pattern   = ["/api/v1/accounts*"]
       auth_enabled   = true
+      sqs_enabled    = true
     }
   }
 }

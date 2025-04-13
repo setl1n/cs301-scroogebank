@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from 'react-oidc-context';
+import { clientApi } from '@/services/clientApi';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,6 +24,39 @@ interface ClientAccount {
 const AgentDashboard = () => {
     const [isCreateProfileOpen, setIsCreateProfileOpen] = useState(false);
     const [selectedClient, setSelectedClient] = useState<string>("");
+    const [clients, setClients] = useState<ClientAccount[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const auth = useAuth();
+
+    useEffect(() => {
+        const fetchClients = async () => {
+            if (!auth.isAuthenticated) return;
+            console.log(clients);
+            console.log(isLoading);
+            console.log(error);
+            
+            
+            try {
+                setIsLoading(true);
+                setError(null);
+                
+                const response = await clientApi.getAllClients();
+                
+                // Update your component state with the fetched clients
+                setClients(response.data || []);
+                console.log(response.data);
+                
+            } catch (err) {
+                console.error('Error fetching clients:', err);
+                setError('Failed to load clients. Please try again later.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        
+        fetchClients();
+    }, [auth.isAuthenticated, auth.user?.access_token]);
 
     const handleClearSelection = (value: string) => {
         if (value === "all") {

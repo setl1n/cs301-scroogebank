@@ -3,7 +3,7 @@ name: Build and Deploy Static Website to S3
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'frontend/**'
   pull_request:

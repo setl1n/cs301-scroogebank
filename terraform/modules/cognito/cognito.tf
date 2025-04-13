@@ -8,6 +8,10 @@ resource "aws_cognito_user_pool" "user_pool" {
 
   auto_verified_attributes = ["email"]
 
+  admin_create_user_config {
+    allow_admin_create_user_only = true
+  }
+
   password_policy {
     minimum_length    = var.password_min_length
     require_lowercase = var.password_require_lowercase
@@ -17,6 +21,11 @@ resource "aws_cognito_user_pool" "user_pool" {
   }
 
   mfa_configuration = var.mfa_configuration
+
+  # # Enable TOTP MFA (authenticator apps like Google Authenticator)
+  # software_token_mfa_configuration {
+  #   enabled = true
+  # }
 }
 
 #--------------------------------------------------------------
@@ -32,8 +41,8 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
 
   generate_secret = true
 
-  allowed_oauth_flows  = ["code"]
-  allowed_oauth_scopes = ["email", "openid", "profile"]
+  allowed_oauth_flows                  = ["code"]
+  allowed_oauth_scopes                 = ["email", "openid", "profile"]
   allowed_oauth_flows_user_pool_client = true
 
 
@@ -41,7 +50,9 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
   callback_urls = distinct(concat(
     compact([
       var.custom_domain != "" ? "https://${var.custom_domain}/oauth2/idpresponse" : "",
-      var.custom_domain != "" ? "https://${var.custom_domain}/login/oauth2/code/cognito" : ""
+      var.custom_domain != "" ? "https://${var.custom_domain}/login/oauth2/code/cognito" : "",
+      var.frontend_domain != "" ? "https://${var.frontend_domain}/oauth2/idpresponse" : "",
+      var.frontend_domain != "" ? "https://${var.frontend_domain}/login/oauth2/code/cognito" : ""
     ]),
     var.enable_local_development ? flatten([
       for port in var.local_development_ports : [
@@ -53,11 +64,12 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
 
   logout_urls = distinct(concat(
     compact([
-      "https://${var.alb_dns_name}/logout",
-      var.custom_domain != "" ? "https://${var.custom_domain}/logout" : ""
+      "https://${var.alb_dns_name}/login",
+      var.custom_domain != "" ? "https://${var.custom_domain}/login" : "",
+      var.frontend_domain != "" ? "https://${var.frontend_domain}/login" : ""
     ]),
     var.enable_local_development ? [
-      for port in var.local_development_ports : "http://localhost:${port}/logout"
+      for port in var.local_development_ports : "http://localhost:${port}/login"
     ] : []
   ))
 
@@ -81,15 +93,17 @@ resource "aws_cognito_user_pool_client" "spa_client" {
 
   generate_secret = false
 
-  allowed_oauth_flows  = ["implicit", "code"]
-  allowed_oauth_scopes = ["email", "openid", "profile"]
+  allowed_oauth_flows                  = ["implicit", "code"]
+  allowed_oauth_scopes                 = ["email", "openid", "profile"]
   allowed_oauth_flows_user_pool_client = true
 
   # SPA callback and logout URLs
   callback_urls = distinct(concat(
     compact([
       var.custom_domain != "" ? "https://${var.custom_domain}" : "",
-      var.custom_domain != "" ? "https://${var.custom_domain}/login/oauth2/code/cognito" : ""
+      var.custom_domain != "" ? "https://${var.custom_domain}/login/oauth2/code/cognito" : "",
+      var.frontend_domain != "" ? "https://${var.frontend_domain}" : "",
+      var.frontend_domain != "" ? "https://${var.frontend_domain}/login/oauth2/code/cognito" : ""
     ]),
     var.enable_local_development ? flatten([
       for port in var.local_development_ports : [
@@ -102,7 +116,9 @@ resource "aws_cognito_user_pool_client" "spa_client" {
   logout_urls = distinct(concat(
     compact([
       var.custom_domain != "" ? "https://${var.custom_domain}" : "",
-      var.custom_domain != "" ? "https://${var.custom_domain}/logout" : ""
+      var.custom_domain != "" ? "https://${var.custom_domain}/login" : "",
+      var.frontend_domain != "" ? "https://${var.frontend_domain}" : "",
+      var.frontend_domain != "" ? "https://${var.frontend_domain}/login" : ""
     ]),
     var.enable_local_development ? [
       for port in var.local_development_ports : "http://localhost:${port}"

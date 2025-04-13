@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
+import { signOutWithCognito } from '@/utils/auth';
 
 const LoginPage = () => {
   const auth = useAuth();
@@ -57,7 +58,7 @@ const LoginPage = () => {
             <Button 
               variant="destructive" 
               className="w-full" 
-              onClick={() => auth.removeUser()}
+              onClick={() => signOutWithCognito(auth)}
             >
               Sign Out
             </Button>
