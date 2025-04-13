@@ -167,8 +167,8 @@ resource "aws_iam_role_policy_attachment" "ecs_tasks_sqs_send_message_policy_att
 }
 
 # SES policy document allowing sending emails via SES
-resource "aws_iam_policy" "ses_send_email_policy" {
-  name        = "ses-send-email-policy"
+resource "aws_iam_policy" "ecs_ses_send_email_policy" {
+  name        = "ecs-ses-send-email-policy"
   description = "Policy to allow sending emails via Amazon SES"
 
   policy = jsonencode({
@@ -194,5 +194,5 @@ resource "aws_iam_role_policy_attachment" "ecs_tasks_ses_send_email_policy_attac
   }
 
   role       = aws_iam_role.ecs_tasks_role[each.key].name
-  policy_arn = aws_iam_policy.ses_send_email_policy.arn
+  policy_arn = aws_iam_policy.ecs_ses_send_email_policy.arn
 }

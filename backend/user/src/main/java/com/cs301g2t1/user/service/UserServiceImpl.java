@@ -20,7 +20,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> getUserById(Long userId) {
+    public Optional<User> getUserById(String userId) {
         return userRepository.findById(userId);
     }
 
@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(Long userId, User updatedUser) {
+    public User updateUser(String userId, User updatedUser) {
         User existingUser = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
 
@@ -55,7 +55,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(Long userId) {
+    public void deleteUser(String userId) {
         if (!userRepository.existsById(userId)) {
             throw new IllegalArgumentException("User not found with ID: " + userId);
         }

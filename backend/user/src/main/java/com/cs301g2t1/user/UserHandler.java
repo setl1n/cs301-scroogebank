@@ -1,16 +1,17 @@
 package com.cs301g2t1.user;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.cs301g2t1.user.model.Response;
 import com.cs301g2t1.user.model.User;
 import com.cs301g2t1.user.service.UserService;
 import com.cs301g2t1.user.service.UserServiceImpl;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Lambda handler for processing user operations
  */
@@ -20,12 +21,17 @@ public class UserHandler implements RequestHandler<Object, Object> {
 
     public static class Request {
         public String operation;
-        public Long userId;
+        public String userId;
         public User user;
     }
 
     @Override
     public Object handleRequest(Object input, Context context) {
+        Map<String, Object> response = new HashMap<>();
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+        response.put("headers", headers);
+
         context.getLogger().log("inside handleRequest method");
         context.getLogger().log("USER_POOL_ID: " + System.getenv("COGNITO_USER_POOL_ID"));
         context.getLogger().log("APP_CLIENT_ID: " + System.getenv("COGNITO_APP_CLIENT_ID"));
@@ -68,10 +74,12 @@ public class UserHandler implements RequestHandler<Object, Object> {
                     requestBody = mapper.readValue(bodyStr, new TypeReference<Map<String, Object>>() {});
                 } catch (Exception e) {
                     context.getLogger().log("Failed to parse body as JSON: " + e.getMessage());
-                    return new Response(false, "Invalid JSON in request body", null);
+                    response.put("statusCode", 400);
+                    response.put("body", "{\"error\":\"Invalid JSON format\"}");
+                    return response;
                 }
             } else {
-                // Body is already a Map
+                // Body is already a                 
                 requestBody = (Map<String, Object>) requestMap.get("body");
             }
             context.getLogger().log("Request body: " + requestBody);
@@ -82,17 +90,7 @@ public class UserHandler implements RequestHandler<Object, Object> {
                 request.operation = (String) requestBody.get("operation");
                 
                 if (requestBody.containsKey("userId")) {
-                    // Handle different number types safely
-                    Object userIdObj = requestBody.get("userId");
-                    if (userIdObj instanceof Number) {
-                        request.userId = ((Number) userIdObj).longValue();
-                    } else if (userIdObj != null) {
-                        try {
-                            request.userId = Long.valueOf(userIdObj.toString());
-                        } catch (NumberFormatException e) {
-                            context.getLogger().log("Invalid userId format: " + userIdObj);
-                        }
-                    }
+                    request.userId = (String) requestBody.get("userId");
                 }
                 
                 if (requestBody.containsKey("user")) {
@@ -103,28 +101,33 @@ public class UserHandler implements RequestHandler<Object, Object> {
                         context.getLogger().log("Converted user object successfully");
                     } catch (Exception e) {
                         context.getLogger().log("Failed to convert user data: " + e.getMessage());
-                        return new Response(false, "Invalid user data format", null);
+                        response.put("statusCode", 400);
+                        response.put("body", "{\"error\":\"Invalid user data format\"}");
+                        return response;
                     }
                 }
                 
-                return processRequest(request, context);
+                return processRequest(request, context, response);
             }
         } else if (input instanceof Request) {
             // If it's already a Request object, process it directly
-            return processRequest((Request) input, context);
+            return processRequest((Request) input, context, response);
         }
-        
-        return new Response(false, "Invalid request format", null);
+        response.put("statusCode", 400);
+        response.put("body", "{\"error\":\"Invalid request format\"}");
+        return response;
     }
     
-    private Response processRequest(Request request, Context context) {
+    private Map<String, Object> processRequest(Request request, Context context, Map<String, Object> response) {
         try {
             switch (request.operation) {
                 case "CREATE":
                     try {
                         context.getLogger().log("Creating user: " + request.user);
                         if (request.user == null) {
-                            return new Response(false, "User data is null", null);
+                            response.put("statusCode", 400);
+                            response.put("body", "{\"error\":\"User data is null\"}");
+                            return response;
                         }
                         
                         // Log details for debugging
@@ -134,36 +137,83 @@ public class UserHandler implements RequestHandler<Object, Object> {
                             + ", role: " + request.user.getRole());
                             
                         User user = userService.createUser(request.user);
-                        return new Response(true, "", user);
+                        
+                        context.getLogger().log("User created successfully: " + user);
+                        response.put("statusCode", 201);
+                        response.put("body", "{\"message\":\"User created successfully\"}");
+                        return response;
                     } catch (Exception e) {
                         context.getLogger().log("Error creating user: " + e.getMessage());
                         context.getLogger().log("Error stack trace: " + e.getStackTrace());
                         if (e.getCause() != null) {
                             context.getLogger().log("Caused by: " + e.getCause().getMessage());
                         }
-                        return new Response(false, "Failed to create user: " + e.getMessage(), null);
+                        response.put("statusCode", 500);
+                        response.put("body", "{\"error\":\"Failed to create user: " + e.getMessage() + "\"}");
+                        return response;
                     }
-                case "READ":
+                case "READUSER": // read 1 user detail
                     try {
-                        return userService.getUserById(request.userId)
-                            .map(user -> new Response(true, "", user))
-                            .orElse(new Response(false, "User not found with ID: " + request.userId, null));
+                        Optional<User> userOptional = userService.getUserById(request.userId);
+                        if (userOptional.isPresent()) {
+                            // Convert to JSON string with ObjectMapper
+                            ObjectMapper mapper = new ObjectMapper();
+                            String userJson = mapper.writeValueAsString(userOptional.get());
+                            response.put("statusCode", 200);
+                            response.put("body", userJson);
+                        } else {
+                            response.put("statusCode", 404);
+                            response.put("body", "{\"error\":\"User not found with ID: " + request.userId + "\"}");
+                        }
+                        return response;
                     } catch (Exception e) {
-                        return new Response(false, e.getMessage(), null);
+                        context.getLogger().log("Error retrieving user: " + e.getMessage());
+                        response.put("statusCode", 500);
+                        response.put("body", "{\"error\":\"" + e.getMessage() + "\"}");
+                        return response;
+                    }
+                case "LIST": // list all users
+                    try {
+                        List<User> users = userService.getAllUsers();
+                        // Convert to JSON string with ObjectMapper
+                        ObjectMapper mapper = new ObjectMapper();
+                        String usersJson = mapper.writeValueAsString(users);
+                        System.out.println("usersJson: " + usersJson);
+                        response.put("statusCode", 200);
+                        response.put("body", usersJson);
+                        return response;
+                    } catch (Exception e) {
+                        context.getLogger().log("Error retrieving all users: " + e.getMessage());
+                        response.put("statusCode", 500);
+                        response.put("body", "{\"error\":\"" + e.getMessage() + "\"}");
+                        return response;
                     }
                 case "UPDATE":
                     try {
                         User user = userService.updateUser(request.userId, request.user);
-                        return new Response(true, "", user);
+                        // Convert to JSON string with ObjectMapper
+                        ObjectMapper mapper = new ObjectMapper();
+                        String userJson = mapper.writeValueAsString(user);
+                        response.put("statusCode", 200);
+                        response.put("body", userJson);
+                        return response;
                     } catch (Exception e) {
-                        return new Response(false, e.getMessage(), null);
+                        context.getLogger().log("Error updating user: " + e.getMessage());
+                        response.put("statusCode", 400);
+                        response.put("body", "{\"error\":\"" + e.getMessage() + "\"}");
+                        return response;
                     }
                 case "DELETE":
                     try {
                         userService.deleteUser(request.userId);
-                        return new Response(true, "", null);
+                        response.put("statusCode", 204); // No Content
+                        response.put("body", "{\"message\":\"User deleted successfully\"}");
+                        return response;
                     } catch (Exception e) {
-                        return new Response(false, e.getMessage(), null);
+                        context.getLogger().log("Error deleting user: " + e.getMessage());
+                        response.put("statusCode", 400);
+                        response.put("body", "{\"error\":\"" + e.getMessage() + "\"}");
+                        return response;
                     }
                 default:
                     throw new IllegalArgumentException("Invalid operation: " + request.operation);

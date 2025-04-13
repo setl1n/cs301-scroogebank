@@ -49,6 +49,7 @@ provider "registry.terraform.io/hashicorp/local" {
 provider "registry.terraform.io/hashicorp/random" {
   version = "3.7.1"
   hashes = [
+    "h1:Jvr+8mqBJlxSOF8R862ZtezBlCb9pVwNMNc1sYsDeYg=",
     "h1:t152MY0tQH4a8fLzTtEWx70ITd3azVOrFDn/pQblbto=",
     "zh:3193b89b43bf5805493e290374cdda5132578de6535f8009547c8b5d7a351585",
     "zh:3218320de4be943e5812ed3de995946056db86eb8d03aa3f074e0c7316599bef",

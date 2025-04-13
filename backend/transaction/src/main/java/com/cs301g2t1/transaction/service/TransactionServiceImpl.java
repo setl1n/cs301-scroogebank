@@ -20,6 +20,11 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Transaction not found with ID: " + id));
     }
+    
+    @Override
+    public List<Transaction> getTransactionsByClientId(Long clientId) {
+        return transactionRepository.findAllByClientId(clientId);
+    }
 
     @Override
     public Transaction createTransaction(Transaction transaction) {

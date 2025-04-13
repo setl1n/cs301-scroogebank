@@ -130,6 +130,12 @@
 			<artifactId>jackson-annotations</artifactId>
 			<version>2.15.2</version>
 		</dependency>
+
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>ses</artifactId>
+			<version>2.20.0</version> 
+		</dependency>
 	</dependencies>
 
 	<build>

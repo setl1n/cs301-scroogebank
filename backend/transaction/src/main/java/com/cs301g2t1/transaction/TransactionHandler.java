@@ -86,7 +86,7 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
             return handleRegularRequest((Request) input, context);
         }
 
-        return new Response(false, "Invalid request format", null);
+        return new Response<>(false, "Invalid request format", null);
     }
     
     private Transaction mapToTransaction(Map<String, Object> map) {
@@ -165,7 +165,7 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
     }
 
     // Handles the original request format
-    private Response handleRegularRequest(Request request, Context context) {
+    private Object handleRegularRequest(Request request, Context context) {
         try {
             switch (request.operation) {
                 case "testSftpConnection":
@@ -180,6 +180,12 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
                 case "READ":
                     return handleRead(request, context);
 
+                case "READ_ALL":
+                    return handleReadAll(request, context);
+
+                case "READ_BY_CLIENT":
+                    return handleReadByClient(request, context);
+
                 case "UPDATE":
                     return handleUpdate(request, context);
 
@@ -191,7 +197,7 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
             }
         } catch (Exception e) {
             context.getLogger().log("Failed to process request: " + e.getMessage());
-            return new Response(false, "Error: " + e.getMessage(), null);
+            return new Response<>(false, "Error: " + e.getMessage(), null);
         }
     }
 
@@ -271,6 +277,30 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
         } catch (Exception e) {
             context.getLogger().log("Error reading transaction: " + e.getMessage());
             return new Response(false, "Failed to read transaction: " + e.getMessage(), null);
+        }
+    }
+
+    private Response<List<Transaction>> handleReadAll(Request request, Context context) {
+        try {
+            List<Transaction> transactions = transactionService.getAllTransactions();
+            return new Response<>(true, "All transactions retrieved successfully", transactions);
+        } catch (Exception e) {
+            context.getLogger().log("Error retrieving all transactions: " + e.getMessage());
+            return new Response<>(false, "Failed to retrieve all transactions: " + e.getMessage(), null);
+        }
+    }
+
+    private Response<List<Transaction>> handleReadByClient(Request request, Context context) {
+        try {
+            if (request.transactionId == null) {
+                return new Response<>(false, "Client ID is missing", null);
+            }
+
+            List<Transaction> transactions = transactionService.getTransactionsByClientId(request.transactionId);
+            return new Response<>(true, "Transactions for client retrieved successfully", transactions);
+        } catch (Exception e) {
+            context.getLogger().log("Error retrieving transactions for client: " + e.getMessage());
+            return new Response<>(false, "Failed to retrieve transactions for client: " + e.getMessage(), null);
         }
     }
 
