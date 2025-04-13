@@ -99,9 +99,8 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                     Map<String, Object> fileData = (Map<String, Object>) multipartData.get("file");
                     fileContent = (String) fileData.get("content");
                     filename = (String) fileData.get("filename");
+                    isFileBase64Encoded = (boolean) fileData.get("isBase64Encoded");
                     context.getLogger().log("File received: " + filename);
-                    // For multipart form data, the file content is NOT base64 encoded
-                    isFileBase64Encoded = false;
                 } else {
                     return createErrorResponse(response, 400, "Missing 'file' field in multipart/form-data");
                 }
@@ -122,7 +121,6 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                 }
                 
                 fileContent = body;
-                // For direct body content, use the isBase64Encoded flag from the request
                 isFileBase64Encoded = isBase64Encoded;
             }
             
@@ -130,10 +128,7 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             if ((token == null || token.isEmpty()) && (email == null || email.isEmpty())) {
                 context.getLogger().log("Warning: Token and email not provided");
             } else if (token != null && !token.isEmpty() && email != null && !email.isEmpty()) {
-                // Here you would normally validate the token and email
-                // For example, by calling a token validation service
                 context.getLogger().log("Validating token and email...");
-                // validateTokenAndEmail(token, email);
             }
             
             // Generate a unique key for the S3 object
@@ -174,8 +169,12 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             }
             
             // If body is base64 encoded, decode it
+            byte[] bodyBytes;
             if (isBase64Encoded) {
-                body = new String(Base64.getDecoder().decode(body));
+                bodyBytes = Base64.getDecoder().decode(body);
+                body = new String(bodyBytes);
+            } else {
+                bodyBytes = body.getBytes();
             }
             
             Map<String, Object> result = new HashMap<>();
@@ -221,10 +220,44 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                 }
                 
                 if (filename != null) {
-                    // This is a file
+                    // This is a file - handle it as binary data
                     Map<String, Object> fileData = new HashMap<>();
                     fileData.put("filename", filename);
-                    fileData.put("content", content);
+                    
+                    // For binary files like images, don't manipulate as a string
+                    // Instead convert directly to Base64 for safe handling
+                    // Find the start and end positions in the original byte array
+                    int startPos = body.indexOf(content);
+                    if (content.endsWith("\r\n")) {
+                        content = content.substring(0, content.length() - 2);
+                    }
+                    
+                    // For binary files (images, pdfs, etc.), encode to Base64
+                    if (isBinaryFile(filename)) {
+                        String headersPart = part.substring(0, headerEnd + 4);
+                        int contentStart = body.indexOf(headersPart) + headersPart.length();
+                        int contentLength = content.length();
+                        
+                        // Extract the raw binary content from the original byte array
+                        byte[] fileBytes;
+                        if (contentLength > 0 && contentStart + contentLength <= bodyBytes.length) {
+                            fileBytes = new byte[contentLength];
+                            System.arraycopy(bodyBytes, contentStart, fileBytes, 0, contentLength);
+                            
+                            // Convert to Base64 for safe handling
+                            fileData.put("content", Base64.getEncoder().encodeToString(fileBytes));
+                            fileData.put("isBase64Encoded", true);
+                        } else {
+                            // Fallback if byte extraction fails
+                            fileData.put("content", content);
+                            fileData.put("isBase64Encoded", false);
+                        }
+                    } else {
+                        // For text files, just use the content string
+                        fileData.put("content", content);
+                        fileData.put("isBase64Encoded", false);
+                    }
+                    
                     result.put(fieldName, fileData);
                 } else {
                     // This is a regular field
@@ -241,6 +274,23 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             context.getLogger().log("Error parsing multipart form data: " + e.getMessage());
             return null;
         }
+    }
+    
+    private boolean isBinaryFile(String filename) {
+        if (filename == null) return false;
+        
+        filename = filename.toLowerCase();
+        return filename.endsWith(".jpg") || 
+               filename.endsWith(".jpeg") || 
+               filename.endsWith(".png") || 
+               filename.endsWith(".gif") || 
+               filename.endsWith(".pdf") || 
+               filename.endsWith(".doc") || 
+               filename.endsWith(".docx") || 
+               filename.endsWith(".xls") || 
+               filename.endsWith(".xlsx") || 
+               filename.endsWith(".zip") || 
+               filename.endsWith(".rar");
     }
     
     private String extractBoundary(String contentType) {
@@ -322,6 +372,15 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                 }
             } else {
                 contentBytes = content.getBytes();
+            }
+            
+            // Log the first few bytes for debugging
+            if (contentBytes.length > 0) {
+                StringBuilder hexString = new StringBuilder();
+                for (int i = 0; i < Math.min(20, contentBytes.length); i++) {
+                    hexString.append(String.format("%02X ", contentBytes[i]));
+                }
+                context.getLogger().log("First bytes of file: " + hexString.toString());
             }
             
             InputStream inputStream = new ByteArrayInputStream(contentBytes);
