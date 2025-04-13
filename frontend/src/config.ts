@@ -14,8 +14,11 @@ interface AppConfig {
   apiBaseUrl: string;
 }
 
+// Default Cognito configuration
+const cognitoRegion = 'ap-southeast-1';
+const cognitoUserPoolId = 'ap-southeast-1_HM7ExvpFj';
 // This client ID should be for a client WITHOUT a client secret (SPA client)
-const cognitoClientId = import.meta.env.VITE_APP_COGNITO_CLIENT_ID || '6ouou5nkrp93on5sj8to5apirt';
+const cognitoClientId = import.meta.env.VITE_APP_COGNITO_CLIENT_ID || '5grq82i3gusaancdflhgq3hhud';
 // Extract domain name from environment or use a default
 const cognitoDomain = import.meta.env.VITE_APP_COGNITO_DOMAIN || 'cs301-g2-t1';
 
@@ -27,7 +30,7 @@ const config: AppConfig = {
   
   
   cognitoConfig: {
-    authority: `https://auth.itsag2t1.com`,
+    authority: `https://cognito-idp.${cognitoRegion}.amazonaws.com/${cognitoUserPoolId}`,
     client_id: cognitoClientId,
     redirect_uri: import.meta.env.VITE_APP_COGNITO_REDIRECT_URI || 'http://localhost:5173/login/oauth2/code/cognito',
     response_type: 'code',
