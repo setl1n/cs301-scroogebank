@@ -1,5 +1,5 @@
-import config from '../config';
 import { AuthContextProps } from 'react-oidc-context';
+import config from '../config';
 
 /**
  * Authentication utilities for Cognito integration
@@ -73,15 +73,16 @@ export const signOutWithCognito = async (auth: AuthContextProps, customLogoutUri
   const clientId = config.cognitoConfig.client_id;
   const region = 'ap-southeast-1'; // Hard-coding region for now - ideally extract from config
   
-  // Determine appropriate logout URI based on environment
+  // Set the hardcoded production URL for logout redirect
+  const productionLogoutUri = 'https://main-frontend.itsag2t1.com/login';
+  
+  // Use the production URL in production, or use localhost in development
   let defaultLogoutUri;
   if (config.isDevelopment) {
-    // In development, use localhost with the appropriate port
     const port = window.location.port || '5173'; // Default to 5173 if port is empty
-    defaultLogoutUri = `http://localhost:${port}/login/oauth2/code/cognito`;
+    defaultLogoutUri = `http://localhost:${port}/login`;
   } else {
-    // In production, use the domain
-    defaultLogoutUri = `${window.location.origin}/login`;
+    defaultLogoutUri = productionLogoutUri;
   }
   
   // Use custom URI if provided, otherwise use default
@@ -104,7 +105,6 @@ export const signOutWithCognito = async (auth: AuthContextProps, customLogoutUri
   
   // Redirect to Cognito logout endpoint
   window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(finalLogoutUri)}`;
-  // auth.signoutRedirect();
 };
 
 /**
@@ -141,4 +141,4 @@ export const getUserGroups = (auth: AuthContextProps): string[] => {
   const userGroups = auth.user.profile['cognito:groups'] || [];
   
   return Array.isArray(userGroups) ? userGroups : [userGroups as string];
-}; 
+};
