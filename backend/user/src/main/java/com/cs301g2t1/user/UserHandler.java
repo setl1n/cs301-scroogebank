@@ -9,7 +9,8 @@ import com.cs301g2t1.user.model.Response;
 import com.cs301g2t1.user.model.User;
 import com.cs301g2t1.user.service.UserService;
 import com.cs301g2t1.user.service.UserServiceImpl;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 /**
  * Lambda handler for processing user operations
  */
@@ -45,7 +46,34 @@ public class UserHandler implements RequestHandler<Object, Object> {
                 }
                 context.getLogger().log("not health check: " + path);
             }
-            Map<String, Object> requestBody = (Map<String, Object>) requestMap.get("body");
+
+            /*
+             * body={
+                "operation": "CREATE",
+                "user": {
+                    "firstName": "abc",
+                    "lastName": "xyz",
+                    "email": "abc.xyz@example.com", 
+                    "role": "AGENT"
+                }
+             */
+            Map<String, Object> requestBody;
+            if (requestMap.containsKey("body") && requestMap.get("body") instanceof String) {
+                String bodyStr = (String) requestMap.get("body");
+                context.getLogger().log("Body is a string, parsing JSON: " + bodyStr);
+                
+                try {
+                    // Parse JSON string to Map using Jackson ObjectMapper
+                    ObjectMapper mapper = new ObjectMapper();
+                    requestBody = mapper.readValue(bodyStr, new TypeReference<Map<String, Object>>() {});
+                } catch (Exception e) {
+                    context.getLogger().log("Failed to parse body as JSON: " + e.getMessage());
+                    return new Response(false, "Invalid JSON in request body", null);
+                }
+            } else {
+                // Body is already a Map
+                requestBody = (Map<String, Object>) requestMap.get("body");
+            }
             context.getLogger().log("Request body: " + requestBody);
             // Convert Map to Request if it has operation
             if (requestBody.containsKey("operation")) {
@@ -68,8 +96,15 @@ public class UserHandler implements RequestHandler<Object, Object> {
                 }
                 
                 if (requestBody.containsKey("user")) {
-                    // This should be properly deserialized into a User object
-                    request.user = (User) requestBody.get("user");
+                    // Use ObjectMapper to convert the nested map to a User object
+                    ObjectMapper mapper = new ObjectMapper();
+                    try {
+                        request.user = mapper.convertValue(requestBody.get("user"), User.class);
+                        context.getLogger().log("Converted user object successfully");
+                    } catch (Exception e) {
+                        context.getLogger().log("Failed to convert user data: " + e.getMessage());
+                        return new Response(false, "Invalid user data format", null);
+                    }
                 }
                 
                 return processRequest(request, context);
