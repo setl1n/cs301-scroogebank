@@ -25,6 +25,9 @@ public class UserHandler implements RequestHandler<Object, Object> {
 
     @Override
     public Object handleRequest(Object input, Context context) {
+        context.getLogger().log("USER_POOL_ID: " + System.getenv("COGNITO_USER_POOL_ID"));
+        context.getLogger().log("APP_CLIENT_ID: " + System.getenv("COGNITO_APP_CLIENT_ID"));
+        
         // Check if this is an API Gateway request with path information
         if (input instanceof Map) {
             @SuppressWarnings("unchecked")
