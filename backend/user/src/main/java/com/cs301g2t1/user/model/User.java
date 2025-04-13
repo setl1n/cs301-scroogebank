@@ -37,5 +37,5 @@ public class User {
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Role is required")
     @Column(columnDefinition = "VARCHAR(20)") // Some SQL issue
-    private UserRole role;  
+    private UserRole role;
 }

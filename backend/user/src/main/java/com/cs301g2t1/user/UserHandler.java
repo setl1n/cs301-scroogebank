@@ -124,6 +124,8 @@ public class UserHandler implements RequestHandler<Object, Object> {
                             + ", role: " + request.user.getRole());
                             
                         User user = userService.createUser(request.user);
+                        
+                        context.getLogger().log("User created successfully: " + user);
                         return new Response(true, "", user);
                     } catch (Exception e) {
                         context.getLogger().log("Error creating user: " + e.getMessage());

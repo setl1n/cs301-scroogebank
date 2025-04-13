@@ -80,6 +80,14 @@ public class UserRepositoryImpl implements UserRepository {
                 return Optional.empty();
             }
             
+            // Print the sub value for debugging
+            String sub = response.users().get(0).attributes().stream()
+                .filter(attr -> "sub".equals(attr.name()))
+                .findFirst()
+                .map(AttributeType::value)
+                .orElse("not found");
+            System.out.println("Found user with sub: " + sub);
+            
             // Map the first (and should be only) result to our User model
             User user = mapToUser(response.users().get(0));
             return Optional.of(user);
@@ -150,6 +158,8 @@ public class UserRepositoryImpl implements UserRepository {
                     .findFirst()
                     .map(AttributeType::value)
                     .orElse(null);
+            
+            System.out.println("Created user with sub: " + sub);
             
             if (sub != null) {
                 user.setUserId(sub);
@@ -290,6 +300,8 @@ public class UserRepositoryImpl implements UserRepository {
 
         // Set user properties from attributes
         String sub = attributes.get("sub");
+        System.out.println("Mapping user with sub: " + sub);
+        
         if (sub != null) {
             try {
                 user.setUserId(sub);
