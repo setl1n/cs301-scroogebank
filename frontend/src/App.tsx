@@ -10,6 +10,7 @@ import ClientsTab from './pages/agent/components/ClientsTab'
 import TransactionsTab from './pages/agent/components/TransactionsTab'
 import AccountsTab from './pages/admin/components/AccountsTab'
 import TransactionsTabAdmin from './pages/admin/components/TransactionsTab'
+import VerificationPage from './pages/verification/VerificationPage'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/login/oauth2/code/cognito" element={<OAuthRedirectHandler />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            <Route path="/verification" element={<VerificationPage />} />
             
             {/* Admin routes */}
             <Route path="/admin" element={
