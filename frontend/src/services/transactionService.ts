@@ -12,6 +12,35 @@ interface ApiResponse<T> {
 
 // Enhanced service that adds business logic on top of API calls
 export const transactionService = {
+  // Trigger daily fetch of transactions from SFTP server
+  dailyFetch: async (auth: AuthContextProps | undefined = undefined) => {
+    try {
+      const response = await transactionApi.dailyFetch(auth);
+      
+      // If we have valid response with data, enrich the transactions with client names
+      if (response?.result && Array.isArray(response.data) && response.data.length > 0 && auth) {
+        try {
+          const enrichedTransactions = await enrichTransactionsWithClientNames(response.data, auth);
+          return {
+            ...response,
+            data: enrichedTransactions
+          };
+        } catch (error) {
+          console.error('Error enriching transactions with client names:', error);
+        }
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Error during daily fetch:', error);
+      return {
+        result: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error during daily fetch',
+        data: null
+      };
+    }
+  },
+  
   // Get all transactions with associated client names
   getAllTransactions: async (auth: AuthContextProps | undefined = undefined) => {
     const response = await transactionApi.getAllTransactions(auth);

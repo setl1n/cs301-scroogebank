@@ -1,5 +1,23 @@
 import { useState, useEffect } from 'react';
-import { Box, Paper, Alert, CircularProgress, Typography, Snackbar, useTheme } from '@mui/material';
+import { 
+  Box, 
+  Paper, 
+  Alert, 
+  CircularProgress, 
+  Typography, 
+  Snackbar, 
+  useTheme, 
+  Button, 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions, 
+  Divider,
+  List,
+  ListItem,
+  ListItemText
+} from '@mui/material';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import TransactionGrid from '../../../components/ui/common/TransactionGrid';
 import SearchBar from '../../../components/ui/navigation/SearchBar';
 import { transactionService } from '../../../services/transactionService';
@@ -64,6 +82,9 @@ export default function TransactionsTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isFetchingDaily, setIsFetchingDaily] = useState(false);
+  const [fetchedTransactions, setFetchedTransactions] = useState<Transaction[]>([]);
+  const [showFetchedDialog, setShowFetchedDialog] = useState(false);
   const auth = useAuth();
   const theme = useTheme();
 
@@ -146,24 +167,120 @@ export default function TransactionsTab() {
     
     setFilteredTransactions(filtered);
   };
+
+  // Handle daily fetch of transactions
+  const handleDailyFetch = async () => {
+    setIsFetchingDaily(true);
+    setError(null);
+    
+    try {
+      if (auth.isAuthenticated) {
+        const response = await transactionService.dailyFetch(auth);
+        console.log('Daily Fetch Response:', response);
+        
+        if (response && response.result === true) {
+          // Get the newly fetched transactions
+          const newTransactions = Array.isArray(response.data) ? response.data : [];
+          
+          if (newTransactions.length > 0) {
+            // Store the fetched transactions for display in the dialog
+            setFetchedTransactions(newTransactions);
+            setShowFetchedDialog(true);
+            
+            // Update the main transactions list with the new transactions
+            setTransactions(prevTransactions => {
+              // Combine existing and new transactions, avoiding duplicates by ID
+              const allTransactionsMap = new Map();
+              
+              // Add existing transactions to the map
+              prevTransactions.forEach(transaction => {
+                allTransactionsMap.set(transaction.id, transaction);
+              });
+              
+              // Add or update with new transactions
+              newTransactions.forEach(transaction => {
+                allTransactionsMap.set(transaction.id, transaction);
+              });
+              
+              // Convert map back to array
+              return Array.from(allTransactionsMap.values());
+            });
+            
+            // Update filtered transactions as well
+            setFilteredTransactions(prevFiltered => {
+              const allTransactionsMap = new Map();
+              
+              // Add existing filtered transactions
+              prevFiltered.forEach(transaction => {
+                allTransactionsMap.set(transaction.id, transaction);
+              });
+              
+              // Add new transactions
+              newTransactions.forEach(transaction => {
+                allTransactionsMap.set(transaction.id, transaction);
+              });
+              
+              return Array.from(allTransactionsMap.values());
+            });
+            
+            setSuccessMessage(`Successfully fetched ${newTransactions.length} new transactions.`);
+          } else {
+            setSuccessMessage('No new transactions found.');
+          }
+        } else {
+          // Handle error response
+          setError(response?.errorMessage || 'Failed to fetch transactions.');
+        }
+      } else {
+        setError('Authentication required. Please log in.');
+      }
+    } catch (err) {
+      console.error('Error during daily fetch:', err);
+      setError('Failed to fetch transactions. Please try again later.');
+    } finally {
+      setIsFetchingDaily(false);
+    }
+  };
+  
+  // Handle closing the fetched transactions dialog
+  const handleCloseFetchedDialog = () => {
+    setShowFetchedDialog(false);
+  };
   
   return (
     <Box>
-      {/* Page header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-          Transaction Management
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          View and manage all client transactions
-        </Typography>
+      {/* Page header with Daily Fetch button */}
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
+            Transaction Management
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            View and manage all client transactions
+          </Typography>
+        </Box>
+        
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleDailyFetch}
+          disabled={isFetchingDaily}
+          sx={{ 
+            height: 42, 
+            px: 3,
+            borderRadius: 2,
+            boxShadow: theme.shadows[2]
+          }}
+        >
+          {isFetchingDaily ? 'Fetching...' : 'Daily Fetch'}
+        </Button>
       </Box>
       
       {/* Search Bar */}
       <SearchBar 
         onSearch={handleSearch}
         totalItems={filteredTransactions.length}
-        showCreateButton={false} // No create button needed for transactions view
+        showCreateButton={false}
         searchPlaceholder="Search transactions by ID, amount, status..."
         title="Transactions"
         showCount={true}
@@ -226,6 +343,84 @@ export default function TransactionsTab() {
           {successMessage}
         </Alert>
       </Snackbar>
+      
+      {/* Fetched Transactions Dialog */}
+      <Dialog
+        open={showFetchedDialog}
+        onClose={handleCloseFetchedDialog}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: theme.shadows[10]
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          bgcolor: theme.palette.primary.main, 
+          color: '#fff',
+          px: 3,
+          py: 2
+        }}>
+          <Typography variant="h6" component="div">
+            Daily Transaction Fetch Results
+          </Typography>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 3 }}>
+          {fetchedTransactions.length > 0 ? (
+            <>
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
+                {fetchedTransactions.length} new transactions fetched:
+              </Typography>
+              <List sx={{ maxHeight: 400, overflow: 'auto' }}>
+                {fetchedTransactions.map((transaction) => (
+                  <Box key={transaction.id}>
+                    <ListItem>
+                      <ListItemText
+                        primary={
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Typography variant="body1" component="span" sx={{ fontWeight: 'bold' }}>
+                              {transaction.transactionType === 'D' ? 'Deposit' : 'Withdrawal'} - ${transaction.amount.toFixed(2)}
+                            </Typography>
+                            <Typography variant="body2" component="span">
+                              ID: {transaction.id}
+                            </Typography>
+                          </Box>
+                        }
+                        secondary={
+                          <Box sx={{ mt: 1 }}>
+                            <Typography variant="body2" component="div">
+                              Client ID: {transaction.clientId}
+                              {transaction.clientName && ` - ${transaction.clientName}`}
+                            </Typography>
+                            <Typography variant="body2" component="div">
+                              Date: {formatDate(transaction.date)} | Status: {transaction.status}
+                            </Typography>
+                          </Box>
+                        }
+                      />
+                    </ListItem>
+                    <Divider variant="fullWidth" component="li" />
+                  </Box>
+                ))}
+              </List>
+            </>
+          ) : (
+            <Typography variant="body1">No new transactions were fetched.</Typography>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button 
+            onClick={handleCloseFetchedDialog} 
+            variant="contained"
+            color="primary"
+            sx={{ borderRadius: 2 }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

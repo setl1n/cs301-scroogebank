@@ -14,6 +14,13 @@ export interface TransactionPayload {
 }
 
 export const transactionApi = {
+  // Trigger daily fetch of transactions from SFTP server
+  dailyFetch: (auth: AuthContextProps | undefined = undefined) => {
+    return api.post(TRANSACTION_ENDPOINT, {
+      operation: "dailyFetch"
+    }, auth);
+  },
+  
   // Get all transactions
   getAllTransactions: (auth: AuthContextProps | undefined = undefined) => {
     return api.post(TRANSACTION_ENDPOINT, {
