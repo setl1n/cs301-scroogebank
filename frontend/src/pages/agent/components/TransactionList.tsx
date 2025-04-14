@@ -24,12 +24,6 @@ interface Transaction {
     clientName?: string;
 }
 
-interface TransactionResponse {
-    result: boolean;
-    errorMessage: string;
-    data: Transaction[];
-}
-
 const TransactionList = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

@@ -3,7 +3,6 @@ import {
   GridColDef, 
   GridRenderCellParams,
   GridToolbar,
-  GridValueGetter
 } from '@mui/x-data-grid';
 import { Client } from '../../../types/Client';
 import { IconButton, Box, Typography, Tooltip } from '@mui/material';

@@ -606,6 +606,7 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
     // Helper method to create CORS headers
     private Map<String, String> createCorsHeaders() {
         Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
         return headers;
     }
     

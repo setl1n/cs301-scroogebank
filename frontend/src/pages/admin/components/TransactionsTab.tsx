@@ -23,7 +23,7 @@ import SearchBar from '../../../components/ui/navigation/SearchBar';
 import { transactionService } from '../../../services/transactionService';
 import { clientService } from '../../../services/clientService';
 import { Transaction } from '../../../types/Transaction';
-import { useAuth } from 'react-oidc-context';
+import { AuthContextProps, useAuth } from 'react-oidc-context';
 
 // Helper function to enrich transactions with client names
 const enrichTransactionsWithClientNames = async (
@@ -198,9 +198,9 @@ export default function TransactionsTab() {
               });
               
               // Add or update with new transactions
-              newTransactions.forEach(transaction => {
+                newTransactions.forEach((transaction: Transaction) => {
                 allTransactionsMap.set(transaction.id, transaction);
-              });
+                });
               
               // Convert map back to array
               return Array.from(allTransactionsMap.values());
@@ -216,9 +216,9 @@ export default function TransactionsTab() {
               });
               
               // Add new transactions
-              newTransactions.forEach(transaction => {
+                newTransactions.forEach((transaction: Transaction) => {
                 allTransactionsMap.set(transaction.id, transaction);
-              });
+                });
               
               return Array.from(allTransactionsMap.values());
             });
