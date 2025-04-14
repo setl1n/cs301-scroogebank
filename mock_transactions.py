@@ -3,11 +3,12 @@ import random
 from datetime import datetime, timedelta
 
 # Number of mock records to generate
-num_records = 100
+num_records = 50
+starting = 100
 
 # Generate mock data
-ids = [i for i in range(1, num_records + 1)]  # Auto-generated Long IDs
-client_ids = [random.randint(1, 50) for _ in range(num_records)]  # Random Long Client IDs
+ids = [i for i in range(starting + 1, starting + num_records + 1)]  # Auto-generated Long IDs
+client_ids = [random.randint(1, 100) for _ in range(num_records)]  # Random Long Client IDs
 transaction_types = [random.choice(['D', 'W']) for _ in range(num_records)]  # Transaction types: Deposit (D) or Withdrawal (W)
 amounts = [round(random.uniform(10, 1000), 2) for _ in range(num_records)]  # Random double amounts
 dates = [(datetime.now() - timedelta(days=random.randint(0, 365))).strftime('%Y-%m-%d') for _ in range(num_records)]  # Random LocalDates within the past year

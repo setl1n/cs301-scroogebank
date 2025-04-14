@@ -386,7 +386,7 @@ export default function TransactionsTab() {
           py: 2
         }}>
           <Typography variant="h6" component="div">
-            Daily Transaction Fetch Results
+            Transaction Results
           </Typography>
         </DialogTitle>
         <DialogContent dividers sx={{ p: 3 }}>
@@ -414,7 +414,6 @@ export default function TransactionsTab() {
                           <Box sx={{ mt: 1 }}>
                             <Typography variant="body2" component="div">
                               Client ID: {transaction.clientId}
-                              {transaction.clientName && ` - ${transaction.clientName}`}
                             </Typography>
                             <Typography variant="body2" component="div">
                               Date: {formatDate(transaction.date)} | Status: {transaction.status}
