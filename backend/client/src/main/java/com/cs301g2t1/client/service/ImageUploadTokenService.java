@@ -20,7 +20,7 @@ public class ImageUploadTokenService {
     
 
     // Hardcoded frontend upload URL for testing
-    private static final String FRONTEND_UPLOAD_URL = "https://alb.itsag2t1.com/upload";
+    private static final String FRONTEND_UPLOAD_URL = "https://main-frontend.itsag2t1.com/verification";
 
     public String generateAndSendToken(Client client) {
         System.out.println("Generating token for client: " + client);

@@ -14,8 +14,25 @@ public class EmailService {
     }
 
     public void sendImageUploadLink(String emailAddress, String uploadLink) {
-        String subject = "Upload Your Image";
-        String body = "Click this link to upload your image: " + uploadLink;
+        String subject = "Request for Upload of Personal Identification Documents";
+        String body = "Dear Customer,\n\n" +
+            "We hope this message finds you well.\n\n" +
+            "In our effort to maintain a secure and reliable banking environment, " +
+            "we kindly request that you provide your personal identification documents for verification purposes. " +
+            "This step is essential to ensure the continued safety of your account with Scrooge Global Bank.\n\n" +
+            "Please click the link below to securely upload your documents. " +
+            "Note that this link is valid for only 24 hours:\n\n" +
+            "Verification documents portal: " + uploadLink + "\n\n" +
+            "If you require any assistance or have further questions, please contact our support " +
+            "team at support@itsag2t1.com.\n\n" +
+            "Thank you for your prompt attention to this matter. We appreciate your cooperation and " +
+            "your trust in Scrooge Global Bank.\n\n" +
+            "Sincerely,\n" +
+            "Scrooge Global Bank\n\n" +
+            "--\n" +
+            "Please note: This is an automatically generated message. If you did not " +
+            "initiate this request, please contact our support team immediately.";
+
 
         SendEmailRequest emailRequest = SendEmailRequest.builder()
             .destination(Destination.builder()
