@@ -583,10 +583,6 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
     // Helper method to create CORS headers
     private Map<String, String> createCorsHeaders() {
         Map<String, String> headers = new HashMap<>();
-        headers.put("Access-Control-Allow-Origin", "*");
-        headers.put("Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key");
-        headers.put("Access-Control-Allow-Methods", "OPTIONS,POST,GET,PUT,DELETE");
-        headers.put("Content-Type", "application/json");
         return headers;
     }
     

@@ -3,58 +3,69 @@ import { transactionApi, TransactionPayload } from './transactionApi';
 import { Transaction, TransactionStatus } from '../types/Transaction';
 import { clientService } from './clientService';
 
+// Response type from the backend API
+interface ApiResponse<T> {
+  result: boolean;
+  errorMessage: string;
+  data: T;
+}
+
 // Enhanced service that adds business logic on top of API calls
 export const transactionService = {
   // Get all transactions with associated client names
-  getAllTransactions: async (auth: AuthContextProps | undefined = undefined): Promise<Transaction[]> => {
-    const transactions = await transactionApi.getAllTransactions(auth);
-    
-    // If transactions are found, enrich them with client names
-    if (transactions && transactions.length > 0) {
-      return await enrichTransactionsWithClientNames(transactions, auth);
-    }
-    
-    return transactions;
+  getAllTransactions: async (auth: AuthContextProps | undefined = undefined) => {
+    const response = await transactionApi.getAllTransactions(auth);
+    return response; // Return the full response for components to handle
   },
   
   // Get transactions for a specific client
-  getTransactionsByClientId: async (clientId: number, auth: AuthContextProps | undefined = undefined): Promise<Transaction[]> => {
-    const transactions = await transactionApi.getTransactionsByClientId(clientId, auth);
+  getTransactionsByClientId: async (clientId: number, auth: AuthContextProps | undefined = undefined) => {
+    const response = await transactionApi.getTransactionsByClientId(clientId, auth);
     
-    // If we have transactions and we have authentication, get client info
-    if (transactions && transactions.length > 0 && auth) {
+    // If we have valid response with data and auth, enrich with client info
+    if (response?.result && Array.isArray(response.data) && response.data.length > 0 && auth) {
       try {
         const client = await clientService.getClientById(clientId, auth);
-        return transactions.map((transaction: Transaction) => ({
-          ...transaction,
-          clientName: `${client.firstName} ${client.lastName}`
-        }));
-      } catch (error) {
-        console.error('Error fetching client information:', error);
-      }
-    }
-    
-    return transactions;
-  },
-  
-  // Get transaction by ID with client name
-  getTransactionById: async (id: number, auth: AuthContextProps | undefined = undefined): Promise<Transaction> => {
-    const transaction = await transactionApi.getTransactionById(id, auth);
-    
-    // If we have a transaction and we have authentication, get client info
-    if (transaction && auth) {
-      try {
-        const client = await clientService.getClientById(transaction.clientId, auth);
+        
+        // Create a new response object with enriched data
         return {
-          ...transaction,
-          clientName: `${client.firstName} ${client.lastName}`
+          ...response,
+          data: response.data.map((transaction: Transaction) => ({
+            ...transaction,
+            clientName: `${client.firstName} ${client.lastName}`
+          }))
         };
       } catch (error) {
         console.error('Error fetching client information:', error);
       }
     }
     
-    return transaction;
+    return response;
+  },
+  
+  // Get transaction by ID with client name
+  getTransactionById: async (id: number, auth: AuthContextProps | undefined = undefined) => {
+    const response = await transactionApi.getTransactionById(id, auth);
+    
+    // If we have a valid response with data and auth, enrich with client info
+    if (response?.result && response.data && auth) {
+      try {
+        const client = await clientService.getClientById(response.data.clientId, auth);
+        
+        // Create a new response object with enriched data
+        return {
+          ...response,
+          data: {
+            ...response.data,
+            clientName: `${client.firstName} ${client.lastName}`
+          }
+        };
+      } catch (error) {
+        console.error('Error fetching client information:', error);
+      }
+    }
+    
+    return response;
   },
   
   // Create a new transaction
@@ -73,25 +84,66 @@ export const transactionService = {
   },
   
   // Get transactions by date range with client names
-  getTransactionsByDateRange: async (startDate: string, endDate: string, auth: AuthContextProps | undefined = undefined): Promise<Transaction[]> => {
-    const transactions = await transactionApi.getTransactionsByDateRange(startDate, endDate, auth);
+  getTransactionsByDateRange: async (startDate: string, endDate: string, auth: AuthContextProps | undefined = undefined) => {
+    const response = await transactionApi.getTransactionsByDateRange(startDate, endDate, auth);
     
-    if (transactions && transactions.length > 0) {
-      return await enrichTransactionsWithClientNames(transactions, auth);
+    // If we have valid response with data, filter based on date range
+    if (response?.result && Array.isArray(response.data)) {
+      const filteredData = response.data.filter((t: Transaction) => {
+        const transactionDate = new Date(t.date);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        return transactionDate >= start && transactionDate <= end;
+      });
+      
+      // Create a new response with filtered data
+      const filteredResponse = {
+        ...response,
+        data: filteredData
+      };
+      
+      // If we have auth, enrich the filtered data with client names
+      if (auth && filteredData.length > 0) {
+        try {
+          filteredResponse.data = await enrichTransactionsWithClientNames(filteredData, auth);
+        } catch (error) {
+          console.error('Error enriching transactions with client names:', error);
+        }
+      }
+      
+      return filteredResponse;
     }
     
-    return transactions;
+    return response;
   },
   
   // Get transactions by status with client names
-  getTransactionsByStatus: async (status: TransactionStatus, auth: AuthContextProps | undefined = undefined): Promise<Transaction[]> => {
-    const transactions = await transactionApi.getTransactionsByStatus(status, auth);
+  getTransactionsByStatus: async (status: TransactionStatus, auth: AuthContextProps | undefined = undefined) => {
+    const response = await transactionApi.getTransactionsByStatus(status, auth);
     
-    if (transactions && transactions.length > 0) {
-      return await enrichTransactionsWithClientNames(transactions, auth);
+    // If we have valid response with data, filter based on status
+    if (response?.result && Array.isArray(response.data)) {
+      const filteredData = response.data.filter((t: Transaction) => t.status === status);
+      
+      // Create a new response with filtered data
+      const filteredResponse = {
+        ...response,
+        data: filteredData
+      };
+      
+      // If we have auth, enrich the filtered data with client names
+      if (auth && filteredData.length > 0) {
+        try {
+          filteredResponse.data = await enrichTransactionsWithClientNames(filteredData, auth);
+        } catch (error) {
+          console.error('Error enriching transactions with client names:', error);
+        }
+      }
+      
+      return filteredResponse;
     }
     
-    return transactions;
+    return response;
   }
 };
 
@@ -110,8 +162,13 @@ async function enrichTransactionsWithClientNames(
   // Fetch client information for each unique client ID
   for (const clientId of clientIds) {
     try {
-      const client = await clientService.getClientById(clientId, auth);
-      clientMap.set(clientId, `${client.firstName} ${client.lastName}`);
+      const clientResponse = await clientService.getClientById(clientId, auth);
+      if (clientResponse?.result && clientResponse.data) {
+        const client = clientResponse.data;
+        clientMap.set(clientId, `${client.firstName} ${client.lastName}`);
+      } else {
+        clientMap.set(clientId, 'Unknown Client');
+      }
     } catch (error) {
       console.error(`Error fetching client information for client ID ${clientId}:`, error);
       clientMap.set(clientId, 'Unknown Client');
@@ -123,4 +180,4 @@ async function enrichTransactionsWithClientNames(
     ...transaction,
     clientName: clientMap.get(transaction.clientId) || 'Unknown Client'
   }));
-} 
+}

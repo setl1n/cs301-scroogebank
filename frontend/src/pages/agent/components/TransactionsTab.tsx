@@ -3,8 +3,60 @@ import { Box, Paper, Alert, CircularProgress, Typography, Snackbar, useTheme } f
 import TransactionGrid from '../../../components/ui/common/TransactionGrid';
 import SearchBar from '../../../components/ui/navigation/SearchBar';
 import { transactionService } from '../../../services/transactionService';
+import { clientService } from '../../../services/clientService';
 import { Transaction } from '../../../types/Transaction';
 import { useAuth } from 'react-oidc-context';
+
+// Helper function to enrich transactions with client names
+const enrichTransactionsWithClientNames = async (
+  transactions: Transaction[], 
+  auth: AuthContextProps
+): Promise<Transaction[]> => {
+  // Create a Set of unique client IDs to minimize API calls
+  const clientIds = new Set(transactions.map(t => t.clientId));
+  const clientMap = new Map();
+  
+  // Create a client data cache
+  const clientDataCache: Record<number, any> = {};
+  
+  // Fetch client information for each unique client ID
+  for (const clientId of clientIds) {
+    try {
+      const clientData = await clientService.getClientById(clientId, auth);
+      
+      // Store in cache
+      clientDataCache[clientId] = clientData;
+      
+      if (clientData && clientData.firstName && clientData.lastName) {
+        // Format the client name
+        clientMap.set(clientId, `${clientData.firstName} ${clientData.lastName}`);
+      } else {
+        // Fallback to client ID if name not available
+        clientMap.set(clientId, `Client #${clientId}`);
+      }
+    } catch (error) {
+      console.error(`Error fetching client information for client ID ${clientId}:`, error);
+      clientMap.set(clientId, `Client #${clientId}`);
+    }
+  }
+  
+  // Enrich transactions with client names
+  return transactions.map(transaction => ({
+    ...transaction,
+    clientName: clientMap.get(transaction.clientId) || `Client #${transaction.clientId}`
+  }));
+};
+
+// Helper function to format a date to a more readable form
+const formatDate = (dateString: string) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
 
 export default function TransactionsTab() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -25,10 +77,30 @@ export default function TransactionsTab() {
     setLoading(true);
     try {
       if (auth.isAuthenticated) {
-        const fetchedTransactions = await transactionService.getAllTransactions(auth);
-        setTransactions(fetchedTransactions);
-        setFilteredTransactions(fetchedTransactions);
-        setError(null);
+        const response = await transactionService.getAllTransactions(auth);
+        console.log('API Response:', response);
+        
+        // Check if we got a valid response with the expected structure
+        if (response && response.result === true && Array.isArray(response.data)) {
+          // Extract the transaction data array from the response
+          const fetchedTransactions = response.data;
+          const enrichedTransactions = await enrichTransactionsWithClientNames(fetchedTransactions, auth);
+          console.log('Enriched transactions:', enrichedTransactions);
+          setTransactions(enrichedTransactions);
+          setFilteredTransactions(enrichedTransactions);
+          setError(null);
+          
+          // Show success message if provided
+          if (response.errorMessage) {
+            setSuccessMessage(response.errorMessage);
+          }
+        } else {
+          // Handle unexpected response format
+          console.error('Unexpected response format:', response);
+          setError('Received an invalid response format from the server.');
+          setTransactions([]);
+          setFilteredTransactions([]);
+        }
       } else {
         setError('Authentication required. Please log in.');
         setTransactions([]);
@@ -133,10 +205,10 @@ export default function TransactionsTab() {
           <TransactionGrid
             rows={filteredTransactions.map(transaction => ({
               id: transaction.id.toString(),
-              amount: transaction.amount,
+              amount: `$${transaction.amount.toFixed(2)}`,
               type: transaction.transactionType === 'D' ? 'Deposit' : 'Withdrawal',
               status: transaction.status.charAt(0) + transaction.status.slice(1).toLowerCase(),
-              date: transaction.date,
+              date: formatDate(transaction.date),
               clientName: transaction.clientName || '',
               clientId: transaction.clientId.toString()
             }))}

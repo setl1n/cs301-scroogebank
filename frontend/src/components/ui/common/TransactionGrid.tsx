@@ -4,7 +4,7 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid';
 // API transaction interface that matches our data structure
 interface ApiTransaction {
   id: string;
-  amount: number;
+  amount: string; // Changed from number to string since we're formatting in TransactionsTab
   type: string;
   status: string;
   date: string;
@@ -23,11 +23,7 @@ const columns: GridColDef[] = [
     field: 'amount', 
     headerName: 'Amount', 
     width: 150,
-    type: 'number',
-    valueFormatter: (params: { value: any }) => {
-      if (params.value == null) return '';
-      return `$${Number(params.value).toFixed(2)}`;
-    }
+    // No valueFormatter needed since we're already formatting in TransactionsTab
   },
   { 
     field: 'type', 
@@ -74,11 +70,7 @@ const columns: GridColDef[] = [
     field: 'date', 
     headerName: 'Date', 
     width: 180,
-    valueFormatter: (params: { value: any }) => {
-      if (!params.value) return '';
-      const date = new Date(params.value);
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
+    // No valueFormatter needed since we're already formatting in TransactionsTab
   },
   { 
     field: 'clientName', 
