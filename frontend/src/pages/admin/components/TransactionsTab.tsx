@@ -1,54 +1,164 @@
-import { useState } from 'react';
-import { Container, Paper } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Box, Paper, Alert, CircularProgress, Typography, Snackbar, useTheme } from '@mui/material';
 import TransactionGrid from '../../../components/ui/common/TransactionGrid';
 import SearchBar from '../../../components/ui/navigation/SearchBar';
-import { rows as transactionData } from '../../../components/ui/common/TransactionData';
+import { transactionService } from '../../../services/transactionService';
+import { clientService } from '../../../services/clientService';
+import { Transaction } from '../../../types/Transaction';
+import { useAuth } from 'react-oidc-context';
 
-// Define the transaction type that matches our API data
-interface ApiTransaction {
-  id: string;
-  amount: number;
-  type: string;
-  status: string;
-  date: string;
-  clientName: string;
-  clientId: string;
-}
+// Helper function to enrich transactions with client names
+const enrichTransactionsWithClientNames = async (
+  transactions: Transaction[], 
+  auth: AuthContextProps
+): Promise<Transaction[]> => {
+  // Create a Set of unique client IDs to minimize API calls
+  const clientIds = new Set(transactions.map(t => t.clientId));
+  const clientMap = new Map();
+  
+  // Create a client data cache
+  const clientDataCache: Record<number, any> = {};
+  
+  // Fetch client information for each unique client ID
+  for (const clientId of clientIds) {
+    try {
+      const clientData = await clientService.getClientById(clientId, auth);
+      
+      // Store in cache
+      clientDataCache[clientId] = clientData;
+      
+      if (clientData && clientData.firstName && clientData.lastName) {
+        // Format the client name
+        clientMap.set(clientId, `${clientData.firstName} ${clientData.lastName}`);
+      } else {
+        // Fallback to client ID if name not available
+        clientMap.set(clientId, `Client #${clientId}`);
+      }
+    } catch (error) {
+      console.error(`Error fetching client information for client ID ${clientId}:`, error);
+      clientMap.set(clientId, `Client #${clientId}`);
+    }
+  }
+  
+  // Enrich transactions with client names
+  return transactions.map(transaction => ({
+    ...transaction,
+    clientName: clientMap.get(transaction.clientId) || `Client #${transaction.clientId}`
+  }));
+};
+
+// Helper function to format a date to a more readable form
+const formatDate = (dateString: string) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
 
 export default function TransactionsTab() {
-  const [filteredTransactions, setFilteredTransactions] = useState<ApiTransaction[]>(transactionData as ApiTransaction[]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const auth = useAuth();
+  const theme = useTheme();
+
+  // Fetch transactions on component mount
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  // Fetch transactions from the API
+  const fetchTransactions = async () => {
+    setLoading(true);
+    try {
+      if (auth.isAuthenticated) {
+        const response = await transactionService.getAllTransactions(auth);
+        console.log('API Response:', response);
+        
+        // Check if we got a valid response with the expected structure
+        if (response && response.result === true && Array.isArray(response.data)) {
+          // Extract the transaction data array from the response
+          const fetchedTransactions = response.data;
+          const enrichedTransactions = await enrichTransactionsWithClientNames(fetchedTransactions, auth);
+          console.log('Enriched transactions:', enrichedTransactions);
+          setTransactions(enrichedTransactions);
+          setFilteredTransactions(enrichedTransactions);
+          setError(null);
+          
+          // Show success message if provided
+          if (response.errorMessage) {
+            setSuccessMessage(response.errorMessage);
+          }
+        } else {
+          // Handle unexpected response format
+          console.error('Unexpected response format:', response);
+          setError('Received an invalid response format from the server.');
+          setTransactions([]);
+          setFilteredTransactions([]);
+        }
+      } else {
+        setError('Authentication required. Please log in.');
+        setTransactions([]);
+        setFilteredTransactions([]);
+      }
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
+      setError('Failed to load transactions. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Handle search across multiple columns
   const handleSearch = (term: string) => {
     if (!term.trim()) {
       // If search is empty, show all transactions
-      setFilteredTransactions(transactionData as ApiTransaction[]);
+      setFilteredTransactions(transactions);
       return;
     }
     
     // Search across multiple fields
     const lowercasedTerm = term.toLowerCase();
-    const filtered = (transactionData as ApiTransaction[]).filter(transaction => {
+    const filtered = transactions.filter(transaction => {
       return (
         // Search by ID
-        transaction.id.toLowerCase().includes(lowercasedTerm) ||
+        transaction.id.toString().toLowerCase().includes(lowercasedTerm) ||
         // Search by amount (convert to string first)
         transaction.amount.toString().includes(lowercasedTerm) ||
         // Search by type
-        transaction.type.toLowerCase().includes(lowercasedTerm) ||
+        transaction.transactionType.toLowerCase().includes(lowercasedTerm) ||
         // Search by status
         transaction.status.toLowerCase().includes(lowercasedTerm) ||
-        // Search by client name
-        transaction.clientName.toLowerCase().includes(lowercasedTerm) ||
-        // Search by date (formatted as string)
-        new Date(transaction.date).toLocaleDateString().includes(lowercasedTerm)
+        // Search by client name (if available)
+        (transaction.clientName && 
+         transaction.clientName.toLowerCase().includes(lowercasedTerm)) ||
+        // Search by client ID
+        transaction.clientId.toString().toLowerCase().includes(lowercasedTerm) ||
+        // Search by date
+        transaction.date.includes(lowercasedTerm)
       );
     });
+    
     setFilteredTransactions(filtered);
   };
   
   return (
-    <Container maxWidth="lg">
+    <Box>
+      {/* Page header */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
+          Transaction Management
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          View and manage all client transactions
+        </Typography>
+      </Box>
+      
       {/* Search Bar */}
       <SearchBar 
         onSearch={handleSearch}
@@ -59,20 +169,63 @@ export default function TransactionsTab() {
         showCount={true}
       />
       
+      {/* Error message */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+      )}
+      
+      {/* Loading indicator */}
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+      
+      {/* No transactions message */}
+      {!loading && filteredTransactions.length === 0 && !error && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          No transactions found.
+        </Alert>
+      )}
+      
       {/* Transactions Grid */}
-      <Paper 
-        elevation={0}
-        sx={{ 
-          borderRadius: 2,
-          overflow: 'hidden',
-          height: 600, // Taller than other grids to show more transactions
-          bgcolor: 'transparent'
-        }}
+      {!loading && filteredTransactions.length > 0 && (
+        <Paper 
+          elevation={0}
+          sx={{ 
+            borderRadius: 2,
+            overflow: 'hidden',
+            height: 'auto',
+            minHeight: 500,
+            bgcolor: 'transparent',
+            border: `1px solid ${theme.palette.divider}`,
+            boxShadow: theme.shadows[1]
+          }}
+        >
+          <TransactionGrid
+            rows={filteredTransactions.map(transaction => ({
+              id: transaction.id.toString(),
+              amount: `$${transaction.amount.toFixed(2)}`,
+              type: transaction.transactionType === 'D' ? 'Deposit' : 'Withdrawal',
+              status: transaction.status.charAt(0) + transaction.status.slice(1).toLowerCase(),
+              date: formatDate(transaction.date),
+              clientName: transaction.clientName || '',
+              clientId: transaction.clientId.toString()
+            }))}
+          />
+        </Paper>
+      )}
+
+      {/* Success message snackbar */}
+      <Snackbar 
+        open={!!successMessage} 
+        autoHideDuration={6000} 
+        onClose={() => setSuccessMessage(null)}
       >
-        <TransactionGrid
-          rows={filteredTransactions}
-        />
-      </Paper>
-    </Container>
+        <Alert severity="success" sx={{ width: '100%' }}>
+          {successMessage}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
-} 
+}

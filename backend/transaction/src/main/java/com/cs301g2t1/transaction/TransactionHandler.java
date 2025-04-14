@@ -288,7 +288,7 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
         return response;
     }
 
-    private Response handleDailyFetch(Request request, Context context) {
+    private Object handleDailyFetch(Request request, Context context) {
         try {
             String sftpTarget = System.getenv("SFTP_TARGET");
             if (sftpTarget == null || sftpTarget.isEmpty()) {
@@ -297,6 +297,9 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
 
             String doneDirectory = sftpTarget + "/../.done";
             String errorDirectory = sftpTarget + "/../.error";
+            
+            // List to collect all processed transactions
+            List<Transaction> allProcessedTransactions = new java.util.ArrayList<>();
 
             // Establish SFTP connection
             try (SFTPFacade sftpFacade = new SFTPFacadeImpl()) {
@@ -310,7 +313,8 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
 
                         // Insert transactions into the database
                         for (Transaction transaction : transactions) {
-                            transactionService.createTransaction(transaction);
+                            Transaction createdTransaction = transactionService.createTransaction(transaction);
+                            allProcessedTransactions.add(createdTransaction);
                         }
 
                         // Move file to .done directory
@@ -322,11 +326,30 @@ public class TransactionHandler implements RequestHandler<Object, Object> {
                     }
                 }
             }
-
-            return new Response(true, "Daily fetch completed successfully.", null);
+            
+            // Create ALB-compatible response
+            Map<String, Object> response = new HashMap<>();
+            response.put("statusCode", 200);
+            response.put("headers", createCorsHeaders());
+            
+            // Create a Response object with the processed transactions and convert it to JSON for the body
+            Response<List<Transaction>> responseObj = new Response<>(true, 
+                "Daily fetch completed successfully. Processed " + allProcessedTransactions.size() + " transactions.", 
+                allProcessedTransactions);
+            String responseBody = convertToJson(responseObj);
+            response.put("body", responseBody);
+            
+            return response;
         } catch (Exception e) {
             context.getLogger().log("Error during dailyFetch: " + e.getMessage());
-            return new Response(false, "Failed to complete daily fetch: " + e.getMessage(), null);
+            
+            // Create error response
+            Map<String, Object> response = new HashMap<>();
+            response.put("statusCode", 500);
+            response.put("headers", createCorsHeaders());
+            response.put("body", "{\"result\":false,\"errorMessage\":\"Failed to complete daily fetch: " 
+                    + e.getMessage().replace("\"", "\\\"") + "\",\"data\":null}");
+            return response;
         }
     }
 
