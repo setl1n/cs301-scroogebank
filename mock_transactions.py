@@ -3,7 +3,7 @@ import random
 from datetime import datetime, timedelta
 
 # Number of mock records to generate
-num_records = 50
+num_records = 5
 starting = 100
 
 # Generate mock data

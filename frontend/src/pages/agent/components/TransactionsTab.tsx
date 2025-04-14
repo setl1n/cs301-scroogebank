@@ -18,7 +18,8 @@ import { AuthContextProps, useAuth } from 'react-oidc-context';
 // Helper function to enrich transactions with client names
 const enrichTransactionsWithClientNames = async (
   transactions: Transaction[], 
-  auth: AuthContextProps
+  auth: AuthContextProps,
+  pageSize = 10  // Process in batches of 50 transactions
 ): Promise<Transaction[]> => {
   // Create a Set of unique client IDs to minimize API calls
   const clientIds = new Set(transactions.map(t => t.clientId));
@@ -27,32 +28,51 @@ const enrichTransactionsWithClientNames = async (
   // Create a client data cache
   const clientDataCache: Record<number, any> = {};
   
-  // Fetch client information for each unique client ID
-  for (const clientId of clientIds) {
-    try {
-      const clientData = await clientService.getClientById(clientId, auth);
-      
-      // Store in cache
-      clientDataCache[clientId] = clientData;
-      
-      if (clientData && clientData.firstName && clientData.lastName) {
-        // Format the client name
-        clientMap.set(clientId, `${clientData.firstName} ${clientData.lastName}`);
-      } else {
-        // Fallback to client ID if name not available
+  // Process client IDs in batches
+  const clientIdArray = Array.from(clientIds);
+  const enrichedTransactions: Transaction[] = [];
+  
+  // Process client data in batches
+  for (let i = 0; i < clientIdArray.length; i += pageSize) {
+    const batchIds = clientIdArray.slice(i, i + pageSize);
+    
+    // Fetch client information for each client ID in the current batch
+    await Promise.all(batchIds.map(async (clientId) => {
+      try {
+        const clientData = await clientService.getClientById(clientId, auth);
+        
+        // Store in cache
+        clientDataCache[clientId] = clientData;
+        
+        if (clientData && clientData.firstName && clientData.lastName) {
+          // Format the client name
+          clientMap.set(clientId, `${clientData.firstName} ${clientData.lastName}`);
+        } else {
+          // Fallback to client ID if name not available
+          clientMap.set(clientId, `Client #${clientId}`);
+        }
+      } catch (error) {
+        console.error(`Error fetching client information for client ID ${clientId}:`, error);
         clientMap.set(clientId, `Client #${clientId}`);
       }
-    } catch (error) {
-      console.error(`Error fetching client information for client ID ${clientId}:`, error);
-      clientMap.set(clientId, `Client #${clientId}`);
-    }
+    }));
   }
   
-  // Enrich transactions with client names
-  return transactions.map(transaction => ({
-    ...transaction,
-    clientName: clientMap.get(transaction.clientId) || `Client #${transaction.clientId}`
-  }));
+  // Process transactions in batches to avoid UI freezing with large datasets
+  for (let i = 0; i < transactions.length; i += pageSize) {
+    const batch = transactions.slice(i, i + pageSize);
+    
+    // Enrich the current batch with client names
+    const enrichedBatch = batch.map(transaction => ({
+      ...transaction,
+      clientName: clientMap.get(transaction.clientId) || `Client #${transaction.clientId}`
+    }));
+    
+    // Add the enriched batch to the results
+    enrichedTransactions.push(...enrichedBatch);
+  }
+  
+  return enrichedTransactions;
 };
 
 // Helper function to format a date to a more readable form
