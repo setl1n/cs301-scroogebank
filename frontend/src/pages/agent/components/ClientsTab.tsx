@@ -127,16 +127,26 @@ export default function ClientsTab() {
   };
 
   const handleRequestImageUpload = async (clientId: number) => {
+    // Clear any existing error messages before starting
+    setError(null);
+    
     try {
       if (auth.isAuthenticated) {
-        await clientService.requestImageUpload(clientId, auth);
+        console.log(`Requesting image upload for client ID: ${clientId}`);
+        const response = await clientService.requestImageUpload(clientId, auth);
+        console.log("Request successful:", response);
+        
+        // Set success message and ensure error is null
         setSuccessMessage('Image upload link sent to client email');
+        setError(null);
       } else {
         setError('Authentication required to request image uploads.');
       }
     } catch (err) {
       console.error('Error requesting image upload:', err);
       setError('Failed to request image upload. Please try again.');
+      // Clear any existing success message
+      setSuccessMessage(null);
     }
   };
   

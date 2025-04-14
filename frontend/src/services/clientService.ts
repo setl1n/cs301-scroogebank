@@ -61,6 +61,13 @@ export const clientService = {
    * @returns Promise with confirmation message
    */
   async requestImageUpload(id: number, auth: AuthContextProps): Promise<string> {
-    return api.post(`${CLIENTS_ENDPOINT}/${id}/request-image-upload`, {}, auth);
+    try {
+      const response = await api.post(`${CLIENTS_ENDPOINT}/${id}/request-image-upload`, {}, auth);
+      console.log("Image upload response:", response);
+      return response;
+    } catch (error) {
+      console.error("Error in requestImageUpload:", error);
+      throw error;
+    }
   }
-}; 
+};

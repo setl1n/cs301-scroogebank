@@ -94,7 +94,14 @@ export const api = {
       throw new Error(`API Error: ${response.status}`);
     }
     
-    return response.json();
+    // Check content type to determine how to handle the response
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return response.json();
+    } else {
+      // For text responses (like in the case of image upload request)
+      return response.text();
+    }
   },
   
   // PUT request
