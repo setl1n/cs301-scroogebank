@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.HttpMethod;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -20,6 +21,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -641,15 +643,27 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                 listRequest.setContinuationToken(listResult.getNextContinuationToken());
             } while (listResult.isTruncated());
             
+            // Set expiration time for pre-signed URLs (15 minutes)
+            Calendar expiration = Calendar.getInstance();
+            expiration.add(Calendar.MINUTE, 15);
+            
             // Build response with file metadata
             List<Map<String, Object>> documents = new ArrayList<>();
             for (com.amazonaws.services.s3.model.S3ObjectSummary summary : objectSummaries) {
                 String key = summary.getKey();
                 
+                // Generate pre-signed URL instead of direct S3 URL
+                java.net.URL presignedUrl = s3Client.generatePresignedUrl(
+                    bucketName, 
+                    key, 
+                    expiration.getTime(), 
+                    HttpMethod.GET
+                );
+                
                 Map<String, Object> document = new HashMap<>();
                 document.put("id", key);
                 document.put("fileName", key.substring(key.lastIndexOf("/") + 1));
-                document.put("url", s3Client.getUrl(bucketName, key).toString());
+                document.put("url", presignedUrl.toString());
                 document.put("uploadDate", summary.getLastModified().toString());
                 document.put("fileType", determineContentType(key));
                 document.put("size", summary.getSize());
@@ -662,7 +676,7 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             // Convert to JSON with ObjectMapper
             String jsonBody = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(documents);
             response.put("body", jsonBody);
-            context.getLogger().log("Found " + documents.size() + " documents");
+            context.getLogger().log("Found " + documents.size() + " documents with pre-signed URLs");
             
             return response;
         } catch (Exception e) {
