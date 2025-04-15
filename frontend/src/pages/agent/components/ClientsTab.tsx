@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Box, 
   Typography, 
@@ -11,14 +11,11 @@ import {
   DialogContent, 
   DialogActions, 
   Button,
-  Grid,
   Card,
   CardMedia,
   CardContent,
   IconButton,
   CircularProgress,
-  Tabs,
-  Tab,
   Divider
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -26,18 +23,11 @@ import DownloadIcon from '@mui/icons-material/Download';
 import ClientGrid from '../../../components/ui/client/ClientGrid';
 import SearchBar from '../../../components/ui/navigation/SearchBar';
 import { clientService } from '../../../services/clientService';
+import verificationService from '../../../services/verificationService';
+import type { VerificationDocument } from '../../../services/verificationService';
 import { Client } from '../../../types/Client';
 import { useAuth } from 'react-oidc-context';
 import ClientForm from './ClientForm';
-
-// Mock document interface - will be replaced with actual API response
-interface VerificationDocument {
-  id: string;
-  fileName: string;
-  url: string;
-  uploadDate: string;
-  fileType: string;
-}
 
 export default function ClientsTab() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -52,17 +42,12 @@ export default function ClientsTab() {
   const [verificationDocuments, setVerificationDocuments] = useState<VerificationDocument[]>([]);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const [documentError, setDocumentError] = useState<string | null>(null);
-  const [selectedTabIndex, setSelectedTabIndex] = useState(0);
+  const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const auth = useAuth();
   const theme = useTheme();
   
-  // Fetch clients on component mount
-  useEffect(() => {
-    fetchClients();
-  }, []);
-
   // Fetch clients from the API
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     setLoading(true);
     try {
       if (auth.isAuthenticated) {
@@ -82,7 +67,12 @@ export default function ClientsTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [auth]);
+  
+  // Fetch clients on component mount
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
   
   // Handle search across multiple columns
   const handleSearch = (term: string) => {
@@ -198,39 +188,12 @@ export default function ClientsTab() {
     setDocumentError(null);
     
     try {
-      // TODO: Replace with actual API call once integrated
-      // Mock data for now
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
-      // Mock documents - replace with actual API response
-      const mockDocuments: VerificationDocument[] = [
-        {
-          id: '1',
-          fileName: 'passport.jpg',
-          url: 'https://images.unsplash.com/photo-1546550879-5ba941e68d35',
-          uploadDate: '2025-04-10T14:30:00Z',
-          fileType: 'image/jpeg'
-        },
-        {
-          id: '2',
-          fileName: 'driver_license.jpg',
-          url: 'https://images.unsplash.com/photo-1541447271487-09612b3f49f7',
-          uploadDate: '2025-04-12T09:15:00Z',
-          fileType: 'image/jpeg'
-        },
-        {
-          id: '3',
-          fileName: 'proof_of_address.pdf',
-          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          uploadDate: '2025-04-14T11:45:00Z',
-          fileType: 'application/pdf'
-        }
-      ];
-      
-      setVerificationDocuments(mockDocuments);
+      // Use our verification service to get documents instead of mock data
+      const documents = await verificationService.getClientDocuments(clientEmail, auth);
+      setVerificationDocuments(documents);
     } catch (err) {
       console.error('Error fetching verification documents:', err);
-      setDocumentError('Failed to load verification documents');
+      setDocumentError('Failed to load verification documents. Please try again later.');
     } finally {
       setLoadingDocuments(false);
     }
@@ -252,10 +215,6 @@ export default function ClientsTab() {
     window.document.body.removeChild(link);
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setSelectedTabIndex(newValue);
-  };
-  
   // Find the client by ID
   const getCurrentClient = () => {
     return clients.find(client => client.clientId === currentClientId);
@@ -375,98 +334,84 @@ export default function ClientsTab() {
               </Typography>
             </Box>
           ) : (
-            <Box sx={{ p: 2 }}>
-              <Tabs 
-                value={selectedTabIndex} 
-                onChange={handleTabChange}
-                variant="scrollable"
-                scrollButtons="auto"
-                sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
-              >
-                <Tab label="All Documents" />
-                <Tab label="Images" />
-                <Tab label="PDFs" />
-              </Tabs>
-              
-              <Grid container spacing={2} sx={{ mt: 1 }}>
-                {verificationDocuments
-                  .filter(doc => {
-                    if (selectedTabIndex === 0) return true;
-                    if (selectedTabIndex === 1) return doc.fileType.startsWith('image/');
-                    if (selectedTabIndex === 2) return doc.fileType === 'application/pdf';
-                    return true;
-                  })
-                  .map((document) => (
-                    <Grid item xs={12} sm={6} md={4} key={document.id}>
-                      <Card sx={{ 
-                        height: '100%', 
+            <Box sx={{ padding: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+              {verificationDocuments
+                .filter(doc => {
+                  if (selectedFilter === 'all') return true;
+                  if (selectedFilter === 'image') return doc.fileType.startsWith('image/');
+                  if (selectedFilter === 'pdf') return doc.fileType === 'application/pdf';
+                  return true;
+                })
+                .map((document) => (
+                  <Box key={document.id} sx={{ width: { xs: '100%', sm: '50%', md: '33.33%' }, padding: 1 }}>
+                    <Card sx={{ 
+                      height: '100%', 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      borderRadius: 2,
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: theme.shadows[4],
+                      }
+                    }}>
+                      {document.fileType.startsWith('image/') ? (
+                        <CardMedia
+                          component="img"
+                          height="140"
+                          image={document.url}
+                          alt={document.fileName}
+                          sx={{ objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <Box sx={{ 
+                          height: 140, 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          bgcolor: 'grey.100' 
+                        }}>
+                          <Typography variant="body2" color="text.secondary">
+                            PDF Document
+                          </Typography>
+                        </Box>
+                      )}
+                      <CardContent sx={{ 
+                        flexGrow: 1,
                         display: 'flex', 
                         flexDirection: 'column',
-                        borderRadius: 2,
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          transform: 'translateY(-4px)',
-                          boxShadow: theme.shadows[4],
-                        }
+                        justifyContent: 'space-between'
                       }}>
-                        {document.fileType.startsWith('image/') ? (
-                          <CardMedia
-                            component="img"
-                            height="140"
-                            image={document.url}
-                            alt={document.fileName}
-                            sx={{ objectFit: 'cover' }}
-                          />
-                        ) : (
-                          <Box sx={{ 
-                            height: 140, 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center',
-                            bgcolor: 'grey.100' 
-                          }}>
-                            <Typography variant="body2" color="text.secondary">
-                              PDF Document
-                            </Typography>
-                          </Box>
-                        )}
-                        <CardContent sx={{ 
-                          flexGrow: 1,
-                          display: 'flex', 
-                          flexDirection: 'column',
-                          justifyContent: 'space-between'
-                        }}>
-                          <Box>
-                            <Typography variant="subtitle1" component="div" noWrap>
-                              {document.fileName}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Uploaded: {new Date(document.uploadDate).toLocaleDateString()}
-                            </Typography>
-                          </Box>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-                            <Button 
-                              size="small" 
-                              variant="outlined"
-                              href={document.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              View
-                            </Button>
-                            <IconButton 
-                              size="small" 
-                              onClick={() => handleDownloadDocument(document)}
-                              color="primary"
-                            >
-                              <DownloadIcon />
-                            </IconButton>
-                          </Box>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-              </Grid>
+                        <Box>
+                          <Typography variant="subtitle1" component="div" noWrap>
+                            {document.fileName}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Uploaded: {new Date(document.uploadDate).toLocaleDateString()}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                          <Button 
+                            size="small" 
+                            variant="outlined"
+                            href={document.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            View
+                          </Button>
+                          <IconButton 
+                            size="small" 
+                            onClick={() => handleDownloadDocument(document)}
+                            color="primary"
+                          >
+                            <DownloadIcon />
+                          </IconButton>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Box>
+                ))}
             </Box>
           )}
         </DialogContent>
@@ -482,6 +427,38 @@ export default function ClientsTab() {
           {successMessage}
         </Alert>
       </Snackbar>
+
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h6">Documents</Typography>
+        <Box sx={{ ml: 'auto' }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setSelectedFilter('all')}
+            color={selectedFilter === 'all' ? 'primary' : 'inherit'}
+            sx={{ mr: 1 }}
+          >
+            All
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setSelectedFilter('image')}
+            color={selectedFilter === 'image' ? 'primary' : 'inherit'}
+            sx={{ mr: 1 }}
+          >
+            Images
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setSelectedFilter('pdf')}
+            color={selectedFilter === 'pdf' ? 'primary' : 'inherit'}
+          >
+            PDFs
+          </Button>
+        </Box>
+      </Box>
     </Box>
   );
 }

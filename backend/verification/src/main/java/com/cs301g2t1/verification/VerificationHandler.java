@@ -4,19 +4,25 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.ListObjectsV2Request;
+import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -45,6 +51,8 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
         Map<String, Object> response = new HashMap<>();
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
+        
+        // Let ALB handle CORS headers - remove to avoid duplicates
         response.put("headers", headers);
         
         // Extract the path from the request
@@ -62,6 +70,8 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
             return handleHealthCheck(response);
         } else if (path.equals("/api/v1/verification/upload")) {
             return handleUpload(request, response, context);
+        } else if (path.equals("/api/v1/verification/documents")) {
+            return handleListDocuments(request, response, context);
         } else if (path.equals("/api/v1/verification/test")) {
             return callExternalService(request, response, context);
         } else {
@@ -122,6 +132,11 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
                 
                 token = (String) multipartData.getOrDefault("token", "");
                 email = (String) multipartData.getOrDefault("email", "");
+                
+                // Make sure the email is properly decoded
+                if (email != null && !email.isEmpty()) {
+                    email = URLDecoder.decode(email, StandardCharsets.UTF_8);
+                }
                 
                 context.getLogger().log("Token: " + token);
                 context.getLogger().log("Email: " + email);
@@ -548,8 +563,11 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
 
     private boolean validateToken(String token, String email, Context context) {
         try {
+            // Make sure the email is URL encoded for the HTTP request
+            String encodedEmail = java.net.URLEncoder.encode(email, StandardCharsets.UTF_8);
+            
             String validationUrl = "http://client.ecs.internal:8080/api/v1/clients/validate-upload-token?token=" 
-                + token + "&email=" + email;
+                + token + "&email=" + encodedEmail;
             
             context.getLogger().log("Validating token at URL: " + validationUrl);
             
@@ -582,6 +600,75 @@ public class VerificationHandler implements RequestHandler<Map<String, Object>, 
         } catch (Exception e) {
             context.getLogger().log("Error validating token: " + e.getMessage());
             return false;
+        }
+    }
+
+    // New method to handle listing documents for a client
+    private Map<String, Object> handleListDocuments(Map<String, Object> request, Map<String, Object> response, Context context) {
+        try {
+            // Extract email from query parameters
+            String email = null;
+            if (request.containsKey("queryStringParameters") && 
+                ((Map)request.get("queryStringParameters")) != null &&
+                ((Map)request.get("queryStringParameters")).containsKey("email")) {
+                email = (String) ((Map)request.get("queryStringParameters")).get("email");
+                
+                // Decode URL-encoded email (convert %40 back to @)
+                email = URLDecoder.decode(email, StandardCharsets.UTF_8);
+                context.getLogger().log("Decoded email: " + email);
+            }
+            
+            context.getLogger().log("Listing documents for email: " + email);
+            
+            if (email == null || email.isEmpty()) {
+                return createErrorResponse(response, 400, "Email parameter is required");
+            }
+            
+            // Sanitize email to match storage pattern
+            String prefix = "uploads/" + sanitizeFilename(email);
+            context.getLogger().log("Looking for objects with prefix: " + prefix);
+            
+            // List objects in S3 with the prefix
+            List<com.amazonaws.services.s3.model.S3ObjectSummary> objectSummaries = new ArrayList<>();
+            ListObjectsV2Request listRequest = new ListObjectsV2Request()
+                .withBucketName(bucketName)
+                .withPrefix(prefix);
+                
+            ListObjectsV2Result listResult;
+            do {
+                listResult = s3Client.listObjectsV2(listRequest);
+                objectSummaries.addAll(listResult.getObjectSummaries());
+                listRequest.setContinuationToken(listResult.getNextContinuationToken());
+            } while (listResult.isTruncated());
+            
+            // Build response with file metadata
+            List<Map<String, Object>> documents = new ArrayList<>();
+            for (com.amazonaws.services.s3.model.S3ObjectSummary summary : objectSummaries) {
+                String key = summary.getKey();
+                
+                Map<String, Object> document = new HashMap<>();
+                document.put("id", key);
+                document.put("fileName", key.substring(key.lastIndexOf("/") + 1));
+                document.put("url", s3Client.getUrl(bucketName, key).toString());
+                document.put("uploadDate", summary.getLastModified().toString());
+                document.put("fileType", determineContentType(key));
+                document.put("size", summary.getSize());
+                documents.add(document);
+            }
+            
+            // Convert to JSON and return
+            response.put("statusCode", 200);
+            
+            // Convert to JSON with ObjectMapper
+            String jsonBody = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(documents);
+            response.put("body", jsonBody);
+            context.getLogger().log("Found " + documents.size() + " documents");
+            
+            return response;
+        } catch (Exception e) {
+            context.getLogger().log("Error listing documents: " + e.getMessage());
+            e.printStackTrace();
+            return createErrorResponse(response, 500, "Failed to list documents: " + e.getMessage());
         }
     }
 }
