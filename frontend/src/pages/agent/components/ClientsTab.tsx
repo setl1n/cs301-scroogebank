@@ -1,11 +1,43 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Alert, Snackbar, Paper, useTheme, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import { 
+  Box, 
+  Typography, 
+  Alert, 
+  Snackbar, 
+  Paper, 
+  useTheme, 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions, 
+  Button,
+  Grid,
+  Card,
+  CardMedia,
+  CardContent,
+  IconButton,
+  CircularProgress,
+  Tabs,
+  Tab,
+  Divider
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import DownloadIcon from '@mui/icons-material/Download';
 import ClientGrid from '../../../components/ui/client/ClientGrid';
 import SearchBar from '../../../components/ui/navigation/SearchBar';
 import { clientService } from '../../../services/clientService';
 import { Client } from '../../../types/Client';
 import { useAuth } from 'react-oidc-context';
 import ClientForm from './ClientForm';
+
+// Mock document interface - will be replaced with actual API response
+interface VerificationDocument {
+  id: string;
+  fileName: string;
+  url: string;
+  uploadDate: string;
+  fileType: string;
+}
 
 export default function ClientsTab() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -14,6 +46,13 @@ export default function ClientsTab() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [openClientForm, setOpenClientForm] = useState(false);
+  const [openDocumentViewer, setOpenDocumentViewer] = useState(false);
+  const [currentClientId, setCurrentClientId] = useState<number | null>(null);
+  const [currentClientEmail, setCurrentClientEmail] = useState<string>('');
+  const [verificationDocuments, setVerificationDocuments] = useState<VerificationDocument[]>([]);
+  const [loadingDocuments, setLoadingDocuments] = useState(false);
+  const [documentError, setDocumentError] = useState<string | null>(null);
+  const [selectedTabIndex, setSelectedTabIndex] = useState(0);
   const auth = useAuth();
   const theme = useTheme();
   
@@ -149,6 +188,78 @@ export default function ClientsTab() {
       setSuccessMessage(null);
     }
   };
+
+  // Handler for viewing verification documents
+  const handleViewVerificationDocuments = async (clientId: number, clientEmail: string) => {
+    setCurrentClientId(clientId);
+    setCurrentClientEmail(clientEmail);
+    setOpenDocumentViewer(true);
+    setLoadingDocuments(true);
+    setDocumentError(null);
+    
+    try {
+      // TODO: Replace with actual API call once integrated
+      // Mock data for now
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      
+      // Mock documents - replace with actual API response
+      const mockDocuments: VerificationDocument[] = [
+        {
+          id: '1',
+          fileName: 'passport.jpg',
+          url: 'https://images.unsplash.com/photo-1546550879-5ba941e68d35',
+          uploadDate: '2025-04-10T14:30:00Z',
+          fileType: 'image/jpeg'
+        },
+        {
+          id: '2',
+          fileName: 'driver_license.jpg',
+          url: 'https://images.unsplash.com/photo-1541447271487-09612b3f49f7',
+          uploadDate: '2025-04-12T09:15:00Z',
+          fileType: 'image/jpeg'
+        },
+        {
+          id: '3',
+          fileName: 'proof_of_address.pdf',
+          url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          uploadDate: '2025-04-14T11:45:00Z',
+          fileType: 'application/pdf'
+        }
+      ];
+      
+      setVerificationDocuments(mockDocuments);
+    } catch (err) {
+      console.error('Error fetching verification documents:', err);
+      setDocumentError('Failed to load verification documents');
+    } finally {
+      setLoadingDocuments(false);
+    }
+  };
+
+  const handleCloseDocumentViewer = () => {
+    setOpenDocumentViewer(false);
+    setCurrentClientId(null);
+    setVerificationDocuments([]);
+  };
+
+  const handleDownloadDocument = (document: VerificationDocument) => {
+    // Create a temporary anchor element to download the file
+    const link = window.document.createElement('a');
+    link.href = document.url;
+    link.download = document.fileName;
+    window.document.body.appendChild(link);
+    link.click();
+    window.document.body.removeChild(link);
+  };
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setSelectedTabIndex(newValue);
+  };
+  
+  // Find the client by ID
+  const getCurrentClient = () => {
+    return clients.find(client => client.clientId === currentClientId);
+  };
   
   return (
     <Box>
@@ -196,6 +307,7 @@ export default function ClientsTab() {
           onEdit={handleEditClient}
           onDelete={handleDeleteClient}
           onRequestImageUpload={handleRequestImageUpload}
+          onViewVerificationDocuments={handleViewVerificationDocuments}
           loading={loading}
         />
       </Paper>
@@ -214,6 +326,150 @@ export default function ClientsTab() {
         <DialogActions>
           <Button onClick={handleCloseClientForm}>Cancel</Button>
         </DialogActions>
+      </Dialog>
+
+      {/* Verification Documents Dialog */}
+      <Dialog
+        open={openDocumentViewer}
+        onClose={handleCloseDocumentViewer}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            overflow: 'hidden'
+          }
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
+          <Box>
+            <Typography variant="h6">
+              Verification Documents
+            </Typography>
+            {getCurrentClient() && (
+              <Typography variant="subtitle1" color="text.secondary">
+                {getCurrentClient()?.firstName} {getCurrentClient()?.lastName} - {currentClientEmail}
+              </Typography>
+            )}
+          </Box>
+          <IconButton onClick={handleCloseDocumentViewer} aria-label="close">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        
+        <Divider />
+        
+        <DialogContent sx={{ p: 0 }}>
+          {loadingDocuments ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
+              <CircularProgress />
+            </Box>
+          ) : documentError ? (
+            <Box sx={{ p: 3, textAlign: 'center' }}>
+              <Alert severity="error">{documentError}</Alert>
+            </Box>
+          ) : verificationDocuments.length === 0 ? (
+            <Box sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="body1" color="text.secondary">
+                No verification documents found for this client.
+              </Typography>
+            </Box>
+          ) : (
+            <Box sx={{ p: 2 }}>
+              <Tabs 
+                value={selectedTabIndex} 
+                onChange={handleTabChange}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
+              >
+                <Tab label="All Documents" />
+                <Tab label="Images" />
+                <Tab label="PDFs" />
+              </Tabs>
+              
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                {verificationDocuments
+                  .filter(doc => {
+                    if (selectedTabIndex === 0) return true;
+                    if (selectedTabIndex === 1) return doc.fileType.startsWith('image/');
+                    if (selectedTabIndex === 2) return doc.fileType === 'application/pdf';
+                    return true;
+                  })
+                  .map((document) => (
+                    <Grid item xs={12} sm={6} md={4} key={document.id}>
+                      <Card sx={{ 
+                        height: '100%', 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        borderRadius: 2,
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          transform: 'translateY(-4px)',
+                          boxShadow: theme.shadows[4],
+                        }
+                      }}>
+                        {document.fileType.startsWith('image/') ? (
+                          <CardMedia
+                            component="img"
+                            height="140"
+                            image={document.url}
+                            alt={document.fileName}
+                            sx={{ objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <Box sx={{ 
+                            height: 140, 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            bgcolor: 'grey.100' 
+                          }}>
+                            <Typography variant="body2" color="text.secondary">
+                              PDF Document
+                            </Typography>
+                          </Box>
+                        )}
+                        <CardContent sx={{ 
+                          flexGrow: 1,
+                          display: 'flex', 
+                          flexDirection: 'column',
+                          justifyContent: 'space-between'
+                        }}>
+                          <Box>
+                            <Typography variant="subtitle1" component="div" noWrap>
+                              {document.fileName}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Uploaded: {new Date(document.uploadDate).toLocaleDateString()}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                            <Button 
+                              size="small" 
+                              variant="outlined"
+                              href={document.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              View
+                            </Button>
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleDownloadDocument(document)}
+                              color="primary"
+                            >
+                              <DownloadIcon />
+                            </IconButton>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+              </Grid>
+            </Box>
+          )}
+        </DialogContent>
       </Dialog>
 
       {/* Success message snackbar */}

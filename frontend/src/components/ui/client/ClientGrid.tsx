@@ -9,12 +9,14 @@ import { IconButton, Box, Typography, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 interface ClientGridProps {
   rows: Client[];
   onEdit?: (client: Client) => void;
   onDelete?: (clientId: number) => void;
   onRequestImageUpload?: (clientId: number) => void;
+  onViewVerificationDocuments?: (clientId: number, clientEmail: string) => void;
   loading?: boolean;
 }
 
@@ -23,6 +25,7 @@ export default function ClientGrid({
   onEdit, 
   onDelete, 
   onRequestImageUpload,
+  onViewVerificationDocuments,
   loading = false 
 }: ClientGridProps) {
   const pageSize = 10;
@@ -94,7 +97,7 @@ export default function ClientGrid({
     { 
       field: 'actions', 
       headerName: 'Actions', 
-      width: 180,
+      width: 230,
       sortable: false,
       filterable: false,
       renderCell: (params: GridRenderCellParams) => {
@@ -123,6 +126,18 @@ export default function ClientGrid({
                   onClick={() => onRequestImageUpload(row.clientId)}
                 >
                   <PhotoCameraIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+            
+            {onViewVerificationDocuments && (
+              <Tooltip title="View Verification Documents">
+                <IconButton 
+                  color="info" 
+                  size="small"
+                  onClick={() => onViewVerificationDocuments(row.clientId, row.emailAddress)}
+                >
+                  <VisibilityIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
             )}
