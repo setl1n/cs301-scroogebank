@@ -3,6 +3,10 @@
 # The main user directory that stores user accounts and handles
 # authentication, account confirmation, and password recovery
 #--------------------------------------------------------------
+
+# Get current AWS account ID for resource ARNs
+data "aws_caller_identity" "current" {}
+
 resource "aws_cognito_user_pool" "user_pool" {
   name = var.user_pool_name
 
@@ -37,10 +41,26 @@ resource "aws_cognito_user_pool" "user_pool" {
 
   mfa_configuration = var.mfa_configuration
 
-  # # Enable TOTP MFA (authenticator apps like Google Authenticator)
-  # software_token_mfa_configuration {
-  #   enabled = true
-  # }
+  # Email configuration - use Cognito's default email sender
+  email_configuration {
+    email_sending_account = "COGNITO_DEFAULT"
+  }
+
+  # Enable TOTP MFA (authenticator apps like Google Authenticator)
+  software_token_mfa_configuration {
+    enabled = true
+  }
+
+  # Custom messages for various verification steps
+  verification_message_template {
+    default_email_option = "CONFIRM_WITH_CODE"
+    email_subject = "Your verification code"
+    email_message = "Your verification code is {####}. This code will expire in 24 hours."
+  }
+  
+  # Custom messages for MFA
+  sms_authentication_message = "Your authentication code is {####}."
+  sms_verification_message = "Your verification code is {####}."
 }
 
 #--------------------------------------------------------------

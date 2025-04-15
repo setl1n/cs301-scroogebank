@@ -62,7 +62,7 @@ variable "password_require_symbols" {
 # MFA settings for user authentication
 #----------------------------------------
 variable "mfa_configuration" {
-  description = "MFA configuration for the user pool. Can be 'OFF', 'ON', or 'OPTIONAL'"
+  description = "MFA configuration for the user pool. When set to 'ON', email-based MFA will be required for all users. Can be 'OFF', 'ON', or 'OPTIONAL'"
   type        = string
   default     = "OFF"
   validation {
