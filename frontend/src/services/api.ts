@@ -8,6 +8,14 @@ const defaultOptions = {
   },
 };
 
+// Helper function to get user ID from auth context
+const getUserId = (auth?: AuthContextProps): string => {
+  if (auth?.user?.profile?.sub) {
+    return auth.user.profile.sub;
+  }
+  return 'default-user-id';
+};
+
 // Helper function to get access token from auth context
 const getAccessToken = (auth?: AuthContextProps): string | null => {
   if (!auth?.isAuthenticated || !auth.user) {
@@ -83,11 +91,22 @@ export const api = {
       headers.append('Authorization', `Bearer ${token}`);
     }
     
+    // Wrap the data with agentId for client-related endpoints
+    let bodyData: { client?: T; agentId?: string } | T;
+    if (endpoint.includes('/clients') && !endpoint.includes('/validate')) {
+      bodyData = {
+        client: data,
+        agentId: getUserId(auth)
+      };
+    } else {
+      bodyData = data;
+    }
+    
     const response = await fetch(`${config.apiBaseUrl}${endpoint}`, {
       method: 'POST',
       headers,
       credentials: 'include',
-      body: JSON.stringify(data),
+      body: JSON.stringify(bodyData),
     });
     
     if (!response.ok) {
@@ -114,11 +133,22 @@ export const api = {
       headers.append('Authorization', `Bearer ${token}`);
     }
     
+    // Wrap the data with agentId for client-related endpoints
+    let bodyData: { client?: T; agentId?: string } | T;
+    if (endpoint.includes('/clients')) {
+      bodyData = {
+        client: data,
+        agentId: getUserId(auth)
+      };
+    } else {
+      bodyData = data;
+    }
+    
     const response = await fetch(`${config.apiBaseUrl}${endpoint}`, {
       method: 'PUT',
       headers,
       credentials: 'include',
-      body: JSON.stringify(data),
+      body: JSON.stringify(bodyData),
     });
     
     if (!response.ok) {
@@ -138,11 +168,21 @@ export const api = {
       headers.append('Authorization', `Bearer ${token}`);
     }
     
-    const response = await fetch(`${config.apiBaseUrl}${endpoint}`, {
+    // For client endpoints, include agentId in body
+    const options: RequestInit = {
       method: 'DELETE',
       headers,
       credentials: 'include',
-    });
+    };
+    
+    // Add body with agentId for client-related endpoints
+    if (endpoint.includes('/clients')) {
+      options.body = JSON.stringify({
+        agentId: getUserId(auth)
+      });
+    }
+    
+    const response = await fetch(`${config.apiBaseUrl}${endpoint}`, options);
     
     if (!response.ok) {
       throw new Error(`API Error: ${response.status}`);

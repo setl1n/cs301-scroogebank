@@ -5,6 +5,7 @@ import com.cs301g2t1.client.service.ClientService;
 import com.cs301g2t1.client.service.ImageUploadTokenService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,9 +51,38 @@ public class ClientController {
         }
     }
 
+    // RequestWrapper class to handle combined client and agentId payload
+    private static class ClientRequest {
+        private Client client;
+        private String agentId;
+
+        public Client getClient() {
+            return client;
+        }
+
+        public void setClient(Client client) {
+            this.client = client;
+        }
+
+        public String getAgentId() {
+            return agentId;
+        }
+
+        public void setAgentId(String agentId) {
+            this.agentId = agentId;
+        }
+    }
+
     @PostMapping
-    public ResponseEntity<?> createClient(HttpServletRequest request, @Valid @RequestBody Client client) {
+    public ResponseEntity<?> createClient(HttpServletRequest request, @Valid @RequestBody ClientRequest clientRequest) {
         try {
+            // Extract client and agentId from request body
+            Client client = clientRequest.getClient();
+            String agentId = clientRequest.getAgentId();
+            
+            // Set agentId as a request attribute
+            request.setAttribute("agentId", agentId);
+            
             Client createdClient = clientService.createClient(client, request);
             return new ResponseEntity<>(createdClient, HttpStatus.CREATED);
         } catch (IllegalArgumentException ex) {
@@ -61,10 +91,39 @@ public class ClientController {
         }
     }
 
+    // RequestWrapper class to handle combined client update and agentId payload
+    private static class ClientUpdateRequest {
+        private Client client;
+        private String agentId;
+
+        public Client getClient() {
+            return client;
+        }
+
+        public void setClient(Client client) {
+            this.client = client;
+        }
+
+        public String getAgentId() {
+            return agentId;
+        }
+
+        public void setAgentId(String agentId) {
+            this.agentId = agentId;
+        }
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<?> updateClient(HttpServletRequest request, @PathVariable("id") Long id,
-                                          @Valid @RequestBody Client updatedClient) {
+                                          @Valid @RequestBody ClientUpdateRequest clientUpdateRequest) {
         try {
+            // Extract client and agentId from request body
+            Client updatedClient = clientUpdateRequest.getClient();
+            String agentId = clientUpdateRequest.getAgentId();
+            
+            // Set agentId as a request attribute
+            request.setAttribute("agentId", agentId);
+            
             Client client = clientService.updateClient(id, updatedClient, request);
             return ResponseEntity.ok(client);
         } catch (IllegalArgumentException ex) {
@@ -77,9 +136,28 @@ public class ClientController {
         }
     }
 
+    // RequestWrapper class to handle agentId for delete operation
+    private static class DeleteRequest {
+        private String agentId;
+
+        public String getAgentId() {
+            return agentId;
+        }
+
+        public void setAgentId(String agentId) {
+            this.agentId = agentId;
+        }
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteClient(HttpServletRequest request, @PathVariable("id") Long id) {
+    public ResponseEntity<?> deleteClient(HttpServletRequest request, @PathVariable("id") Long id,
+                                         @RequestBody(required = false) DeleteRequest deleteRequest) {
         try {
+            // Set agentId as a request attribute if provided
+            if (deleteRequest != null && deleteRequest.getAgentId() != null) {
+                request.setAttribute("agentId", deleteRequest.getAgentId());
+            }
+            
             clientService.deleteClient(id, request);
             return ResponseEntity.noContent().build(); // 204 No Content
         } catch (IllegalArgumentException ex) {
@@ -116,7 +194,7 @@ public class ClientController {
         return redisTemplate.keys("*");
     }
 
-     @Autowired
+    @Autowired
     private ImageUploadTokenService tokenService;
     
     @PostMapping("/{id}/request-image-upload")
@@ -130,7 +208,6 @@ public class ClientController {
 
         return ResponseEntity.ok("Upload link sent to email");
     }
-
 
     @GetMapping("/validate-upload-token")
     public ResponseEntity<Boolean> validateToken(
@@ -148,5 +225,4 @@ public class ClientController {
         }
         return new ResponseEntity<>(true, HttpStatus.OK);
     }
-
 }
