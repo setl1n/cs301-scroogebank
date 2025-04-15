@@ -158,7 +158,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
           value={formData.dateOfBirth}
           onChange={handleChange}
           error={!!errors.dateOfBirth}
-          helperText={errors.dateOfBirth || 'YYYY-MM-DD format'}
+          helperText={errors.dateOfBirth || 'DD-MM-YYYY format'}
           InputLabelProps={{
             shrink: true,
           }}

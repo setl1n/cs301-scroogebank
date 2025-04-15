@@ -49,27 +49,57 @@ export const columns: GridColDef[] = [
 // Sample transaction data with added agentId field
 export const rows: GridRowsProp = [
   { 
-    id: 'TRX-10025',
+    id: 'TRX-10048',
     amount: 5000.00,
     type: 'Deposit',
     status: 'Completed',
-    date: new Date('2025-04-12T09:30:00'),
+    date: new Date('2025-04-12T14:30:00'),
     clientName: 'John Smith',
     clientId: 'C001',
     agentId: 'G001'
   },
   { 
-    id: 'TRX-10026',
+    id: 'TRX-10047',
     amount: 1200.50,
     type: 'Withdrawal',
     status: 'Completed',
-    date: new Date('2025-04-12T10:15:00'),
+    date: new Date('2025-04-12T13:59:00'),
     clientName: 'Sarah Johnson',
     clientId: 'C002',
     agentId: 'G001'
   },
   { 
-    id: 'TRX-10027',
+    id: 'TRX-10046',
+    amount: 100.00,
+    type: 'Withdrawal',
+    status: 'Completed',
+    date: new Date('2025-04-12T13:20:00'),
+    clientName: 'Sarah Johnson',
+    clientId: 'C002',
+    agentId: 'G001'
+  },
+  { 
+    id: 'TRX-10045',
+    amount: 2000.00,
+    type: 'Deposit',
+    status: 'Completed',
+    date: new Date('2025-04-12T12:40:00'),
+    clientName: 'Sarah Johnson',
+    clientId: 'C002',
+    agentId: 'G001'
+  },
+  { 
+    id: 'TRX-10044',
+    amount: 500.00,
+    type: 'Deposit',
+    status: 'Completed',
+    date: new Date('2025-04-12T11:20:00'),
+    clientName: 'Sarah Johnson',
+    clientId: 'C002',
+    agentId: 'G001'
+  },
+  { 
+    id: 'TRX-10043',
     amount: 3500.00,
     type: 'Deposit',
     status: 'Pending',
@@ -79,7 +109,7 @@ export const rows: GridRowsProp = [
     agentId: 'G002'
   },
   { 
-    id: 'TRX-10028',
+    id: 'TRX-10042',
     amount: 750.25,
     type: 'Withdrawal',
     status: 'Completed',
@@ -89,7 +119,7 @@ export const rows: GridRowsProp = [
     agentId: 'G002'
   },
   { 
-    id: 'TRX-10029',
+    id: 'TRX-10041',
     amount: 10000.00,
     type: 'Deposit',
     status: 'Completed',
@@ -99,7 +129,7 @@ export const rows: GridRowsProp = [
     agentId: 'G003'
   },
   { 
-    id: 'TRX-10030',
+    id: 'TRX-10040',
     amount: 4500.00,
     type: 'Withdrawal',
     status: 'Rejected',
@@ -109,7 +139,7 @@ export const rows: GridRowsProp = [
     agentId: 'G003'
   },
   { 
-    id: 'TRX-10031',
+    id: 'TRX-10039',
     amount: 8750.00,
     type: 'Deposit',
     status: 'Pending',
@@ -119,7 +149,7 @@ export const rows: GridRowsProp = [
     agentId: 'G004'
   },
   { 
-    id: 'TRX-10032',
+    id: 'TRX-10038',
     amount: 1800.75,
     type: 'Withdrawal',
     status: 'Completed',
@@ -129,7 +159,7 @@ export const rows: GridRowsProp = [
     agentId: 'G004'
   },
   { 
-    id: 'TRX-10033',
+    id: 'TRX-10037',
     amount: 3250.50,
     type: 'Deposit',
     status: 'Completed',
@@ -139,7 +169,7 @@ export const rows: GridRowsProp = [
     agentId: 'G005'
   },
   { 
-    id: 'TRX-10034',
+    id: 'TRX-10036',
     amount: 920.00,
     type: 'Withdrawal',
     status: 'Rejected',
