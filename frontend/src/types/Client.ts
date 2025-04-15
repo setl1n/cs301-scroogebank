@@ -11,6 +11,7 @@ export interface Client {
   state: string;
   country: string;
   postalCode: string;
+  verificationStatus?: string; // Added for client verification functionality
 }
 
 // Helper function to format client name

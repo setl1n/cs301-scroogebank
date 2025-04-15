@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DownloadIcon from '@mui/icons-material/Download';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ClientGrid from '../../../components/ui/client/ClientGrid';
 import SearchBar from '../../../components/ui/navigation/SearchBar';
 import { clientService } from '../../../services/clientService';
@@ -43,6 +44,7 @@ export default function ClientsTab() {
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const [documentError, setDocumentError] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [approvingClient, setApprovingClient] = useState(false);
   const auth = useAuth();
   const theme = useTheme();
   
@@ -219,6 +221,42 @@ export default function ClientsTab() {
   const getCurrentClient = () => {
     return clients.find(client => client.clientId === currentClientId);
   };
+
+  // Handler for approving a client
+  const handleApproveClient = async () => {
+    if (!currentClientId) return;
+    
+    setApprovingClient(true);
+    try {
+      if (auth.isAuthenticated) {
+        // Update client with verification status
+        await clientService.updateClient(
+          currentClientId, 
+          { verificationStatus: 'APPROVED' }, 
+          auth
+        );
+        
+        // Update the client in the local state
+        const updatedClients = clients.map(client => 
+          client.clientId === currentClientId 
+            ? { ...client, verificationStatus: 'APPROVED' } 
+            : client
+        );
+        
+        setClients(updatedClients);
+        setFilteredClients(updatedClients);
+        setSuccessMessage(`Client ${getCurrentClient()?.firstName} ${getCurrentClient()?.lastName} has been approved`);
+        setOpenDocumentViewer(false);
+      } else {
+        setError('Authentication required to approve clients.');
+      }
+    } catch (err) {
+      console.error('Error approving client:', err);
+      setError('Failed to approve client. Please try again.');
+    } finally {
+      setApprovingClient(false);
+    }
+  };
   
   return (
     <Box>
@@ -311,9 +349,21 @@ export default function ClientsTab() {
               </Typography>
             )}
           </Box>
-          <IconButton onClick={handleCloseDocumentViewer} aria-label="close">
-            <CloseIcon />
-          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<CheckCircleIcon />}
+              onClick={handleApproveClient}
+              disabled={approvingClient || loadingDocuments || verificationDocuments.length === 0}
+              sx={{ mr: 2 }}
+            >
+              {approvingClient ? 'Approving...' : 'Approve Client'}
+            </Button>
+            <IconButton onClick={handleCloseDocumentViewer} aria-label="close">
+              <CloseIcon />
+            </IconButton>
+          </Box>
         </DialogTitle>
         
         <Divider />
