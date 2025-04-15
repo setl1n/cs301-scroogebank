@@ -13,6 +13,9 @@ import Drawer from '@mui/material/Drawer';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import PersonIcon from '@mui/icons-material/Person';
+import LogoutIcon from '@mui/icons-material/Logout';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import Menu from '@mui/material/Menu';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ColorModeIconDropdown from '../template/shared-theme/ColorModeIconDropdown';
 import { useAuth } from 'react-oidc-context';
@@ -21,6 +24,8 @@ import { useMemo } from 'react';
 
 export default function NavBar() {
   const [open, setOpen] = React.useState(false);
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
   const navigate = useNavigate();
   const location = useLocation();
   const auth = useAuth();
@@ -48,8 +53,22 @@ export default function NavBar() {
     setOpen(newOpen);
   };
 
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   const handleLoginClick = () => {
+    handleProfileMenuClose();
     navigate('/login');
+  };
+
+  const handleSignOut = () => {
+    handleProfileMenuClose();
+    auth.signoutRedirect();
   };
 
   // Replace your getLogo function with this useMemo approach
@@ -260,12 +279,69 @@ export default function NavBar() {
             <ColorModeIconDropdown />
             <IconButton 
               color="primary" 
-              onClick={handleLoginClick}
-              aria-label="Login"
-              title="Login"
+              onClick={handleProfileMenuOpen}
+              aria-label="account of current user"
+              aria-controls="profile-menu"
+              aria-haspopup="true"
+              title={auth.isAuthenticated ? "Profile" : "Login"}
             >
               <PersonIcon />
             </IconButton>
+            <Menu
+              id="profile-menu"
+              anchorEl={anchorEl}
+              open={menuOpen}
+              onClose={handleProfileMenuClose}
+              MenuListProps={{
+                'aria-labelledby': 'profile-button',
+              }}
+              PaperProps={{
+                elevation: 3,
+                sx: {
+                  overflow: 'visible',
+                  filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.3))',
+                  mt: 1.5,
+                  borderRadius: 2,
+                  minWidth: 180,
+                  '& .MuiMenuItem-root': {
+                    px: 2,
+                    py: 1,
+                  },
+                },
+              }}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            >
+              {auth.isAuthenticated ? (
+                <>
+                  <Box sx={{ px: 2, py: 1.5 }}>
+                    <Typography variant="subtitle1" noWrap fontWeight="bold">
+                      {username}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" noWrap>
+                      {auth.user?.profile?.email || "user@example.com"}
+                    </Typography>
+                  </Box>
+                  <Divider />
+                  <MenuItem onClick={() => {
+                    handleProfileMenuClose();
+                    navigate('/profile');
+                  }}>
+                    <AccountCircleIcon fontSize="small" sx={{ mr: 1.5 }} />
+                    Profile
+                  </MenuItem>
+                  <MenuItem onClick={handleSignOut}>
+                    <LogoutIcon fontSize="small" sx={{ mr: 1.5 }} />
+                    Sign out
+                  </MenuItem>
+                </>
+              ) : (
+                <MenuItem onClick={handleLoginClick}>
+                  <PersonIcon fontSize="small" sx={{ mr: 1.5 }} />
+                  Login
+                </MenuItem>
+              )}
+            </Menu>
           </Box>
           
           {/* Mobile menu - update MenuItem components too */}
@@ -273,12 +349,69 @@ export default function NavBar() {
             <ColorModeIconDropdown size="medium" />
             <IconButton 
               color="primary"
-              onClick={handleLoginClick}
-              aria-label="Login"
-              sx={{ mr: 1 }}
+              onClick={handleProfileMenuOpen}
+              aria-label="account of current user"
+              aria-controls="profile-menu-mobile"
+              aria-haspopup="true"
+              title={auth.isAuthenticated ? "Profile" : "Login"}
             >
               <PersonIcon />
             </IconButton>
+            <Menu
+              id="profile-menu-mobile"
+              anchorEl={anchorEl}
+              open={menuOpen}
+              onClose={handleProfileMenuClose}
+              MenuListProps={{
+                'aria-labelledby': 'profile-button-mobile',
+              }}
+              PaperProps={{
+                elevation: 3,
+                sx: {
+                  overflow: 'visible',
+                  filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.3))',
+                  mt: 1.5,
+                  borderRadius: 2,
+                  minWidth: 180,
+                  '& .MuiMenuItem-root': {
+                    px: 2,
+                    py: 1,
+                  },
+                },
+              }}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            >
+              {auth.isAuthenticated ? (
+                <>
+                  <Box sx={{ px: 2, py: 1.5 }}>
+                    <Typography variant="subtitle1" noWrap fontWeight="bold">
+                      {username}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" noWrap>
+                      {auth.user?.profile?.email || "user@example.com"}
+                    </Typography>
+                  </Box>
+                  <Divider />
+                  <MenuItem onClick={() => {
+                    handleProfileMenuClose();
+                    navigate('/profile');
+                  }}>
+                    <AccountCircleIcon fontSize="small" sx={{ mr: 1.5 }} />
+                    Profile
+                  </MenuItem>
+                  <MenuItem onClick={handleSignOut}>
+                    <LogoutIcon fontSize="small" sx={{ mr: 1.5 }} />
+                    Sign out
+                  </MenuItem>
+                </>
+              ) : (
+                <MenuItem onClick={handleLoginClick}>
+                  <PersonIcon fontSize="small" sx={{ mr: 1.5 }} />
+                  Login
+                </MenuItem>
+              )}
+            </Menu>
             <IconButton aria-label="Menu button" onClick={toggleDrawer(true)}>
               <MenuIcon />
             </IconButton>
@@ -424,11 +557,19 @@ export default function NavBar() {
                 )}
 
                 <Divider sx={{ my: 2 }} />
-                <MenuItem>
-                  <Button color="primary" variant="contained" fullWidth onClick={handleLoginClick}>
-                    Login / Sign up
-                  </Button>
-                </MenuItem>
+                {auth.isAuthenticated ? (
+                  <MenuItem onClick={handleSignOut}>
+                    <Button color="primary" variant="contained" fullWidth startIcon={<LogoutIcon />}>
+                      Sign out
+                    </Button>
+                  </MenuItem>
+                ) : (
+                  <MenuItem>
+                    <Button color="primary" variant="contained" fullWidth onClick={handleLoginClick}>
+                      Login / Sign up
+                    </Button>
+                  </MenuItem>
+                )}
               </Box>
             </Drawer>
           </Box>
