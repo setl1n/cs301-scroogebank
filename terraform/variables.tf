@@ -140,7 +140,7 @@ variable "LOCAL_DEVELOPMENT_PORTS" {
 variable "mfa_configuration" {
   description = "MFA configuration for the application (e.g., OFF, ON, OPTIONAL)"
   type        = string
-  default     = "OFF" # Set a default value as needed
+  default     = "ON" # Set a default value as needed
 }
 
 #--------------------------------------------------------------
