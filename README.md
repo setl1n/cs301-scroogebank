@@ -27,7 +27,7 @@ This project was selected as the winner of the **UBS SMU-X IT Solution Architect
 
 ## 🏗️ System Architecture
 
-![Architecture Diagram](./docs/images/architecture_diagram.jpg)
+![Architecture Diagram](./docs/images/architecture_diagram.png)
 
 ### Key Components
 
